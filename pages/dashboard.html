@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestor de Laboratórios</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background-color: #132E4B;">
+
+    <script type="module" src="../js/authGuard.js"></script>
+
+    <div class="container my-5">
+        <div class="text-center mb-4">
+            <img src="../imagens/logo-labstocker.png" alt="Logo UFC" class="img-fluid" style="max-height: 300px;">
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-6">
+                <a href="estoque.html" class="btn btn-primary btn-square">
+                    <i class="bi bi-box-seam-fill"></i> <span>Estoque</span> </a>
+            </div>
+            <div class="col-6">
+                <a href="reagentes.html" class="btn btn-success btn-square">
+                    <i class="bi bi-eyedropper"></i>
+                    <span>Reagentes</span>
+                </a>
+            </div>
+
+            <div class="col-6">
+                <a href="relatorios.html" class="btn btn-info btn-square">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span>Relatórios</span>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="laboratorios.html" class="btn btn-warning btn-square">
+                    <i class="bi bi-building"></i>
+                    <span>Laboratórios</span>
+                </a>
+            </div>
+
+            <div class="col-6">
+                <a href="usuarios.html" class="btn btn-danger btn-square">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Usuários</span>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="autorizacoes.html" class="btn btn-secondary btn-square">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Autorizações</span>
+                </a>
+            </div>
+
+            <div class="col-6">
+                <a href="residuos.html" class="btn btn-dark btn-square">
+                    <i class="bi bi-trash-fill"></i>
+                    <span>Resíduos</span>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="suporte.html" class="btn btn-light btn-square border">
+                    <i class="bi bi-headset"></i>
+                    <span>Suporte</span>
+                </a>
+            </div>
+
+            <div class="col-6">
+                <a href="historico.html" class="btn btn-primary btn-square">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Histórico</span>
+                </a>
+            </div>
+            </div>
+
+        <div class="text-center mt-5">
+            <button id="btn-logout" class="btn btn-outline-danger">Sair (Logout)</button>
+        </div>
+    </div>
+
+    <script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>

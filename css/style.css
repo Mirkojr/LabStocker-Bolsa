@@ -1,0 +1,24 @@
+/*
+ * CSS para os botões quadrados do dashboard
+ */
+.btn-square {
+    width: 100%;             /* Ocupa 100% da largura da coluna */
+    aspect-ratio: 1 / 1;     /* FORÇA o botão a ser um quadrado (largura = altura) */
+    
+    /* Centraliza o conteúdo (ícone e texto) */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    font-size: 1.1rem;      /* Tamanho do texto */
+    font-weight: 500;       /* "Peso" da fonte */
+    padding: 1rem;          /* Espaçamento interno */
+    text-transform: uppercase; /* Opcional: deixa o texto em maiúsculas */
+}
+
+/* Estiliza o ícone (logo) dentro do botão */
+.btn-square i {
+    font-size: 3rem;        /* Tamanho grande para o ícone */
+    margin-bottom: 0.5rem;  /* Espaço entre o ícone e o texto */
+}
