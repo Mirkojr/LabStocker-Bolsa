@@ -5,60 +5,51 @@ const listaEstoqueEl = document.getElementById('lista-estoque');
 const formEstoque = document.getElementById('form-estoque');
 const inputBusca = document.getElementById('input-busca-estoque');
 const spinner = document.getElementById('loading-spinner-estoque');
+const btnCadastrarEstoque = document.querySelector('[data-bs-target="#modal-estoque"]');
+const modalEl = document.getElementById('modal-estoque');
+const modalEstoque = new bootstrap.Modal(modalEl);
+
+// Seletores do formulário do modal
+const modalTitle = modalEl.querySelector('.modal-title');
+const modalSubmitBtn = formEstoque.querySelector('button[type="submit"]');
+const editIdInput = document.getElementById('estoque-edit-id');
 const selectReagente = document.getElementById('estoque-reagente');
-const modalEstoque = new bootstrap.Modal(document.getElementById('modal-estoque'));
+const quantidadeInput = document.getElementById('estoque-quantidade');
+const unidadeInput = document.getElementById('estoque-unidade');
+const validadeInput = document.getElementById('estoque-validade');
+const observacoesInput = document.getElementById('estoque-observacoes');
 
-// Variável global para guardar o ID do laboratório do usuário
+// Variável global
 let ID_LAB_DO_USUARIO = null;
-
 
 // --- Funções Principais ---
 
-/**
- * Passo 1: Descobre o ID do usuário e, em seguida, o ID do seu laboratório.
- */
 async function getLabIdDoUsuario() {
-    // Pega o usuário logado
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-        console.error('Usuário não encontrado.');
-        return null;
-    }
-
-    // Busca o perfil do usuário para encontrar o 'id_laboratorio'
-    // (Requer a Política RLS de 'SELECT' na tabela 'Perfis' que criamos)
     try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) throw new Error('Usuário não encontrado.');
+
         const { data, error } = await supabaseClient
             .from('Perfis')
             .select('id_laboratorio')
-            .eq('id', user.id) // Onde o 'id' do perfil é o 'id' do usuário logado
-            .single(); // Esperamos SÓ UM resultado
+            .eq('id', user.id)
+            .single();
 
         if (error) throw error;
-        if (!data.id_laboratorio) {
-            throw new Error('Usuário não está associado a nenhum laboratório.');
-        }
+        if (!data.id_laboratorio) throw new Error('Usuário não está associado a nenhum laboratório.');
 
-        return data.id_laboratorio; // Retorna o UUID do laboratório
-
+        return data.id_laboratorio;
     } catch (error) {
-        listaEstoqueEl.innerHTML = `<p class="text-center text-danger">Erro: ${error.message}</p>`;
+        listaEstoqueEl.innerHTML = `<div class="list-group-item text-center text-danger">Erro: ${error.message}</div>`;
         return null;
     }
 }
 
-/**
- * Passo 2: Busca os itens de ESTOQUE do laboratório específico.
- */
 async function fetchEstoque(labId, filtroNome = '') {
     spinner.classList.remove('d-none');
     listaEstoqueEl.innerHTML = '';
 
     try {
-        // Esta é a MÁGICA:
-        // 1. Pega tudo de 'EstoqueLab'
-        // 2. Pega ( * ) (tudo) da tabela 'Reagente' relacionada
-        // 3. Onde o 'id_laboratorio' for o do nosso usuário
         let query = supabaseClient
             .from('EstoqueLab')
             .select(`
@@ -67,148 +58,188 @@ async function fetchEstoque(labId, filtroNome = '') {
                 unidade_medida,
                 data_validade,
                 observacoes_operacionais,
+                id_reagente,
                 Reagente ( nome ) 
-            `) // Otimizado: só pega o 'nome' do Reagente
+            `)
             .eq('id_laboratorio', labId)
             .order('data_validade');
-
-        // Adiciona o filtro de busca se houver
-        // (Nota: filtrar por nome de tabela relacionada é avançado,
-        // vamos filtrar na lista de resultados por enquanto)
             
-        // (Filtro de busca simples - faremos no front-end por agora)
-
         const { data, error } = await query;
         if (error) throw error;
 
-        // Filtro de busca (pós-query)
         const itensFiltrados = data.filter(item => 
-            !filtroNome || item.Reagente.nome.toLowerCase().includes(filtroNome.toLowerCase())
+            !filtroNome || (item.Reagente && item.Reagente.nome.toLowerCase().includes(filtroNome.toLowerCase()))
         );
 
         if (itensFiltrados.length === 0) {
-            listaEstoqueEl.innerHTML = '<p class="text-center text-muted">Nenhum item no estoque.</p>';
+            listaEstoqueEl.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum item no estoque.</div>';
         } else {
             renderEstoque(itensFiltrados);
         }
-
     } catch (error) {
         console.error('Erro ao buscar estoque:', error.message);
-        listaEstoqueEl.innerHTML = '<p class="text-center text-danger">Erro ao carregar estoque.</p>';
+        listaEstoqueEl.innerHTML = '<div class="list-group-item text-center text-danger">Erro ao carregar estoque.</div>';
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
-/**
- * Renderiza a lista de estoque no HTML.
- */
 function renderEstoque(itens) {
     itens.forEach(item => {
         const itemHtml = `
-            <div class="list-group-item">
-                <div class="d-flex w-100 justify-content-between">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
                     <h5 class="mb-1">${item.Reagente.nome} - ${item.quantidade} ${item.unidade_medida}</h5>
+                    <p class="mb-1">${item.observacoes_operacionais || 'Sem observações.'}</p>
                     <small class="text-muted">Val: ${item.data_validade || 'N/A'}</small>
                 </div>
-                <p class="mb-1">${item.observacoes_operacionais || 'Sem observações.'}</p>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-estoque" 
+                        data-id="${item.id}"
+                        data-reagente-id="${item.id_reagente}"
+                        data-quantidade="${item.quantidade}"
+                        data-unidade="${item.unidade_medida}"
+                        data-validade="${item.data_validade || ''}"
+                        data-observacoes="${item.observacoes_operacionais || ''}">
+                        Editar
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm btn-delete-estoque" data-id="${item.id}">
+                        Excluir
+                    </button>
+                </div>
             </div>
         `;
         listaEstoqueEl.innerHTML += itemHtml;
     });
 }
 
-/**
- * Passo 3: Busca os REAGENTES (do catálogo) para preencher o Modal.
- */
 async function fetchReagentesParaModal() {
     try {
-        const { data, error } = await supabaseClient
-            .from('Reagente')
-            .select('id, nome')
-            .order('nome');
-        
+        const { data, error } = await supabaseClient.from('Reagente').select('id, nome').order('nome');
         if (error) throw error;
-
-        // Preenche o <select>
+        
         selectReagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
         data.forEach(reagente => {
-            const option = `<option value="${reagente.id}">${reagente.nome}</option>`;
-            selectReagente.innerHTML += option;
+            selectReagente.innerHTML += `<option value="${reagente.id}">${reagente.nome}</option>`;
         });
-
     } catch (error) {
         console.error('Erro ao buscar reagentes para o modal:', error.message);
         selectReagente.innerHTML = '<option value="" disabled>Erro ao carregar</option>';
     }
 }
 
-/**
- * Lida com o cadastro de um novo item de ESTOQUE.
- */
-async function handleCadastroEstoque(evento) {
+async function handleFormSubmitEstoque(evento) {
     evento.preventDefault();
     if (!ID_LAB_DO_USUARIO) {
         alert('Erro: ID do laboratório não encontrado.');
         return;
     }
 
-    // Pega os dados do formulário do modal
-    const reagenteId = document.getElementById('estoque-reagente').value;
-    const quantidade = document.getElementById('estoque-quantidade').value;
-    const unidade = document.getElementById('estoque-unidade').value;
-    const validade = document.getElementById('estoque-validade').value;
-    const observacoes = document.getElementById('estoque-observacoes').value;
+    const id = editIdInput.value;
+    const dadosForm = {
+        id_laboratorio: ID_LAB_DO_USUARIO,
+        id_reagente: selectReagente.value,
+        quantidade: quantidadeInput.value,
+        unidade_medida: unidadeInput.value,
+        data_validade: validadeInput.value || null,
+        observacoes_operacionais: observacoesInput.value || null
+    };
 
     try {
-        const { error } = await supabaseClient
-            .from('EstoqueLab')
-            .insert({
-                id_laboratorio: ID_LAB_DO_USUARIO, // O ID que buscamos
-                id_reagente: reagenteId,
-                quantidade: quantidade,
-                unidade_medida: unidade,
-                data_validade: validade || null, // Se for vazio, insere NULO
-                observacoes_operacionais: observacoes || null
-            });
-        
+        let query;
+        if (id) {
+            // ATUALIZAR
+            query = supabaseClient.from('EstoqueLab').update(dadosForm).eq('id', id);
+        } else {
+            // CRIAR
+            query = supabaseClient.from('EstoqueLab').insert(dadosForm);
+        }
+
+        const { error } = await query;
         if (error) throw error;
 
-        alert('Item adicionado ao estoque!');
-        formEstoque.reset();
+        alert(id ? 'Item atualizado no estoque!' : 'Item adicionado ao estoque!');
         modalEstoque.hide();
-        fetchEstoque(ID_LAB_DO_USUARIO); // Atualiza a lista
+        fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
 
     } catch (error) {
-        console.error('Erro ao cadastrar no estoque:', error.message);
-        alert('Erro ao cadastrar: ' + error.message);
+        console.error('Erro ao salvar item no estoque:', error.message);
+        alert('Erro ao salvar: ' + error.message);
     }
 }
 
+function handleEditClickEstoque(button) {
+    const { id, reagenteId, quantidade, unidade, validade, observacoes } = button.dataset;
 
-// --- Event Listeners (Ouvintes de Eventos) ---
+    editIdInput.value = id;
+    selectReagente.value = reagenteId;
+    quantidadeInput.value = quantidade;
+    unidadeInput.value = unidade;
+    validadeInput.value = validade;
+    observacoesInput.value = observacoes;
 
-// 1. Quando o DOM carregar, começa a cadeia de eventos
-document.addEventListener('DOMContentLoaded', async () => {
-    // Passo 1: Descobre o lab
-    ID_LAB_DO_USUARIO = await getLabIdDoUsuario();
+    modalTitle.textContent = 'Editar Item do Estoque';
+    modalSubmitBtn.textContent = 'Atualizar';
+
+    modalEstoque.show();
+}
+
+async function handleDeleteClickEstoque(button) {
+    const id = button.dataset.id;
     
+    if (confirm('Tem certeza que deseja excluir este item do seu estoque?')) {
+        try {
+            const { error } = await supabaseClient.from('EstoqueLab').delete().eq('id', id);
+
+            if (error) throw error;
+            
+            alert('Item excluído do estoque.');
+            fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+
+        } catch (error) {
+            console.error('Erro ao excluir item:', error.message);
+            alert('Erro ao excluir: ' + error.message);
+        }
+    }
+}
+
+function resetModalEstoque() {
+    formEstoque.reset();
+    editIdInput.value = '';
+    modalTitle.textContent = 'Adicionar Item ao Estoque';
+    modalSubmitBtn.textContent = 'Salvar no Estoque';
+    selectReagente.value = "";
+}
+
+// --- Event Listeners ---
+
+document.addEventListener('DOMContentLoaded', async () => {
+    ID_LAB_DO_USUARIO = await getLabIdDoUsuario();
     if (ID_LAB_DO_USUARIO) {
-        // Passo 2: Busca o estoque
         fetchEstoque(ID_LAB_DO_USUARIO);
-        // Passo 3: Prepara o modal
         fetchReagentesParaModal();
     }
 });
 
-// 2. Quando o formulário do modal for enviado
-formEstoque.addEventListener('submit', handleCadastroEstoque);
+formEstoque.addEventListener('submit', handleFormSubmitEstoque);
 
-// 3. Busca
 let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+        if (ID_LAB_DO_USUARIO) {
+            fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+        }
     }, 300);
 });
+
+listaEstoqueEl.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-edit-estoque')) handleEditClickEstoque(e.target);
+    if (e.target.classList.contains('btn-delete-estoque')) handleDeleteClickEstoque(e.target);
+});
+
+if (btnCadastrarEstoque) {
+    btnCadastrarEstoque.addEventListener('click', resetModalEstoque);
+}
+
+modalEl.addEventListener('hidden.bs.modal', resetModalEstoque);

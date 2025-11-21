@@ -5,116 +5,176 @@ const listaReagentesEl = document.getElementById('lista-reagentes');
 const formReagente = document.getElementById('form-reagente');
 const inputBusca = document.getElementById('input-busca');
 const spinner = document.getElementById('loading-spinner');
-// Pega a instância do Modal do Bootstrap
-const modalReagente = new bootstrap.Modal(document.getElementById('modal-reagente'));
+const btnCadastrar = document.querySelector('[data-bs-target="#modal-reagente"]');
+const modalEl = document.getElementById('modal-reagente');
+// Inicializa o Modal do Bootstrap corretamente
+const modalReagente = new bootstrap.Modal(modalEl);
 
+// Seletores internos do modal
+const modalTitle = modalEl.querySelector('.modal-title');
+const modalSubmitBtn = formReagente.querySelector('button[type="submit"]');
+const editIdInput = document.getElementById('reagente-edit-id');
+const nomeInput = document.getElementById('reagente-nome');
+const composicaoInput = document.getElementById('reagente-composicao');
+const controladoraInput = document.getElementById('reagente-controladora');
 
 // --- Funções ---
 
-/**
- * Busca reagentes no Supabase (com filtro opcional) e atualiza a tela.
- */
 async function fetchReagentes(filtroNome = '') {
-    // Mostra o spinner e limpa a lista
     spinner.classList.remove('d-none');
     listaReagentesEl.innerHTML = '';
 
     try {
         let query = supabaseClient.from('Reagente').select('*').order('nome');
-
-        // Se houver filtro, adiciona a busca .ilike() (case-insensitive)
         if (filtroNome) {
             query = query.ilike('nome', `%${filtroNome}%`);
         }
-
         const { data, error } = await query;
         if (error) throw error;
 
         if (data.length === 0) {
-            listaReagentesEl.innerHTML = '<p class="text-center text-muted">Nenhum reagente encontrado.</p>';
+            listaReagentesEl.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum reagente encontrado.</div>';
         } else {
-            // Renderiza os itens na tela
             renderReagentes(data);
         }
-
     } catch (error) {
         console.error('Erro ao buscar reagentes:', error.message);
-        listaReagentesEl.innerHTML = '<p class="text-center text-danger">Erro ao carregar reagentes.</p>';
+        listaReagentesEl.innerHTML = '<div class="list-group-item text-center text-danger">Erro ao carregar reagentes.</div>';
     } finally {
-        // Esconde o spinner
         spinner.classList.add('d-none');
     }
 }
 
-/**
- * Renderiza a lista de reagentes no HTML.
- */
 function renderReagentes(reagentes) {
     reagentes.forEach(reagente => {
-        // (Como você pediu, por enquanto não é um link, mas é aqui que você o faria)
         const itemHtml = `
-            <div classj="list-group-item">
-                <div class="d-flex w-100 justify-content-between">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
                     <h5 class="mb-1">${reagente.nome}</h5>
+                    <p class="mb-1">${reagente.composicao_quimica || 'Sem composição'}</p>
+                    <small class="text-muted">${reagente.instituicao_controladora || 'Sem controle'}</small>
                 </div>
-                <p class="mb-1">${reagente.composicao_quimica || 'Sem composição'}</p>
-                <small class="text-muted">${reagente.instituicao_controladora || 'Sem controle'}</small>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-edit" 
+                        data-id="${reagente.id}"
+                        data-nome="${reagente.nome}"
+                        data-composicao="${reagente.composicao_quimica || ''}"
+                        data-controladora="${reagente.instituicao_controladora || ''}">
+                        Editar
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm btn-delete" data-id="${reagente.id}">
+                        Excluir
+                    </button>
+                </div>
             </div>
         `;
         listaReagentesEl.innerHTML += itemHtml;
     });
 }
 
-/**
- * Lida com o cadastro de um novo reagente (submit do modal).
- */
-async function handleCadastro(evento) {
+async function handleFormSubmit(evento) {
     evento.preventDefault();
     
-    // Pega os dados do formulário do modal
-    const nome = document.getElementById('reagente-nome').value;
-    const composicao = document.getElementById('reagente-composicao').value;
-    const controladora = document.getElementById('reagente-controladora').value;
+    const id = editIdInput.value;
+    const dadosForm = {
+        nome: nomeInput.value,
+        composicao_quimica: composicaoInput.value,
+        instituicao_controladora: controladoraInput.value
+    };
 
     try {
-        const { error } = await supabaseClient
-            .from('Reagente')
-            .insert({
-                nome: nome,
-                composicao_quimica: composicao,
-                instituicao_controladora: controladora
-            });
-        
+        let query;
+        if (id) {
+            // ATUALIZAR
+            query = supabaseClient.from('Reagente').update(dadosForm).eq('id', id);
+        } else {
+            // CRIAR
+            query = supabaseClient.from('Reagente').insert(dadosForm);
+        }
+
+        const { error } = await query;
         if (error) throw error;
 
-        alert('Reagente cadastrado com sucesso!');
-        formReagente.reset(); // Limpa o formulário
-        modalReagente.hide(); // Fecha o modal
-        fetchReagentes(); // Atualiza a lista na tela
+        alert(id ? 'Reagente atualizado com sucesso!' : 'Reagente cadastrado com sucesso!');
+        modalReagente.hide();
+        fetchReagentes(inputBusca.value);
 
     } catch (error) {
-        console.error('Erro ao cadastrar:', error.message);
-        alert('Erro ao cadastrar: ' + error.message);
+        console.error('Erro ao salvar reagente:', error.message);
+        alert('Erro ao salvar: ' + error.message);
     }
 }
 
+function handleEditClick(button) {
+    const { id, nome, composicao, controladora } = button.dataset;
 
-// --- Event Listeners (Ouvintes de Eventos) ---
+    editIdInput.value = id;
+    nomeInput.value = nome;
+    composicaoInput.value = composicao;
+    controladoraInput.value = controladora;
 
-// 1. Quando o DOM carregar, busca os reagentes
+    modalTitle.textContent = 'Editar Reagente';
+    modalSubmitBtn.textContent = 'Atualizar';
+
+    modalReagente.show();
+}
+
+async function handleDeleteClick(button) {
+    const id = button.dataset.id;
+    
+    if (confirm('Tem certeza que deseja excluir este reagente do catálogo?')) {
+        try {
+            const { error } = await supabaseClient.from('Reagente').delete().eq('id', id);
+            
+            if (error) {
+                // Se o erro for violação de chave estrangeira (Código 23503)
+                if (error.code === '23503') {
+                    throw new Error('Não é possível excluir este reagente pois ele está cadastrado no estoque de um ou mais laboratórios. Remova-o dos estoques antes de excluir do catálogo.');
+                }
+                throw error; // Lança outros erros normalmente
+            }
+            
+            alert('Reagente excluído com sucesso.');
+            fetchReagentes(inputBusca.value);
+
+        } catch (error) {
+            console.error('Erro ao excluir:', error.message);
+            alert('Erro: ' + error.message);
+        }
+    }
+}
+
+function resetModal() {
+    formReagente.reset();
+    editIdInput.value = '';
+    modalTitle.textContent = 'Cadastrar Novo Reagente';
+    modalSubmitBtn.textContent = 'Salvar';
+}
+
+// --- Event Listeners ---
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchReagentes();
 });
 
-// 2. Quando o formulário do modal for enviado
-formReagente.addEventListener('submit', handleCadastro);
+formReagente.addEventListener('submit', handleFormSubmit);
 
-// 3. Quando o usuário digitar na busca (com debounce)
 let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
-    // Espera 300ms após o usuário parar de digitar para fazer a busca
     debounceTimer = setTimeout(() => {
         fetchReagentes(inputBusca.value);
     }, 300);
 });
+
+listaReagentesEl.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-edit')) handleEditClick(e.target);
+    if (e.target.classList.contains('btn-delete')) handleDeleteClick(e.target);
+});
+
+// Correção importante: Verifica se o botão existe antes de adicionar evento
+if (btnCadastrar) {
+    btnCadastrar.addEventListener('click', resetModal);
+}
+
+modalEl.addEventListener('hidden.bs.modal', resetModal);

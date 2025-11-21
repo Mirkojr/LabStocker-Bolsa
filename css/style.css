@@ -22,3 +22,11 @@
     font-size: 3rem;        /* Tamanho grande para o ícone */
     margin-bottom: 0.5rem;  /* Espaço entre o ícone e o texto */
 }
+
+body {
+    background-color: #132E4B;
+    /* Opcional: Forçar todo texto solto a ser branco por padrão */
+    /* color: white; */ 
+}
+
+/* ... resto do css dos botões ... */

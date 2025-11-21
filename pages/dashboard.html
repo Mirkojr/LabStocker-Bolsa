@@ -13,7 +13,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body style="background-color: #132E4B;">
+<body>
 
     <script type="module" src="../js/authGuard.js"></script>
 
@@ -21,12 +21,19 @@
         <div class="text-center mb-4">
             <img src="../imagens/logo-labstocker.png" alt="Logo UFC" class="img-fluid" style="max-height: 300px;">
         </div>
+        <h2 class="text-center mb-4" style="color: white">Painel de Controle</h2>
+
+        <h5 id="user-greeting"  class="text-center text-white mb-4">
+            Bem-vindo(a), <span class="spinner-border spinner-border-sm" ></span>
+        </h5>
 
         <div class="row g-3">
 
             <div class="col-6">
                 <a href="estoque.html" class="btn btn-primary btn-square">
-                    <i class="bi bi-box-seam-fill"></i> <span>Estoque</span> </a>
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span>Estoque</span>
+                </a>
             </div>
             <div class="col-6">
                 <a href="reagentes.html" class="btn btn-success btn-square">
@@ -80,7 +87,15 @@
                     <span>Histórico</span>
                 </a>
             </div>
+            
+            <div class="col-6">
+                <a href="solicitacoes.html" class="btn btn-success btn-square">
+                    <i class="bi bi-arrow-left-right"></i>
+                    <span>Solicitações</span>
+                </a>
             </div>
+
+        </div>
 
         <div class="text-center mt-5">
             <button id="btn-logout" class="btn btn-outline-danger">Sair (Logout)</button>
