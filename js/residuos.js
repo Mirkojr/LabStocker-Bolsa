@@ -1,4 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
+// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
+import { getCurrentLabId } from './sessionManager.js';
 
 const listaResiduos = document.getElementById('lista-residuos');
 const formResiduo = document.getElementById('form-residuo');
@@ -19,10 +21,14 @@ let MEU_LAB_ID = null;
 
 async function init() {
     try {
-        const { data: labId, error } = await supabaseClient.rpc('get_my_lab_id');
-        if (error) throw error;
-        MEU_LAB_ID = labId;
-        fetchResiduos();
+        // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
+        MEU_LAB_ID = await getCurrentLabId();
+        
+        if (MEU_LAB_ID) {
+            fetchResiduos();
+        } else {
+            listaResiduos.innerHTML = '<div class="col-12 text-center text-danger">Erro: Laboratório não identificado.</div>';
+        }
     } catch (error) {
         console.error(error);
         listaResiduos.innerHTML = '<div class="col-12 text-center text-danger">Erro ao carregar dados.</div>';
@@ -83,14 +89,13 @@ function renderResiduos(itens) {
             corTexto = 'text-danger';
         }
 
-        // --- LÓGICA DOS BOTÕES (MUDANÇA AQUI) ---
+        // --- LÓGICA DOS BOTÕES ---
         let statusBadge = 'bg-primary';
         let btnAcao = ''; 
         let btnEditar = '';
 
         if (item.status === 'Em Aberto') {
             // Estado 1: Aberto
-            // Pode Editar e Pode Marcar como Cheio
             statusBadge = 'bg-primary';
             
             btnEditar = `
@@ -107,10 +112,9 @@ function renderResiduos(itens) {
             btnAcao = `<button class="btn btn-sm btn-outline-dark btn-fechar w-100" data-id="${item.id}">Marcar como Cheio</button>`;
 
         } else if (item.status === 'Cheio') {
-            // Estado 2: Cheio (AQUI ENTRA O DESFAZER)
+            // Estado 2: Cheio
             statusBadge = 'bg-warning text-dark';
             
-            // O botão de editar continua aqui (opcional, mas útil se errou a quantidade)
             btnEditar = `
                 <button class="btn btn-sm btn-outline-secondary btn-editar me-1" 
                     data-id="${item.id}"
@@ -122,7 +126,6 @@ function renderResiduos(itens) {
                 </button>
             `;
 
-            // Agora temos DOIS botões na ação: Desfazer e Descartar
             btnAcao = `
                 <div class="d-flex gap-1 w-100">
                     <button class="btn btn-sm btn-outline-secondary btn-reabrir w-50" data-id="${item.id}" title="Voltar para Aberto">
@@ -225,7 +228,6 @@ function resetModal() {
 }
 
 async function atualizarStatus(id, novoStatus) {
-    // Mensagens personalizadas de confirmação
     let msg = `Deseja alterar o status para: ${novoStatus}?`;
     if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltará a ficar disponível para uso.";
     if (novoStatus === 'Descartado') msg = "Confirmar envio para incineração? Isso finalizará o ciclo do resíduo.";
@@ -258,7 +260,6 @@ listaResiduos.addEventListener('click', (e) => {
     // Botão Desfazer (Seta Circular)
     const btnReabrir = e.target.closest('.btn-reabrir');
     if (btnReabrir) {
-        // Volta o status para 'Em Aberto'
         atualizarStatus(btnReabrir.dataset.id, 'Em Aberto');
     }
 

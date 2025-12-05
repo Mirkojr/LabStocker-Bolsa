@@ -1,4 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
+// MUDANÇA: Importando o gerenciador de sessão para suportar Admin
+import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from './sessionManager.js';
 
 // --- Elementos ---
 const gridLabs = document.getElementById('grid-laboratorios');
@@ -23,21 +25,33 @@ const erroQtd = document.getElementById('erro-qtd');
 
 // Variáveis Globais
 let MEU_LAB_ID = null;
-let ESTOQUE_ATUAL_CACHE = []; // Para guardar o estoque que estamos vendo
+let SOU_ADMIN = false; // MUDANÇA: Variável para controlar status de admin
+let ESTOQUE_ATUAL_CACHE = [];
 
 // --- Funções ---
 
 async function init() {
-    // 1. Descobrir qual é o meu laboratório (para não mostrar ele na lista e para ser a "Origem" da troca)
     try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        const { data: perfil } = await supabaseClient.from('Perfis').select('id_laboratorio').eq('id', user.id).single();
-        MEU_LAB_ID = perfil.id_laboratorio;
+        // MUDANÇA: Usando getCurrentLabId() em vez de buscar direto no banco
+        // Isso permite que o Admin "finja" ser de um laboratório específico se já estiver logado nele
+        MEU_LAB_ID = await getCurrentLabId();
+        
+        // MUDANÇA: Verifica se é Admin
+        SOU_ADMIN = await checkIsAdmin();
+
+        // Se for admin, mostramos um aviso visual no topo da tela
+        if (SOU_ADMIN) {
+            const container = document.querySelector('.container');
+            const aviso = document.createElement('div');
+            aviso.className = 'alert alert-warning text-center fw-bold shadow-sm';
+            aviso.innerHTML = '<i class="bi bi-shield-lock-fill"></i> Modo Administrador Ativo: Você pode gerenciar qualquer laboratório abaixo.';
+            container.insertBefore(aviso, container.firstChild);
+        }
         
         fetchLaboratorios();
     } catch (error) {
         console.error("Erro ao iniciar:", error);
-        alert("Erro ao carregar perfil do usuário.");
+        alert("Erro ao carregar dados do usuário.");
     }
 }
 
@@ -46,11 +60,9 @@ async function fetchLaboratorios(filtro = '') {
     gridLabs.innerHTML = '';
 
     try {
-        // Busca todos os laboratórios exceto o meu (.neq)
         let query = supabaseClient
             .from('Laboratorio')
             .select('*')
-            .neq('id', MEU_LAB_ID) 
             .order('nome_laboratorio');
 
         if (filtro) {
@@ -61,7 +73,7 @@ async function fetchLaboratorios(filtro = '') {
         if (error) throw error;
 
         if (data.length === 0) {
-            gridLabs.innerHTML = '<p class="text-center text-muted col-12">Nenhum outro laboratório encontrado.</p>';
+            gridLabs.innerHTML = '<p class="text-center text-muted col-12">Nenhum laboratório encontrado.</p>';
         } else {
             renderLabs(data);
         }
@@ -75,6 +87,34 @@ async function fetchLaboratorios(filtro = '') {
 
 function renderLabs(labs) {
     labs.forEach(lab => {
+        // Se eu NÃO sou admin, não preciso ver meu próprio laboratório na lista de parceiros
+        if (!SOU_ADMIN && lab.id === MEU_LAB_ID) return;
+
+        // MUDANÇA: Cria o botão de Admin se o usuário for Admin
+        let btnAdmin = '';
+        let btnAcoesNormais = '';
+
+        // Botões normais (Ver estoque/Solicitar)
+        // Se eu sou admin, posso ver o estoque de qualquer um (modo leitura), 
+        // mas a função principal do admin aqui será "Acessar Painel".
+        btnAcoesNormais = `
+            <button class="btn btn-outline-primary btn-ver-estoque w-100 mt-2" 
+                data-id="${lab.id}" 
+                data-nome="${lab.nome_laboratorio}">
+                Ver Reagentes Disponíveis
+            </button>
+        `;
+
+        if (SOU_ADMIN) {
+            btnAdmin = `
+                <button class="btn btn-warning w-100 mt-2 btn-gerenciar-admin fw-bold"
+                    data-id="${lab.id}"
+                    data-nome="${lab.nome_laboratorio}">
+                    <i class="bi bi-gear-fill"></i> Acessar Painel
+                </button>
+            `;
+        }
+
         const card = `
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm hover-effect">
@@ -84,11 +124,9 @@ function renderLabs(labs) {
                         </div>
                         <h5 class="card-title">${lab.nome_laboratorio}</h5>
                         <p class="card-text text-muted small">SIPAC: ${lab.codigo_sipac}</p>
-                        <button class="btn btn-outline-primary btn-ver-estoque w-100 mt-2" 
-                            data-id="${lab.id}" 
-                            data-nome="${lab.nome_laboratorio}">
-                            Ver Reagentes Disponíveis
-                        </button>
+                        
+                        ${btnAcoesNormais}
+                        ${btnAdmin}
                     </div>
                 </div>
             </div>
@@ -114,13 +152,13 @@ async function fetchEstoqueExterno(labId, labNome) {
                 Reagente ( nome, composicao_quimica )
             `)
             .eq('id_laboratorio', labId)
-            .gt('quantidade', 0) // Só mostra o que tem quantidade positiva
+            .gt('quantidade', 0)
             .order('quantidade', { ascending: false });
 
         if (error) throw error;
         
-        ESTOQUE_ATUAL_CACHE = data; // Guarda em memória para filtrar
-        ESTOQUE_ATUAL_CACHE.labId = labId; // Guarda o ID do dono desse estoque
+        ESTOQUE_ATUAL_CACHE = data; 
+        ESTOQUE_ATUAL_CACHE.labId = labId;
         
         renderEstoqueExterno(data, labId);
 
@@ -139,6 +177,9 @@ function renderEstoqueExterno(itens, labIdDono) {
     }
 
     itens.forEach(item => {
+        // Se eu sou admin e estou apenas navegando, ou se estou vendo o estoque do lab que estou "logado",
+        // talvez não faça sentido pedir para mim mesmo. Mas deixaremos o botão por compatibilidade.
+        
         const html = `
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
@@ -162,7 +203,6 @@ function renderEstoqueExterno(itens, labIdDono) {
 function abrirModalSolicitacao(btn) {
     const { id, nome, max, unidade, labDestino } = btn.dataset;
 
-    // Preenche o modal pequeno
     document.getElementById('solic-item-id').value = id;
     document.getElementById('solic-lab-destino').value = labDestino;
     document.getElementById('solic-max-qtd').value = max;
@@ -173,7 +213,6 @@ function abrirModalSolicitacao(btn) {
     qtdSolicitadaInput.value = '';
     erroQtd.classList.add('d-none');
 
-    // Esconde o modal grande (estoque) e abre o pequeno (solicitação)
     modalEstoqueExt.hide();
     modalSolicitar.show();
 }
@@ -182,7 +221,7 @@ async function enviarSolicitacao(e) {
     e.preventDefault();
     
     const itemId = document.getElementById('solic-item-id').value;
-    const labDestino = document.getElementById('solic-lab-destino').value; // O Outro Lab
+    const labDestino = document.getElementById('solic-lab-destino').value; 
     const quantidade = parseFloat(qtdSolicitadaInput.value);
     const max = parseFloat(document.getElementById('solic-max-qtd').value);
 
@@ -197,9 +236,8 @@ async function enviarSolicitacao(e) {
             .from('Transferencia')
             .insert({
                 id_item_estoque: itemId,
-                // PADRÃO CORRETO:
-                id_lab_origem: MEU_LAB_ID,   // EU sou a Origem do PEDIDO (estou pedindo)
-                id_lab_destino: labDestino,  // O outro lab é o Destino do PEDIDO (ele vai aprovar)
+                id_lab_origem: MEU_LAB_ID,   // EU sou a Origem do PEDIDO
+                id_lab_destino: labDestino,  // O outro lab é o Destino do PEDIDO
                 quantidade_transferida: quantidade,
                 status: 'Pendente'
             });
@@ -243,18 +281,27 @@ document.addEventListener('click', (e) => {
     }
     
     // Botão "Solicitar" (na Lista)
-    // Precisamos usar .closest() porque o usuário pode clicar no ícone <i> dentro do botão
     const btnSolicitar = e.target.closest('.btn-solicitar');
     if (btnSolicitar) {
         abrirModalSolicitacao(btnSolicitar);
+    }
+
+    // MUDANÇA: Botão de Admin "Acessar Painel"
+    const btnAdmin = e.target.closest('.btn-gerenciar-admin');
+    if (btnAdmin) {
+        const id = btnAdmin.dataset.id;
+        const nome = btnAdmin.dataset.nome;
+        
+        if(confirm(`Entrar no painel do ${nome} com privilégios de Administrador?`)) {
+            setAdminLabContext(id, nome); // Salva na sessão que agora somos desse lab
+            window.location.href = 'dashboard.html'; // Redireciona para o dashboard simulando ser desse lab
+        }
     }
 });
 
 // Envio do formulário
 formSolicitacao.addEventListener('submit', enviarSolicitacao);
 
-// Quando fecha o modal de solicitação, reabre o de estoque (UX melhor)
 modalSolicitarEl.addEventListener('hidden.bs.modal', () => {
-    // Só reabre se não tivermos acabado de enviar com sucesso (opcional, mas bom fluxo)
-    // Por simplicidade, vamos deixar fechado ou o usuário reabre se quiser ver mais.
+    // Opcional: reabrir modal de estoque
 });

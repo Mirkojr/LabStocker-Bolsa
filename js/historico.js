@@ -1,4 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
+// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
+import { getCurrentLabId } from './sessionManager.js';
 
 const listaHistorico = document.getElementById('lista-historico');
 const inputBusca = document.getElementById('busca-historico');
@@ -9,15 +11,17 @@ let HISTORICO_CACHE = [];
 
 async function init() {
     try {
-        // Pega meu Lab ID de forma segura
-        const { data: labId, error } = await supabaseClient.rpc('get_my_lab_id');
-        if (error) throw error;
-        MEU_LAB_ID = labId;
+        // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
+        MEU_LAB_ID = await getCurrentLabId();
         
-        fetchHistorico();
+        if (MEU_LAB_ID) {
+            fetchHistorico();
+        } else {
+            listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro: Laboratório não identificado.</div>';
+        }
     } catch (error) {
         console.error(error);
-        listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro ao carregar perfil.</div>';
+        listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro ao carregar dados.</div>';
     }
 }
 

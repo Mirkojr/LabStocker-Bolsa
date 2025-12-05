@@ -3,15 +3,49 @@ import { supabaseClient } from './supabaseClient.js';
 // Seletores
 const logoutButton = document.getElementById('btn-logout');
 const greetingElement = document.getElementById('user-greeting');
+// Selecionamos o H2 para mudar o título quando estiver em modo Admin
+const pageTitle = document.querySelector('h2'); 
 
-// Função para carregar o nome do usuário
+// Função Principal que decide o que mostrar
+async function loadDashboardInfo() {
+    // 1. Verifica se estamos em modo "Personificação" (Admin acessando um lab)
+    const adminLabName = sessionStorage.getItem('ADMIN_SELECTED_LAB_NAME');
+
+    if (adminLabName) {
+        // --- CENÁRIO A: MODO ADMINISTRADOR ATIVO ---
+        
+        // Muda o título para indicar qual laboratório estamos gerenciando
+        if (pageTitle) pageTitle.textContent = `Painel: ${adminLabName}`;
+
+        // Muda a saudação para um aviso visual
+        greetingElement.innerHTML = `<span class="badge bg-warning text-dark">MODO ADMINISTRADOR ATIVO</span>`;
+
+        // Cria o botão de "Sair do Laboratório" (Voltar para o Dashboard geral)
+        const btnSairModo = document.createElement('button');
+        btnSairModo.className = "btn btn-sm btn-outline-warning mt-2 d-block mx-auto fw-bold"; 
+        btnSairModo.textContent = "Sair do Laboratório (Voltar ao Admin)";
+        
+        // Ação do botão: Limpa a sessão de admin e recarrega a página
+        btnSairModo.onclick = () => {
+            sessionStorage.removeItem('ADMIN_SELECTED_LAB_ID');
+            sessionStorage.removeItem('ADMIN_SELECTED_LAB_NAME');
+            window.location.reload(); // Recarrega para voltar ao estado normal
+        };
+
+        greetingElement.appendChild(btnSairModo);
+
+    } else {
+        // --- CENÁRIO B: MODO NORMAL (Usuário Comum ou Admin na sua própria conta) ---
+        await loadUserName();
+    }
+}
+
+// Função auxiliar para carregar o nome do usuário (Lógica original)
 async function loadUserName() {
     try {
-        // 1. Pega o usuário logado (Auth)
         const { data: { user } } = await supabaseClient.auth.getUser();
         
         if (user) {
-            // 2. Busca o nome na tabela Perfis
             const { data, error } = await supabaseClient
                 .from('Perfis')
                 .select('nome, sobrenome')
@@ -20,10 +54,8 @@ async function loadUserName() {
 
             if (error) throw error;
 
-            // 3. Atualiza o texto na tela
             if (data) {
                 greetingElement.textContent = `Bem-vindo(a), ${data.nome}`;
-                // Se quiser nome completo use: ${data.nome} ${data.sobrenome}
             }
         }
     } catch (error) {
@@ -35,12 +67,16 @@ async function loadUserName() {
 // Espera o HTML carregar
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Carrega o nome assim que a página abre
-    loadUserName();
+    // Executa a lógica principal (Admin Check ou Load User)
+    loadDashboardInfo();
 
     // Lógica de Logout
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
+            // Se estiver em modo admin, limpamos a sessão antes de sair da conta
+            sessionStorage.removeItem('ADMIN_SELECTED_LAB_ID');
+            sessionStorage.removeItem('ADMIN_SELECTED_LAB_NAME');
+
             const { error } = await supabaseClient.auth.signOut();
             
             if (error) {

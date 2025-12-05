@@ -1,4 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
+// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
+import { getCurrentLabId } from './sessionManager.js';
 
 // --- Seletores de Elementos ---
 const listaEstoqueEl = document.getElementById('lista-estoque');
@@ -24,26 +26,7 @@ let ID_LAB_DO_USUARIO = null;
 
 // --- Funções Principais ---
 
-async function getLabIdDoUsuario() {
-    try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) throw new Error('Usuário não encontrado.');
-
-        const { data, error } = await supabaseClient
-            .from('Perfis')
-            .select('id_laboratorio')
-            .eq('id', user.id)
-            .single();
-
-        if (error) throw error;
-        if (!data.id_laboratorio) throw new Error('Usuário não está associado a nenhum laboratório.');
-
-        return data.id_laboratorio;
-    } catch (error) {
-        listaEstoqueEl.innerHTML = `<div class="list-group-item text-center text-danger">Erro: ${error.message}</div>`;
-        return null;
-    }
-}
+// (A função getLabIdDoUsuario foi removida pois agora usamos o sessionManager)
 
 async function fetchEstoque(labId, filtroNome = '') {
     spinner.classList.remove('d-none');
@@ -214,10 +197,14 @@ function resetModalEstoque() {
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', async () => {
-    ID_LAB_DO_USUARIO = await getLabIdDoUsuario();
+    // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
+    ID_LAB_DO_USUARIO = await getCurrentLabId();
+    
     if (ID_LAB_DO_USUARIO) {
         fetchEstoque(ID_LAB_DO_USUARIO);
         fetchReagentesParaModal();
+    } else {
+        listaEstoqueEl.innerHTML = '<div class="alert alert-danger text-center">Erro: Laboratório não identificado.</div>';
     }
 });
 

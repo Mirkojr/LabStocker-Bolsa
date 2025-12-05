@@ -1,4 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
+// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
+import { getCurrentLabId } from './sessionManager.js';
 
 const listaUsuariosEl = document.getElementById('lista-usuarios');
 const spinner = document.getElementById('spinner-users');
@@ -6,16 +8,18 @@ let MEU_LAB_ID = null;
 
 async function init() {
     try {
-        // 1. Descobrir meu Lab ID
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        const { data: perfil } = await supabaseClient.from('Perfis').select('id_laboratorio').eq('id', user.id).single();
+        // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
+        MEU_LAB_ID = await getCurrentLabId();
         
-        MEU_LAB_ID = perfil.id_laboratorio;
-        fetchUsuarios();
+        if (MEU_LAB_ID) {
+            fetchUsuarios();
+        } else {
+            listaUsuariosEl.innerHTML = '<div class="alert alert-danger">Erro: Laboratório não identificado.</div>';
+        }
 
     } catch (error) {
         console.error(error);
-        listaUsuariosEl.innerHTML = '<div class="alert alert-danger">Erro ao carregar perfil.</div>';
+        listaUsuariosEl.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados.</div>';
     }
 }
 
