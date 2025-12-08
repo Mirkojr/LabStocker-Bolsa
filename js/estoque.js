@@ -1,5 +1,4 @@
 import { supabaseClient } from './supabaseClient.js';
-// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
 import { getCurrentLabId } from './sessionManager.js';
 
 // --- Seletores de Elementos ---
@@ -26,8 +25,6 @@ let ID_LAB_DO_USUARIO = null;
 
 // --- Funções Principais ---
 
-// (A função getLabIdDoUsuario foi removida pois agora usamos o sessionManager)
-
 async function fetchEstoque(labId, filtroNome = '') {
     spinner.classList.remove('d-none');
     listaEstoqueEl.innerHTML = '';
@@ -36,12 +33,7 @@ async function fetchEstoque(labId, filtroNome = '') {
         let query = supabaseClient
             .from('EstoqueLab')
             .select(`
-                id,
-                quantidade,
-                unidade_medida,
-                data_validade,
-                observacoes_operacionais,
-                id_reagente,
+                id, quantidade, unidade_medida, data_validade, observacoes_operacionais, id_reagente,
                 Reagente ( nome ) 
             `)
             .eq('id_laboratorio', labId)
@@ -106,7 +98,7 @@ async function fetchReagentesParaModal() {
             selectReagente.innerHTML += `<option value="${reagente.id}">${reagente.nome}</option>`;
         });
     } catch (error) {
-        console.error('Erro ao buscar reagentes para o modal:', error.message);
+        console.error('Erro ao buscar reagentes for o modal:', error.message);
         selectReagente.innerHTML = '<option value="" disabled>Erro ao carregar</option>';
     }
 }
@@ -122,7 +114,7 @@ async function handleFormSubmitEstoque(evento) {
     const dadosForm = {
         id_laboratorio: ID_LAB_DO_USUARIO,
         id_reagente: selectReagente.value,
-        quantidade: quantidadeInput.value,
+        quantidade: parseFloat(quantidadeInput.value),
         unidade_medida: unidadeInput.value,
         data_validade: validadeInput.value || null,
         observacoes_operacionais: observacoesInput.value || null
@@ -131,17 +123,31 @@ async function handleFormSubmitEstoque(evento) {
     try {
         let query;
         if (id) {
-            // ATUALIZAR
+            // ATUALIZAR (UPDATE)
             query = supabaseClient.from('EstoqueLab').update(dadosForm).eq('id', id);
         } else {
-            // CRIAR
+            // CRIAR (INSERT)
             query = supabaseClient.from('EstoqueLab').insert(dadosForm);
+            
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Recuperamos o nome do reagente selecionado para o histórico
+            const nomeReagente = selectReagente.options[selectReagente.selectedIndex].text;
+            
+            // Inserimos na tabela Movimentacao (Isso fará aparecer nos relatórios)
+            await supabaseClient.from('Movimentacao').insert({
+                id_laboratorio: ID_LAB_DO_USUARIO,
+                tipo: 'ENTRADA', // Define que é uma Compra/Entrada
+                item_nome: nomeReagente,
+                quantidade: dadosForm.quantidade,
+                unidade: dadosForm.unidade_medida,
+                observacao: 'Cadastro inicial no estoque (Compra)'
+            });
         }
 
         const { error } = await query;
         if (error) throw error;
 
-        alert(id ? 'Item atualizado no estoque!' : 'Item adicionado ao estoque!');
+        alert(id ? 'Item atualizado no estoque!' : 'Item adicionado e registrado no histórico!');
         modalEstoque.hide();
         fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
 
@@ -153,32 +159,25 @@ async function handleFormSubmitEstoque(evento) {
 
 function handleEditClickEstoque(button) {
     const { id, reagenteId, quantidade, unidade, validade, observacoes } = button.dataset;
-
     editIdInput.value = id;
     selectReagente.value = reagenteId;
     quantidadeInput.value = quantidade;
     unidadeInput.value = unidade;
     validadeInput.value = validade;
     observacoesInput.value = observacoes;
-
     modalTitle.textContent = 'Editar Item do Estoque';
     modalSubmitBtn.textContent = 'Atualizar';
-
     modalEstoque.show();
 }
 
 async function handleDeleteClickEstoque(button) {
     const id = button.dataset.id;
-    
     if (confirm('Tem certeza que deseja excluir este item do seu estoque?')) {
         try {
             const { error } = await supabaseClient.from('EstoqueLab').delete().eq('id', id);
-
             if (error) throw error;
-            
             alert('Item excluído do estoque.');
             fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
-
         } catch (error) {
             console.error('Erro ao excluir item:', error.message);
             alert('Erro ao excluir: ' + error.message);
@@ -194,12 +193,9 @@ function resetModalEstoque() {
     selectReagente.value = "";
 }
 
-// --- Event Listeners ---
-
+// --- Init ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
     ID_LAB_DO_USUARIO = await getCurrentLabId();
-    
     if (ID_LAB_DO_USUARIO) {
         fetchEstoque(ID_LAB_DO_USUARIO);
         fetchReagentesParaModal();
@@ -214,9 +210,7 @@ let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        if (ID_LAB_DO_USUARIO) {
-            fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
-        }
+        if (ID_LAB_DO_USUARIO) fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
     }, 300);
 });
 
@@ -225,8 +219,5 @@ listaEstoqueEl.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-delete-estoque')) handleDeleteClickEstoque(e.target);
 });
 
-if (btnCadastrarEstoque) {
-    btnCadastrarEstoque.addEventListener('click', resetModalEstoque);
-}
-
+if (btnCadastrarEstoque) btnCadastrarEstoque.addEventListener('click', resetModalEstoque);
 modalEl.addEventListener('hidden.bs.modal', resetModalEstoque);

@@ -1,5 +1,4 @@
 import { supabaseClient } from './supabaseClient.js';
-// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
 import { getCurrentLabId } from './sessionManager.js';
 
 const listaHistorico = document.getElementById('lista-historico');
@@ -11,9 +10,7 @@ let HISTORICO_CACHE = [];
 
 async function init() {
     try {
-        // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
         MEU_LAB_ID = await getCurrentLabId();
-        
         if (MEU_LAB_ID) {
             fetchHistorico();
         } else {
@@ -30,45 +27,45 @@ async function fetchHistorico() {
     listaHistorico.innerHTML = '';
 
     try {
-        // Faremos duas buscas simultâneas: Transferências e Resíduos Descartados
+        // Faremos 3 buscas simultâneas para compor o histórico completo
 
-        // 1. Buscar Transferências
+        // 1. Transferências (Trocas entre labs)
         const queryTransf = supabaseClient
             .from('Transferencia')
             .select(`
-                id,
-                quantidade_transferida,
-                status,
-                data_solicitacao,
-                id_lab_origem,  
-                id_lab_destino,
+                id, quantidade_transferida, status, data_solicitacao, id_lab_origem, id_lab_destino,
                 LabOrigem:id_lab_origem ( nome_laboratorio ),
                 LabDestino:id_lab_destino ( nome_laboratorio ),
-                EstoqueLab:id_item_estoque (
-                    unidade_medida,
-                    Reagente ( nome )
-                )
+                EstoqueLab:id_item_estoque ( unidade_medida, Reagente ( nome ) )
             `)
             .or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`)
             .order('data_solicitacao', { ascending: false });
 
-        // 2. Buscar Resíduos (Apenas os descartados/finalizados)
+        // 2. Resíduos (Descartes)
         const queryResiduos = supabaseClient
             .from('Residuo')
             .select('*')
             .eq('id_laboratorio', MEU_LAB_ID)
-            .eq('status', 'Descartado') // Só queremos ver o que já foi embora
+            .eq('status', 'Descartado')
             .order('data_criacao', { ascending: false });
 
-        // Executa as duas ao mesmo tempo
-        const [resTransf, resResiduos] = await Promise.all([queryTransf, queryResiduos]);
+        // 3. Movimentações (Entradas/Compras) - NOVO!
+        const queryMov = supabaseClient
+            .from('Movimentacao')
+            .select('*')
+            .eq('id_laboratorio', MEU_LAB_ID)
+            .eq('tipo', 'ENTRADA') // Por enquanto só estamos gravando entradas aqui
+            .order('data_movimentacao', { ascending: false });
+
+        // Executa tudo junto
+        const [resTransf, resResiduos, resMov] = await Promise.all([queryTransf, queryResiduos, queryMov]);
 
         if (resTransf.error) throw resTransf.error;
         if (resResiduos.error) throw resResiduos.error;
+        if (resMov.error) throw resMov.error;
 
-        // --- UNIFICAÇÃO DAS LISTAS ---
+        // --- Unificação e Formatação ---
         
-        // Adiciona um campo "tipo_registro" para sabermos diferenciar depois
         const listaTransf = resTransf.data.map(item => ({
             ...item, 
             tipo_registro: 'TRANSFERENCIA',
@@ -78,13 +75,17 @@ async function fetchHistorico() {
         const listaResiduos = resResiduos.data.map(item => ({
             ...item, 
             tipo_registro: 'RESIDUO',
-            data_ordenacao: item.data_criacao // Ou data de atualização, se preferir
+            data_ordenacao: item.data_criacao
         }));
 
-        // Junta tudo
-        const listaCompleta = [...listaTransf, ...listaResiduos];
+        const listaMov = resMov.data.map(item => ({
+            ...item,
+            tipo_registro: 'ENTRADA_ESTOQUE',
+            data_ordenacao: item.data_movimentacao
+        }));
 
-        // Ordena pela data (do mais recente para o mais antigo)
+        // Junta tudo e ordena
+        const listaCompleta = [...listaTransf, ...listaResiduos, ...listaMov];
         listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
         HISTORICO_CACHE = listaCompleta;
@@ -107,15 +108,39 @@ function renderHistorico(itens) {
     listaHistorico.innerHTML = '';
 
     itens.forEach(item => {
+        // Formata a data e hora (Item 2 da sua lista)
+        const dataObj = new Date(item.data_ordenacao);
+        const dataFormatada = dataObj.toLocaleDateString('pt-BR');
+        const horaFormatada = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dataCompleta = `${dataFormatada} às ${horaFormatada}`;
+
         let html = '';
 
-        // SE FOR UM RESÍDUO
-        if (item.tipo_registro === 'RESIDUO') {
-            const data = new Date(item.data_ordenacao).toLocaleDateString('pt-BR', {
-                day: '2-digit', month: '2-digit', year: '2-digit'
-            });
-            
-            // Ícone de lixeira para descarte
+        // TIPO 1: ENTRADA DE ESTOQUE (COMPRA)
+        if (item.tipo_registro === 'ENTRADA_ESTOQUE') {
+            html = `
+                <div class="list-group-item list-group-item-action border-start border-4 border-primary">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-bag-plus-fill text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="mb-0 fw-bold text-dark">${item.item_nome}</h6>
+                                <span class="badge bg-primary">Compra / Entrada</span>
+                            </div>
+                            <p class="mb-1 small text-muted">Item cadastrado no estoque.</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Qtd: <strong>${item.quantidade} ${item.unidade}</strong></small>
+                                <small class="text-muted">${dataCompleta}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // TIPO 2: RESÍDUO (DESCARTE)
+        else if (item.tipo_registro === 'RESIDUO') {
             html = `
                 <div class="list-group-item list-group-item-action border-start border-4 border-dark">
                     <div class="d-flex align-items-center">
@@ -127,52 +152,45 @@ function renderHistorico(itens) {
                                 <h6 class="mb-0 fw-bold text-dark">${item.descricao}</h6>
                                 <span class="badge bg-secondary">Descarte</span>
                             </div>
-                            <p class="mb-1 small">
-                                Enviado para incineração (Tipo: <strong>${item.tipo_perigo}</strong>)
+                            <p class="mb-1 small text-muted">
+                                Enviado para incineração (${item.tipo_perigo})
                             </p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">Volume: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
-                                <small class="text-muted">${data}</small>
+                                <small class="text-muted">Vol: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
+                                <small class="text-muted">${dataCompleta}</small>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
         } 
-        
-        // SE FOR UMA TRANSFERÊNCIA (Lógica anterior)
+        // TIPO 3: TRANSFERÊNCIA (TROCA)
         else {
             const euFizOPedido = item.id_lab_origem === MEU_LAB_ID; 
-            
             let corIcone, icone, labParceiroNome, textoAcao, corBorda;
     
-            if (euFizOPedido) {
-                // ENTRADA
+            if (euFizOPedido) { // ENTRADA (Recebido)
                 corIcone = 'text-success';
                 icone = 'bi-arrow-down-circle-fill';
                 corBorda = 'border-success';
                 labParceiroNome = item.LabDestino ? item.LabDestino.nome_laboratorio : 'Lab Desconhecido'; 
                 textoAcao = `Recebido de <strong>${labParceiroNome}</strong>`;
-            } else {
-                // SAÍDA
+            } else { // SAÍDA (Enviado)
                 corIcone = 'text-danger';
                 icone = 'bi-arrow-up-circle-fill';
                 corBorda = 'border-danger';
                 labParceiroNome = item.LabOrigem ? item.LabOrigem.nome_laboratorio : 'Lab Desconhecido';
                 textoAcao = `Enviado para <strong>${labParceiroNome}</strong>`;
             }
+            
+            const nomeReagente = item.EstoqueLab?.Reagente?.nome || 'Item desconhecido';
+            const unidade = item.EstoqueLab?.unidade_medida || '';
     
-            const data = new Date(item.data_solicitacao).toLocaleDateString('pt-BR', {
-                day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute:'2-digit'
-            });
-    
+            // Define cor do badge de status
             let badgeClass = 'bg-secondary';
             if (item.status === 'Aprovado') badgeClass = 'bg-success';
             if (item.status === 'Recusado') badgeClass = 'bg-danger';
             if (item.status === 'Pendente') badgeClass = 'bg-warning text-dark';
-    
-            const nomeReagente = item.EstoqueLab?.Reagente?.nome || 'Item desconhecido';
-            const unidade = item.EstoqueLab?.unidade_medida || '';
     
             html = `
                 <div class="list-group-item list-group-item-action border-start border-4 ${corBorda}">
@@ -187,8 +205,8 @@ function renderHistorico(itens) {
                             </div>
                             <p class="mb-1 small">${textoAcao}</p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">Quantidade: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
-                                <small class="text-muted">${data}</small>
+                                <small class="text-muted">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
+                                <small class="text-muted">${dataCompleta}</small>
                             </div>
                         </div>
                     </div>
@@ -206,10 +224,11 @@ inputBusca.addEventListener('keyup', () => {
     const termo = inputBusca.value.toLowerCase();
     
     const filtrados = HISTORICO_CACHE.filter(item => {
-        // Filtro Genérico para os dois tipos
         let textoPesquisavel = '';
         
-        if (item.tipo_registro === 'RESIDUO') {
+        if (item.tipo_registro === 'ENTRADA_ESTOQUE') {
+            textoPesquisavel = item.item_nome.toLowerCase();
+        } else if (item.tipo_registro === 'RESIDUO') {
             textoPesquisavel = (item.descricao + item.tipo_perigo).toLowerCase();
         } else {
             const nomeReagente = item.EstoqueLab?.Reagente?.nome || '';
@@ -217,7 +236,6 @@ inputBusca.addEventListener('keyup', () => {
             const nomeDestino = item.LabDestino?.nome_laboratorio || '';
             textoPesquisavel = (nomeReagente + nomeOrigem + nomeDestino).toLowerCase();
         }
-
         return textoPesquisavel.includes(termo);
     });
     

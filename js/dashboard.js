@@ -12,7 +12,7 @@ async function loadDashboardInfo() {
     const adminLabName = sessionStorage.getItem('ADMIN_SELECTED_LAB_NAME');
 
     if (adminLabName) {
-        // --- CENÁRIO A: MODO ADMINISTRADOR ATIVO ---
+        // --- CENÁRIO A: MODO ADMINISTRADOR ATIVO (Personificando um Lab) ---
         
         // Muda o título para indicar qual laboratório estamos gerenciando
         if (pageTitle) pageTitle.textContent = `Painel: ${adminLabName}`;
@@ -37,6 +37,31 @@ async function loadDashboardInfo() {
     } else {
         // --- CENÁRIO B: MODO NORMAL (Usuário Comum ou Admin na sua própria conta) ---
         await loadUserName();
+
+        // === LÓGICA DO BOTÃO ADMIN (QUE ESTAVA FALTANDO) ===
+        try {
+            // Importação dinâmica para verificar se é admin
+            const { checkIsAdmin } = await import('./sessionManager.js');
+            const isAdmin = await checkIsAdmin();
+
+            if (isAdmin) {
+                // Cria o container do botão
+                const btnContainer = document.createElement('div');
+                btnContainer.className = "text-center mb-4";
+                
+                // HTML do botão amarelo
+                btnContainer.innerHTML = `
+                    <a href="admin-labs.html" class="btn btn-warning fw-bold shadow-sm">
+                        <i class="bi bi-plus-circle-fill"></i> Gerenciar/Cadastrar Laboratórios
+                    </a>
+                `;
+                
+                // Insere logo APÓS o elemento de saudação ("Bem-vindo...")
+                greetingElement.after(btnContainer);
+            }
+        } catch (error) {
+            console.error("Erro ao verificar admin no dashboard:", error);
+        }
     }
 }
 
