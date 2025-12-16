@@ -1,32 +1,86 @@
-/*
- * CSS para os botões quadrados do dashboard
- */
-.btn-square {
-    width: 100%;             /* Ocupa 100% da largura da coluna */
-    aspect-ratio: 1 / 1;     /* FORÇA o botão a ser um quadrado (largura = altura) */
-    
-    /* Centraliza o conteúdo (ícone e texto) */
+/* Style do site */
+body {
+    background: linear-gradient(135deg, #132E4B 0%, #0d2136 100%);
+    min-height: 100vh;
+    color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.logo-container img {
+    max-height: 180px; 
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); 
+}
+
+
+.dashboard-card {
+    background-color: #ffffff; 
+    border-radius: 16px;       
+    padding: 1.5rem;
+    text-decoration: none;     
+    color: #132E4B;            
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    gap: 15px;                 
     
-    font-size: 1.1rem;      /* Tamanho do texto */
-    font-weight: 500;       /* "Peso" da fonte */
-    padding: 1rem;          /* Espaçamento interno */
-    text-transform: uppercase; /* Opcional: deixa o texto em maiúsculas */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+    
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    height: 100%; 
 }
 
-/* Estiliza o ícone (logo) dentro do botão */
-.btn-square i {
-    font-size: 3rem;        /* Tamanho grande para o ícone */
-    margin-bottom: 0.5rem;  /* Espaço entre o ícone e o texto */
+
+.icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    transition: transform 0.3s ease;
 }
 
-body {
-    background-color: #132E4B;
-    /* Opcional: Forçar todo texto solto a ser branco por padrão */
-    /* color: white; */ 
+.dashboard-card span {
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 0.5px;
 }
 
-/* ... resto do css dos botões ... */
+.dashboard-card:hover {
+    transform: translateY(-8px); 
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25); 
+    color: #132E4B; 
+}
+
+.dashboard-card:hover .icon-box {
+    transform: scale(1.1) rotate(5deg); 
+}
+
+.bg-icon-primary   { background-color: #e6f0ff; color: #0d6efd; }
+.bg-icon-success   { background-color: #e6fffa; color: #198754; }
+.bg-icon-info      { background-color: #e0f7fa; color: #0dcaf0; }
+.bg-icon-warning   { background-color: #fff8e1; color: #ffc107; }
+.bg-icon-danger    { background-color: #ffebee; color: #dc3545; }
+.bg-icon-secondary { background-color: #f3f4f6; color: #6c757d; }
+.bg-icon-dark      { background-color: #e2e3e5; color: #212529; }
+.bg-icon-purple    { background-color: #f3e5f5; color: #6f42c1; } 
+
+.btn-logout-custom {
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #ccc;
+    padding: 10px 30px;
+    border-radius: 30px;
+    transition: 0.3s;
+}
+.btn-logout-custom:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
