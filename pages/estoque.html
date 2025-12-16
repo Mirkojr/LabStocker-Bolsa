@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Estoque - GestorLab</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,43 +13,46 @@
 
     <script type="module" src="../js/authGuard.js"></script>
 
+    <div id="toast-container"></div>
+
     <div class="container my-5">
-        <div class="row">
-            <div class="col-lg-10 mx-auto">
-                
-                <div class="card shadow-sm">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="text-center mb-4">
-                            <div class="text-center mb-4">
-                            <img src="../imagens/logo-labstocker-branco.png" alt="Logo UFC" class="img-fluid" style="max-height: 200px;">
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="mb-0">Estoque do Laboratório</h2>
-                            <a href="dashboard.html" class="btn btn-outline-secondary">Voltar ao Painel</a>
-                        </div>
         
-                        <div class="mb-3">
-                            <input type="text" id="input-busca-estoque" class="form-control" placeholder="Pesquisar por nome no estoque...">
-                        </div>
-        
-                        <div class="mb-3">
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-estoque">
-                                Adicionar Item ao Estoque
-                            </button>
-                        </div>
-        
-                        <div class="list-group" id="lista-estoque">
-                            </div>
-                        <div id="loading-spinner-estoque" class="text-center mt-4 d-none">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Carregando...</span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div> 
+        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+            <div class="d-flex align-items-center">
+                <a href="dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-arrow-left fw-bold"></i>
+                </a>
+                <div>
+                    <h2 class="mb-0 fw-bold">Estoque</h2>
+                    <p class="mb-0 opacity-75 small">Gerencie reagentes e validades</p>
+                </div>
             </div>
+            
+            <button class="btn btn-warning fw-bold text-dark shadow-lg px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#modal-estoque">
+                <i class="bi bi-plus-lg me-2"></i> Novo Item
+            </button>
+        </div>
+
+        <div class="glass-panel">
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="input-busca-estoque" class="form-control border-start-0 search-input rounded-end-5" placeholder="Pesquisar reagente...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-spinner-estoque" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Carregando frascos...</p>
+            </div>
+
+            <div class="list-group list-group-flush" id="lista-estoque">
+                </div>
         </div>
     </div>
 
@@ -56,7 +60,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Item ao Estoque</h5>
+                    <h5 class="modal-title fw-bold text-primary">Adicionar Item ao Estoque</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
@@ -64,39 +68,37 @@
                     <input type="hidden" id="estoque-edit-id">
                     
                     <div class="modal-body">
-                        
                         <div class="mb-3">
-                            <label for="estoque-reagente" class="form-label">Reagente (do Catálogo)</label>
+                            <label for="estoque-reagente" class="form-label fw-bold small text-secondary">Reagente</label>
                             <select class="form-select" id="estoque-reagente" required>
-                                <option value="" disabled selected>Carregando reagentes...</option>
+                                <option value="" disabled selected>Carregando catálogo...</option>
                             </select>
                         </div>
 
-                        <div class="row">
-                            <div class="col-8 mb-3">
-                                <label for="estoque-quantidade" class="form-label">Quantidade</label>
+                        <div class="row g-3">
+                            <div class="col-6 mb-3">
+                                <label for="estoque-quantidade" class="form-label fw-bold small text-secondary">Quantidade</label>
                                 <input type="number" step="0.01" class="form-control" id="estoque-quantidade" required>
                             </div>
-                            <div class="col-4 mb-3">
-                                <label for="estoque-unidade" class="form-label">Unidade</label>
-                                <input type="text" class="form-control" id="estoque-unidade" placeholder="ml, g, L" required>
+                            <div class="col-6 mb-3">
+                                <label for="estoque-unidade" class="form-label fw-bold small text-secondary">Unidade</label>
+                                <input type="text" class="form-control" id="estoque-unidade" placeholder="Ex: mL, g" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="estoque-validade" class="form-label">Data de Validade</label>
+                            <label for="estoque-validade" class="form-label fw-bold small text-secondary">Data de Validade</label>
                             <input type="date" class="form-control" id="estoque-validade">
                         </div>
 
                         <div class="mb-3">
-                            <label for="estoque-observacoes" class="form-label">Observações Operacionais</label>
-                            <textarea class="form-control" id="estoque-observacoes" rows="3"></textarea>
+                            <label for="estoque-observacoes" class="form-label fw-bold small text-secondary">Observações</label>
+                            <textarea class="form-control" id="estoque-observacoes" rows="2" placeholder="Localização na prateleira, estado do frasco..."></textarea>
                         </div>
-
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar no Estoque</button>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Salvar</button>
                     </div>
                 </form>
             </div>
