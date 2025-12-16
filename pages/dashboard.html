@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestor de Laboratórios</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    
     <link rel="stylesheet" href="../css/style.css">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -18,87 +14,112 @@
     <script type="module" src="../js/authGuard.js"></script>
 
     <div class="container my-5">
-        <div class="text-center mb-4">
-            <img src="../imagens/logo-labstocker.png" alt="Logo UFC" class="img-fluid" style="max-height: 300px;">
+        
+        <div class="text-center mb-5 logo-container">
+            <img src="../imagens/logo-labstocker.png" alt="Logo LabStocker" class="img-fluid mb-3">
+            <h5 id="user-greeting" class="text-white-50 fw-light">
+                Carregando perfil... <span class="spinner-border spinner-border-sm"></span>
+            </h5>
         </div>
-        <h2 class="text-center mb-4" style="color: white">Painel de Controle</h2>
 
-        <h5 id="user-greeting"  class="text-center text-white mb-4">
-            Bem-vindo(a), <span class="spinner-border spinner-border-sm" ></span>
-        </h5>
+        <div class="row g-4 justify-content-center">
 
-        <div class="row g-3">
-
-            <div class="col-6">
-                <a href="estoque.html" class="btn btn-primary btn-square">
-                    <i class="bi bi-box-seam-fill"></i>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="estoque.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-primary">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
                     <span>Estoque</span>
                 </a>
             </div>
-            <div class="col-6">
-                <a href="reagentes.html" class="btn btn-success btn-square">
-                    <i class="bi bi-eyedropper"></i>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="reagentes.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-success">
+                        <i class="bi bi-eyedropper"></i>
+                    </div>
                     <span>Reagentes</span>
                 </a>
             </div>
 
-            <div class="col-6">
-                <a href="relatorios.html" class="btn btn-info btn-square">
-                    <i class="bi bi-file-earmark-bar-graph"></i>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="relatorios.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-info">
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                    </div>
                     <span>Relatórios</span>
                 </a>
             </div>
-            <div class="col-6">
-                <a href="laboratorios.html" class="btn btn-warning btn-square">
-                    <i class="bi bi-building"></i>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="laboratorios.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-warning">
+                        <i class="bi bi-building"></i>
+                    </div>
                     <span>Laboratórios</span>
                 </a>
             </div>
 
-            <div class="col-6">
-                <a href="usuarios.html" class="btn btn-danger btn-square">
-                    <i class="bi bi-people-fill"></i>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="usuarios.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-danger">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
                     <span>Usuários</span>
                 </a>
             </div>
-            <div class="col-6">
-                <a href="autorizacoes.html" class="btn btn-secondary btn-square">
-                    <i class="bi bi-shield-check"></i>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="autorizacoes.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-secondary">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
                     <span>Autorizações</span>
                 </a>
             </div>
 
-            <div class="col-6">
-                <a href="residuos.html" class="btn btn-dark btn-square">
-                    <i class="bi bi-trash-fill"></i>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="residuos.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-dark">
+                        <i class="bi bi-trash-fill"></i>
+                    </div>
                     <span>Resíduos</span>
                 </a>
             </div>
-            <div class="col-6">
-                <a href="suporte.html" class="btn btn-light btn-square border">
-                    <i class="bi bi-headset"></i>
-                    <span>Suporte</span>
+            
+             <div class="col-6 col-md-4 col-lg-3">
+                <a href="solicitacoes.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-success">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <span>Solicitações</span>
                 </a>
             </div>
 
-            <div class="col-6">
-                <a href="historico.html" class="btn btn-primary btn-square">
-                    <i class="bi bi-clock-history"></i>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="historico.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-primary">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
                     <span>Histórico</span>
                 </a>
             </div>
-            
-            <div class="col-6">
-                <a href="solicitacoes.html" class="btn btn-success btn-square">
-                    <i class="bi bi-arrow-left-right"></i>
-                    <span>Solicitações</span>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="suporte.html" class="dashboard-card">
+                    <div class="icon-box bg-icon-purple">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <span>Suporte</span>
                 </a>
             </div>
 
         </div>
 
-        <div class="text-center mt-5">
-            <button id="btn-logout" class="btn btn-outline-danger">Sair (Logout)</button>
+        <div class="text-center mt-5 pt-4 border-top border-secondary">
+            <button id="btn-logout" class="btn btn-logout-custom">
+                <i class="bi bi-box-arrow-left me-2"></i> Encerrar Sessão
+            </button>
         </div>
     </div>
 
