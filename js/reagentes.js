@@ -7,7 +7,6 @@ const inputBusca = document.getElementById('input-busca');
 const spinner = document.getElementById('loading-spinner');
 const btnCadastrar = document.querySelector('[data-bs-target="#modal-reagente"]');
 const modalEl = document.getElementById('modal-reagente');
-// Inicializa o Modal do Bootstrap corretamente
 const modalReagente = new bootstrap.Modal(modalEl);
 
 // Seletores internos do modal
@@ -18,7 +17,51 @@ const nomeInput = document.getElementById('reagente-nome');
 const composicaoInput = document.getElementById('reagente-composicao');
 const controladoraInput = document.getElementById('reagente-controladora');
 
-// --- Funções ---
+
+function showToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    
+    let iconClass = 'bi-check-circle-fill';
+    let typeClass = 'toast-success';
+    
+    if (tipo === 'error') {
+        iconClass = 'bi-x-circle-fill';
+        typeClass = 'toast-error';
+    } else if (tipo === 'warning') {
+        iconClass = 'bi-exclamation-triangle-fill';
+        typeClass = 'toast-warning';
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-box ${typeClass}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${iconClass} fs-4 me-3"></i>
+            <span class="fw-semibold text-dark">${mensagem}</span>
+        </div>
+        <button type="button" class="btn-close ms-3" aria-label="Close"></button>
+    `;
+
+    // Fechar ao clicar
+    toast.querySelector('.btn-close').onclick = () => {
+        toast.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    // Timer automático
+    setTimeout(() => {
+        if(toast.parentElement) {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4000);
+}
+
+// ===============================================
+// 2. LÓGICA DE REAGENTES
+// ===============================================
 
 async function fetchReagentes(filtroNome = '') {
     spinner.classList.remove('d-none');
@@ -33,42 +76,75 @@ async function fetchReagentes(filtroNome = '') {
         if (error) throw error;
 
         if (data.length === 0) {
-            listaReagentesEl.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum reagente encontrado.</div>';
+            listaReagentesEl.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-eyedropper text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">Nenhum reagente encontrado no catálogo.</p>
+                </div>`;
         } else {
             renderReagentes(data);
         }
     } catch (error) {
-        console.error('Erro ao buscar reagentes:', error.message);
-        listaReagentesEl.innerHTML = '<div class="list-group-item text-center text-danger">Erro ao carregar reagentes.</div>';
+        console.error('Erro:', error.message);
+        showToast('Erro ao carregar reagentes.', 'error');
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
 function renderReagentes(reagentes) {
+    listaReagentesEl.innerHTML = '';
+    
     reagentes.forEach(reagente => {
-        const itemHtml = `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-1">${reagente.nome}</h5>
-                    <p class="mb-1">${reagente.composicao_quimica || 'Sem composição'}</p>
-                    <small class="text-muted">${reagente.instituicao_controladora || 'Sem controle'}</small>
+        // Badge se for controlado
+        let badgeControlado = '';
+        if (reagente.instituicao_controladora) {
+            badgeControlado = `
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-2">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> ${reagente.instituicao_controladora}
+                </span>`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'list-group-item p-3 mb-2 shadow-sm rounded border-0';
+        div.style.transition = 'transform 0.2s';
+        div.onmouseover = () => div.style.transform = 'translateX(5px)';
+        div.onmouseout = () => div.style.transform = 'translateX(0)';
+
+        div.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="bg-light rounded-circle p-3 me-3 text-success d-none d-md-block">
+                        <i class="bi bi-eyedropper fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 fw-bold text-dark">
+                            ${reagente.nome}
+                        </h5>
+                        <p class="mb-1 text-muted small font-monospace">
+                            ${reagente.composicao_quimica || '<span class="text-muted opacity-50">Sem fórmula</span>'}
+                        </p>
+                        <div class="mt-1">
+                             ${badgeControlado || '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Não Controlado</span>'}
+                        </div>
+                    </div>
                 </div>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-edit" 
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit rounded-start-pill px-3" 
                         data-id="${reagente.id}"
                         data-nome="${reagente.nome}"
                         data-composicao="${reagente.composicao_quimica || ''}"
                         data-controladora="${reagente.instituicao_controladora || ''}">
-                        Editar
+                        <i class="bi bi-pencil-fill"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm btn-delete" data-id="${reagente.id}">
-                        Excluir
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete rounded-end-pill px-3" data-id="${reagente.id}">
+                        <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
             </div>
         `;
-        listaReagentesEl.innerHTML += itemHtml;
+        listaReagentesEl.appendChild(div);
     });
 }
 
@@ -79,29 +155,27 @@ async function handleFormSubmit(evento) {
     const dadosForm = {
         nome: nomeInput.value,
         composicao_quimica: composicaoInput.value,
-        instituicao_controladora: controladoraInput.value
+        instituicao_controladora: controladoraInput.value || null
     };
 
     try {
         let query;
         if (id) {
-            // ATUALIZAR
             query = supabaseClient.from('Reagente').update(dadosForm).eq('id', id);
         } else {
-            // CRIAR
             query = supabaseClient.from('Reagente').insert(dadosForm);
         }
 
         const { error } = await query;
         if (error) throw error;
 
-        alert(id ? 'Reagente atualizado com sucesso!' : 'Reagente cadastrado com sucesso!');
+        showToast(id ? 'Reagente atualizado!' : 'Reagente cadastrado!', 'success');
         modalReagente.hide();
         fetchReagentes(inputBusca.value);
 
     } catch (error) {
-        console.error('Erro ao salvar reagente:', error.message);
-        alert('Erro ao salvar: ' + error.message);
+        console.error('Erro:', error.message);
+        showToast('Erro ao salvar: ' + error.message, 'error');
     }
 }
 
@@ -127,19 +201,18 @@ async function handleDeleteClick(button) {
             const { error } = await supabaseClient.from('Reagente').delete().eq('id', id);
             
             if (error) {
-                // Se o erro for violação de chave estrangeira (Código 23503)
                 if (error.code === '23503') {
-                    throw new Error('Não é possível excluir este reagente pois ele está cadastrado no estoque de um ou mais laboratórios. Remova-o dos estoques antes de excluir do catálogo.');
+                    showToast('Não é possível excluir: Reagente em uso no estoque.', 'warning');
+                    return;
                 }
-                throw error; // Lança outros erros normalmente
+                throw error;
             }
             
-            alert('Reagente excluído com sucesso.');
+            showToast('Reagente excluído.', 'success');
             fetchReagentes(inputBusca.value);
 
         } catch (error) {
-            console.error('Erro ao excluir:', error.message);
-            alert('Erro: ' + error.message);
+            showToast('Erro ao excluir: ' + error.message, 'error');
         }
     }
 }
@@ -152,7 +225,6 @@ function resetModal() {
 }
 
 // --- Event Listeners ---
-
 document.addEventListener('DOMContentLoaded', () => {
     fetchReagentes();
 });
@@ -168,13 +240,15 @@ inputBusca.addEventListener('keyup', () => {
 });
 
 listaReagentesEl.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn-edit')) handleEditClick(e.target);
-    if (e.target.classList.contains('btn-delete')) handleDeleteClick(e.target);
+    // Usar closest para pegar o botão mesmo clicando no ícone
+    const btnEdit = e.target.closest('.btn-edit');
+    const btnDelete = e.target.closest('.btn-delete');
+
+    if (btnEdit) handleEditClick(btnEdit);
+    if (btnDelete) handleDeleteClick(btnDelete);
 });
 
-// Correção importante: Verifica se o botão existe antes de adicionar evento
 if (btnCadastrar) {
     btnCadastrar.addEventListener('click', resetModal);
 }
-
 modalEl.addEventListener('hidden.bs.modal', resetModal);
