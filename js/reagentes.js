@@ -6,10 +6,16 @@ const formReagente = document.getElementById('form-reagente');
 const inputBusca = document.getElementById('input-busca');
 const spinner = document.getElementById('loading-spinner');
 const btnCadastrar = document.querySelector('[data-bs-target="#modal-reagente"]');
+
+// Modais
 const modalEl = document.getElementById('modal-reagente');
 const modalReagente = new bootstrap.Modal(modalEl);
 
-// Seletores internos do modal
+const modalConfirmEl = document.getElementById('modal-confirmacao');
+const modalConfirmacao = new bootstrap.Modal(modalConfirmEl);
+const btnConfirmarExclusao = document.getElementById('btn-confirmar-exclusao');
+
+// Elementos do Form
 const modalTitle = modalEl.querySelector('.modal-title');
 const modalSubmitBtn = formReagente.querySelector('button[type="submit"]');
 const editIdInput = document.getElementById('reagente-edit-id');
@@ -17,7 +23,10 @@ const nomeInput = document.getElementById('reagente-nome');
 const composicaoInput = document.getElementById('reagente-composicao');
 const controladoraInput = document.getElementById('reagente-controladora');
 
+// Variável para armazenar o ID temporariamente antes de excluir
+let ID_PARA_EXCLUIR = null;
 
+// --- Função de Toast ---
 function showToast(mensagem, tipo = 'success') {
     const container = document.getElementById('toast-container');
     
@@ -42,7 +51,6 @@ function showToast(mensagem, tipo = 'success') {
         <button type="button" class="btn-close ms-3" aria-label="Close"></button>
     `;
 
-    // Fechar ao clicar
     toast.querySelector('.btn-close').onclick = () => {
         toast.style.animation = 'fadeOut 0.5s forwards';
         setTimeout(() => toast.remove(), 500);
@@ -50,7 +58,6 @@ function showToast(mensagem, tipo = 'success') {
 
     container.appendChild(toast);
 
-    // Timer automático
     setTimeout(() => {
         if(toast.parentElement) {
             toast.style.animation = 'fadeOut 0.5s forwards';
@@ -59,9 +66,6 @@ function showToast(mensagem, tipo = 'success') {
     }, 4000);
 }
 
-// ===============================================
-// 2. LÓGICA DE REAGENTES
-// ===============================================
 
 async function fetchReagentes(filtroNome = '') {
     spinner.classList.remove('d-none');
@@ -96,7 +100,6 @@ function renderReagentes(reagentes) {
     listaReagentesEl.innerHTML = '';
     
     reagentes.forEach(reagente => {
-        // Badge se for controlado
         let badgeControlado = '';
         if (reagente.instituicao_controladora) {
             badgeControlado = `
@@ -148,6 +151,7 @@ function renderReagentes(reagentes) {
     });
 }
 
+// --- CADASTRO E EDIÇÃO ---
 async function handleFormSubmit(evento) {
     evento.preventDefault();
     
@@ -179,6 +183,7 @@ async function handleFormSubmit(evento) {
     }
 }
 
+// --- CLIQUE BOTÃO EDITAR ---
 function handleEditClick(button) {
     const { id, nome, composicao, controladora } = button.dataset;
 
@@ -193,29 +198,40 @@ function handleEditClick(button) {
     modalReagente.show();
 }
 
-async function handleDeleteClick(button) {
-    const id = button.dataset.id;
-    
-    if (confirm('Tem certeza que deseja excluir este reagente do catálogo?')) {
-        try {
-            const { error } = await supabaseClient.from('Reagente').delete().eq('id', id);
-            
-            if (error) {
-                if (error.code === '23503') {
-                    showToast('Não é possível excluir: Reagente em uso no estoque.', 'warning');
-                    return;
-                }
-                throw error;
-            }
-            
-            showToast('Reagente excluído.', 'success');
-            fetchReagentes(inputBusca.value);
-
-        } catch (error) {
-            showToast('Erro ao excluir: ' + error.message, 'error');
-        }
-    }
+// --- CLIQUE BOTÃO EXCLUIR (ABRE O MODAL) ---
+function handleDeleteClick(button) {
+    ID_PARA_EXCLUIR = button.dataset.id; // Guarda o ID na variável global
+    modalConfirmacao.show();             // Mostra o modal bonito
 }
+
+// --- AÇÃO REAL DE EXCLUIR (NO MODAL) ---
+btnConfirmarExclusao.addEventListener('click', async () => {
+    if (!ID_PARA_EXCLUIR) return;
+
+    // Fecha o modal imediatamente
+    modalConfirmacao.hide();
+
+    try {
+        const { error } = await supabaseClient.from('Reagente').delete().eq('id', ID_PARA_EXCLUIR);
+        
+        if (error) {
+            // Tratamento de erro de chave estrangeira (FK)
+            if (error.code === '23503') {
+                showToast('Não é possível excluir: Reagente em uso no estoque.', 'warning');
+                return;
+            }
+            throw error;
+        }
+        
+        showToast('Reagente excluído com sucesso.', 'success');
+        fetchReagentes(inputBusca.value);
+
+    } catch (error) {
+        showToast('Erro ao excluir: ' + error.message, 'error');
+    } finally {
+        ID_PARA_EXCLUIR = null; // Limpa o ID
+    }
+});
 
 function resetModal() {
     formReagente.reset();
@@ -224,7 +240,7 @@ function resetModal() {
     modalSubmitBtn.textContent = 'Salvar';
 }
 
-// --- Event Listeners ---
+// --- Listeners de Inicialização ---
 document.addEventListener('DOMContentLoaded', () => {
     fetchReagentes();
 });
@@ -240,7 +256,6 @@ inputBusca.addEventListener('keyup', () => {
 });
 
 listaReagentesEl.addEventListener('click', (e) => {
-    // Usar closest para pegar o botão mesmo clicando no ícone
     const btnEdit = e.target.closest('.btn-edit');
     const btnDelete = e.target.closest('.btn-delete');
 
