@@ -19,17 +19,17 @@ export async function checkIsAdmin() {
 }
 
 /**
- * Função para pegar o ID do laboratório atual.
- * (Útil se você usar em outras partes do sistema)
+ * Pega o ID do laboratório que o usuário está gerenciando agora.
+ * Se for um Admin "disfarçado", retorna o ID do lab que ele escolheu.
  */
 export async function getCurrentLabId() {
-    // 1. Verifica se o Admin escolheu um lab (sessão)
+    // 1. Verifica se o Admin escolheu um lab específico (Modo Personificação)
     const adminSelectedLab = sessionStorage.getItem('ADMIN_SELECTED_LAB_ID');
     if (adminSelectedLab) {
         return adminSelectedLab;
     }
 
-    // 2. Se não, usa o ID real do usuário
+    // 2. Se não, usa o ID real do laboratório vinculado ao usuário
     const { data: labId, error } = await supabaseClient.rpc('get_my_lab_id');
     
     if (error) {
@@ -37,4 +37,12 @@ export async function getCurrentLabId() {
         return null;
     }
     return labId;
+}
+
+/**
+ * Define o contexto de qual laboratório o Admin quer "visitar"
+ */
+export function setAdminLabContext(id, nome) {
+    sessionStorage.setItem('ADMIN_SELECTED_LAB_ID', id);
+    sessionStorage.setItem('ADMIN_SELECTED_LAB_NAME', nome);
 }
