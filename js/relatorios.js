@@ -1,53 +1,99 @@
 import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId, checkIsAdmin } from './sessionManager.js';
 
+// --- Seletores ---
 const formRelatorio = document.getElementById('form-relatorio');
 const tbodyPreview = document.getElementById('tbody-preview');
 const dataInicioInput = document.getElementById('data-inicio');
 const dataFimInput = document.getElementById('data-fim');
-const tituloPagina = document.querySelector('h2');
+const tituloPagina = document.querySelector('h2'); 
 
 let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
 let MODO_GLOBAL = false;
 let MAPA_LABORATORIOS = {}; 
 
+
+function showToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    
+    let iconClass = 'bi-check-circle-fill';
+    let typeClass = 'toast-success';
+    
+    if (tipo === 'error') {
+        iconClass = 'bi-x-circle-fill';
+        typeClass = 'toast-error';
+    } else if (tipo === 'warning') {
+        iconClass = 'bi-exclamation-triangle-fill';
+        typeClass = 'toast-warning';
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-box ${typeClass}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${iconClass} fs-4 me-3"></i>
+            <span class="fw-semibold text-dark">${mensagem}</span>
+        </div>
+        <button type="button" class="btn-close ms-3" aria-label="Close"></button>
+    `;
+
+    toast.querySelector('.btn-close').onclick = () => {
+        toast.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if(toast.parentElement) {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4000);
+}
+
+
 async function init() {
     try {
         MEU_LAB_ID = await getCurrentLabId();
         SOU_ADMIN = await checkIsAdmin();
 
-        // Verifica Modo Global
+        // Verifica Modo Global (Admin vendo tudo)
         const labSelecionado = sessionStorage.getItem('ADMIN_SELECTED_LAB_ID');
         if (SOU_ADMIN && !labSelecionado) {
             MODO_GLOBAL = true;
-            if (tituloPagina) tituloPagina.innerHTML = '<i class="bi bi-globe-americas"></i> Relatório Geral (Todos os Laboratórios)';
+            if (tituloPagina) tituloPagina.innerHTML = 'Relatório Geral (Todos os Laboratórios)';
             
+            // Adiciona coluna "Laboratório" se for admin global
             const headerRow = document.querySelector('#tabela-preview thead tr');
             if (headerRow && !headerRow.innerHTML.includes('Laboratório')) {
                 const thLab = document.createElement('th');
                 thLab.textContent = 'Laboratório';
-                headerRow.insertBefore(thLab, headerRow.children[1]);
+                thLab.className = 'py-3';
+                headerRow.insertBefore(thLab, headerRow.children[1]); 
             }
         }
 
         await fetchMapaLaboratorios();
 
         if (MEU_LAB_ID || MODO_GLOBAL) {
+            // Define datas padrão (últimos 30 dias)
             const hoje = new Date();
             const trintaDiasAtras = new Date();
             trintaDiasAtras.setDate(hoje.getDate() - 30);
 
-            // Ajuste simples para os inputs de data
             dataFimInput.value = hoje.toISOString().split('T')[0];
             dataInicioInput.value = trintaDiasAtras.toISOString().split('T')[0];
 
+            // Carrega preview inicial
             carregarDados(dataInicioInput.value, dataFimInput.value, false);
         } else {
-            if (!SOU_ADMIN) alert("Erro: Laboratório não identificado.");
+            if (!SOU_ADMIN) showToast("Erro: Laboratório não identificado.", "error");
         }
     } catch (error) {
         console.error(error);
+        showToast("Erro na inicialização da página.", "error");
     }
 }
 
@@ -72,21 +118,31 @@ function getNomeLab(id) {
 }
 
 async function carregarDados(dataInicio, dataFim, isDownload) {
-    if (!isDownload) tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center">Carregando...</td></tr>';
+    const btnSubmit = formRelatorio.querySelector('button[type="submit"]');
+    
+    if (!isDownload) {
+        tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando dados...</td></tr>';
+    } else {
+        // Feedback visual no botão de baixar
+        const originalText = btnSubmit.innerHTML;
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando CSV...';
+        
+        // Função interna para resetar o botão
+        var resetBtn = () => {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalText;
+        };
+    }
 
-    // === CORREÇÃO CRÍTICA DE DATAS ===
-    // Garante que pegamos desde o início do dia (00:00 UTC) até o fim do dia (23:59:59 UTC)
-    
-    // Data Início: 00:00 UTC (Padrão do new Date("YYYY-MM-DD"))
+    // Configuração de Datas (UTC)
     const inicioISO = new Date(dataInicio).toISOString(); 
-    
-    // Data Fim: Forçamos 23:59:59 UTC
     const fimDate = new Date(dataFim);
-    fimDate.setUTCHours(23, 59, 59, 999); // <--- MUDANÇA AQUI: Usar UTC Hours
+    fimDate.setUTCHours(23, 59, 59, 999);
     const fimISO = fimDate.toISOString();
 
     try {
-        // 1. Movimentações (Compras)
+        // Consultas ao Supabase
         let qMov = supabaseClient.from('Movimentacao')
             .select('*') 
             .gte('data_movimentacao', inicioISO)
@@ -94,7 +150,6 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         
         if (!MODO_GLOBAL) qMov = qMov.eq('id_laboratorio', MEU_LAB_ID);
 
-        // 2. Transferências
         let qTransf = supabaseClient.from('Transferencia')
             .select(`*, LabOrigem:id_lab_origem(nome_laboratorio), LabDestino:id_lab_destino(nome_laboratorio), EstoqueLab:id_item_estoque(Reagente(nome), unidade_medida)`)
             .gte('data_solicitacao', inicioISO)
@@ -104,7 +159,6 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             qTransf = qTransf.or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`);
         }
 
-        // 3. Resíduos
         let qRes = supabaseClient.from('Residuo')
             .select('*')
             .eq('status', 'Descartado')
@@ -113,13 +167,13 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
 
         if (!MODO_GLOBAL) qRes = qRes.eq('id_laboratorio', MEU_LAB_ID);
 
-        // Executa
+        // Executa todas em paralelo
         const [resMov, resTransf, resRes] = await Promise.all([qMov, qTransf, qRes]);
 
-        // Unificação
+        // Processamento dos dados
         let lista = [];
 
-        // Compras
+        // 1. Compras/Entradas
         if (resMov.data) {
             resMov.data.forEach(m => {
                 const nomeLab = getNomeLab(m.id_laboratorio);
@@ -135,7 +189,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             });
         }
 
-        // Transferências
+        // 2. Transferências
         if (resTransf.data) {
             resTransf.data.forEach(t => {
                 let tipoLabel = 'TRANSFERÊNCIA';
@@ -165,7 +219,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             });
         }
 
-        // Resíduos
+        // 3. Descartes
         if (resRes.data) {
             resRes.data.forEach(r => {
                 const nomeLab = getNomeLab(r.id_laboratorio);
@@ -181,39 +235,53 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             });
         }
 
+        // Ordenar por data (mais recente primeiro)
         lista.sort((a, b) => new Date(b.data) - new Date(a.data));
 
         if (isDownload) {
-            gerarCSV(lista);
+            if (lista.length === 0) {
+                showToast("Não há dados para gerar relatório neste período.", "warning");
+            } else {
+                gerarCSV(lista);
+                showToast("Relatório gerado com sucesso! Download iniciado.", "success");
+            }
+            if(resetBtn) resetBtn();
         } else {
             renderPreview(lista);
         }
 
     } catch (error) {
         console.error(error);
-        alert("Erro ao gerar relatório.");
+        showToast("Erro ao processar dados do relatório.", "error");
+        if(resetBtn) resetBtn();
+        if(!isDownload) tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
     }
 }
 
 function renderPreview(lista) {
     tbodyPreview.innerHTML = '';
     if (lista.length === 0) {
-        tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center">Nenhum registro no período.</td></tr>';
+        tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste período.</td></tr>';
         return;
     }
 
     lista.forEach(item => {
         const dataF = new Date(item.data).toLocaleDateString('pt-BR');
-        let colLab = MODO_GLOBAL ? `<td><small class="fw-bold text-primary">${item.laboratorio}</small></td>` : '';
+        let colLab = MODO_GLOBAL ? `<td><span class="badge bg-light text-dark border">${item.laboratorio}</span></td>` : '';
+        
+        let badgeTipo = 'bg-secondary';
+        if(item.tipo.includes('ENTRADA')) badgeTipo = 'bg-success';
+        if(item.tipo.includes('SAÍDA')) badgeTipo = 'bg-danger';
+        if(item.tipo.includes('TRANSFERÊNCIA')) badgeTipo = 'bg-primary';
 
         const tr = `
             <tr>
-                <td>${dataF}</td>
+                <td class="ps-3">${dataF}</td>
                 ${colLab}
-                <td>${item.tipo}</td>
-                <td>${item.item}</td>
-                <td>${item.qtd} ${item.unidade}</td>
-                <td>${item.detalhes}</td>
+                <td><span class="badge ${badgeTipo}" style="font-size: 0.75rem;">${item.tipo}</span></td>
+                <td class="fw-semibold">${item.item}</td>
+                <td>${item.qtd} <small class="text-muted text-uppercase">${item.unidade}</small></td>
+                <td class="pe-3 text-muted small">${item.detalhes}</td>
             </tr>
         `;
         tbodyPreview.innerHTML += tr;
