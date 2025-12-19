@@ -2,7 +2,7 @@ import { checkIsAdmin } from './labContext.js';
 import { supabaseClient } from './supabaseClient.js';
 
 // ==========================================
-// FUNÇÕES UTILITÁRIAS DE FORMATAÇÃO
+// FUNÇÕES UTILITÁRIAS DE FORMATAÇÃO E UI
 // ==========================================
 function formatarCPF(cpf) {
     if (!cpf) return "-";
@@ -27,11 +27,46 @@ function formatarUnidade(unidade) {
     return unidade;
 }
 
+/**
+ * Sistema de Notificação (Toast)
+ */
+function showToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
+    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
+    if (tipo === 'warning') { iconClass = 'bi-exclamation-triangle-fill'; typeClass = 'toast-warning'; }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-box ${typeClass}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${iconClass} fs-4 me-3"></i>
+            <span class="fw-semibold text-dark">${mensagem}</span>
+        </div>
+        <button type="button" class="btn-close ms-3"></button>
+    `;
+
+    toast.querySelector('.btn-close').onclick = () => {
+        toast.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4000);
+}
+
 // ==========================================
-// LÓGICA PRINCIPAL
+// LÓGICA DE CARREGAMENTO INICIAL
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-
     const loadingDiv = document.getElementById('auth-loading');
     const contentDiv = document.getElementById('main-content');
 
@@ -43,6 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Remove tela de loading e mostra o conteúdo
         if (loadingDiv) loadingDiv.classList.add('d-none');
         if (contentDiv) contentDiv.style.display = 'block';
 
@@ -52,11 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error("Erro ao verificar permissões:", error);
+        showToast("Erro na verificação de acesso.", "error");
     }
 });
 
 /**
- * Busca dados do perfil logado e pré-preenche.
+ * Busca dados do perfil logado e pré-preenche o formulário
  */
 async function preencherDadosUsuario() {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -107,19 +144,20 @@ async function preencherDadosUsuario() {
 function bloquearCampo(elemento) {
     if (!elemento) return;
     elemento.setAttribute('readonly', true);
-    elemento.style.backgroundColor = "#e9ecef"; 
+    elemento.style.backgroundColor = "rgba(255, 255, 255, 0.05)"; 
     elemento.style.cursor = "not-allowed";
+    elemento.classList.add('opacity-75');
 }
 
 // ==========================================
-// CARREGAR HISTÓRICO
+// GESTÃO DO HISTÓRICO DE PROJETOS
 // ==========================================
 async function carregarMeusProjetos() {
     const listaDiv = document.getElementById('lista-meus-projetos');
     const { data: { user } } = await supabaseClient.auth.getUser();
 
     if (!user) {
-        listaDiv.innerHTML = '<div class="alert alert-warning">Usuário não identificado.</div>';
+        listaDiv.innerHTML = '<div class="p-3 text-warning">Usuário não identificado.</div>';
         return;
     }
 
@@ -133,18 +171,18 @@ async function carregarMeusProjetos() {
 
     if (error) {
         console.error(error);
-        listaDiv.innerHTML = '<div class="alert alert-danger small">Erro ao carregar histórico.</div>';
+        listaDiv.innerHTML = '<div class="p-3 text-danger small">Erro ao carregar histórico.</div>';
         return;
     }
 
     if (!data || data.length === 0) {
-        listaDiv.innerHTML = '<div class="text-center py-3 text-muted border rounded bg-white">Você ainda não possui solicitações.</div>';
+        listaDiv.innerHTML = '<div class="text-center py-3 text-muted-light small">Você ainda não possui solicitações.</div>';
         return;
     }
 
     data.forEach(proj => {
         const item = document.createElement('button');
-        item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+        item.className = 'list-group-item bg-transparent border-white border-opacity-10 d-flex justify-content-between align-items-center text-decoration-none py-3';
         item.type = 'button'; 
         
         let badgeClass = proj.status === 'aprovado' ? 'bg-success' : 'bg-warning text-dark';
@@ -153,8 +191,8 @@ async function carregarMeusProjetos() {
 
         item.innerHTML = `
             <div class="text-start">
-                <div class="fw-bold text-primary">${proj.titulo_projeto}</div>
-                <small class="text-muted">Enviado em: ${dataCriacao}</small>
+                <div class="fw-bold text-white">${proj.titulo_projeto}</div>
+                <small class="text-muted-light">Enviado em: ${dataCriacao}</small>
             </div>
             <span class="badge ${badgeClass} rounded-pill">${statusTexto}</span>
         `;
@@ -165,50 +203,49 @@ async function carregarMeusProjetos() {
 }
 
 // ==========================================
-// ABRIR MODAL
+// MODAL DE DETALHES
 // ==========================================
 function abrirModalDetalhes(proj) {
-    document.getElementById('modal-projeto-titulo').textContent = proj.titulo_projeto;
+    document.getElementById('modal-proj-titulo').textContent = proj.titulo_projeto;
     document.getElementById('modal-resp-nome').textContent = proj.responsavel_nome;
-    document.getElementById('modal-resp-cpf').textContent = formatarCPF(proj.responsavel_cpf);
     document.getElementById('modal-resp-email').textContent = proj.responsavel_email;
     document.getElementById('modal-resp-telefone').textContent = formatarTelefone(proj.responsavel_telefone);
     document.getElementById('modal-lab-nome').textContent = proj.lab_nome;
 
-    const statusText = document.getElementById('modal-status-text');
-    const statusArea = document.getElementById('modal-status-area');
-    const btnDownload = document.getElementById('modal-btn-download');
-
-    if (proj.status === 'aprovado') {
-        statusArea.className = 'alert alert-success d-flex justify-content-between align-items-center mb-3';
-        statusText.innerHTML = '<i class="bi bi-check-circle-fill"></i> Aprovado';
-        
-        if (proj.pdf_assinado_url) {
-            btnDownload.classList.remove('d-none');
-            const { data: publicUrlData } = supabaseClient
-                .storage
-                .from('documentos-projetos')
-                .getPublicUrl(proj.pdf_assinado_url);
-            btnDownload.href = publicUrlData.publicUrl;
-            btnDownload.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar Ofício Assinado';
-        } else {
-            btnDownload.classList.add('d-none');
-        }
-    } else {
-        statusArea.className = 'alert alert-warning d-flex justify-content-between align-items-center mb-3';
-        statusText.innerHTML = '<i class="bi bi-hourglass-split"></i> Aguardando Aprovação';
-        btnDownload.classList.add('d-none');
-    }
-
     const listaProd = document.getElementById('modal-lista-produtos');
     listaProd.innerHTML = '';
+    
     if (proj.produtos) {
         proj.produtos.forEach((prod, index) => {
             const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center bg-transparent';
-            li.innerHTML = `<span><strong>${index+1}.</strong> ${prod.nome}</span><span class="badge bg-secondary rounded-pill">${prod.quantidade} ${formatarUnidade(prod.unidade)}</span>`;
+            li.className = 'list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-1';
+            li.innerHTML = `
+                <span class="text-dark"><strong>${index + 1}.</strong> ${prod.nome}</span>
+                <span class="badge bg-secondary rounded-pill">${prod.quantidade} ${formatarUnidade(prod.unidade)}</span>
+            `;
             listaProd.appendChild(li);
         });
+    }
+
+    // Lógica do PDF Assinado
+    const footer = document.querySelector('#modalDetalhes .modal-footer');
+    const existingDownloadBtn = document.getElementById('modal-btn-download');
+    if (existingDownloadBtn) existingDownloadBtn.remove();
+
+    if (proj.status === 'aprovado' && proj.pdf_assinado_url) {
+        const btnDownload = document.createElement('a');
+        btnDownload.id = 'modal-btn-download';
+        btnDownload.className = 'btn btn-success rounded-pill px-4 me-auto';
+        
+        const { data: publicUrlData } = supabaseClient
+            .storage
+            .from('documentos-projetos')
+            .getPublicUrl(proj.pdf_assinado_url);
+            
+        btnDownload.href = publicUrlData.publicUrl;
+        btnDownload.target = "_blank";
+        btnDownload.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar Ofício Assinado';
+        footer.insertBefore(btnDownload, footer.firstChild);
     }
 
     const modalEl = document.getElementById('modalDetalhes');
@@ -220,11 +257,10 @@ function abrirModalDetalhes(proj) {
 // LÓGICA DO FORMULÁRIO E BUSCAS DINÂMICAS
 // ==========================================
 function iniciarLogicaFormulario() {
-    const btnAdd = document.getElementById('btn-add-produto');
-    const tbody = document.getElementById('lista-produtos-body');
-    const form = document.getElementById('form-projeto');
+    const btnAdd = document.getElementById('btn-adicionar-item');
+    const tbody = document.getElementById('corpo-tabela-produtos');
+    const form = document.getElementById('form-autorizacao');
     
-    // Campos para lógica dinâmica
     const labSipacInput = document.getElementById('lab-sipac');
     const labNomeInput = document.getElementById('lab-nome');
     const siapeInput = document.getElementById('responsavel-siape');
@@ -233,177 +269,152 @@ function iniciarLogicaFormulario() {
     function atualizarNumeracao() {
         const linhas = tbody.querySelectorAll('tr');
         linhas.forEach((linha, index) => {
-            linha.querySelector('.index-item').textContent = index + 1;
-            const btnRemove = linha.querySelector('.btn-remove-item');
+            linha.cells[0].textContent = index + 1;
+            const btnRemove = linha.querySelector('.btn-remover-item');
             if (btnRemove) {
-                if (linhas.length > 1) btnRemove.removeAttribute('disabled');
-                else btnRemove.setAttribute('disabled', 'true');
+                if (linhas.length > 1) btnRemove.classList.remove('d-none');
+                else btnRemove.classList.add('d-none');
             }
         });
     }
 
-    if (btnAdd) {
-        btnAdd.addEventListener('click', function() {
-            const novaLinha = document.createElement('tr');
-            novaLinha.innerHTML = `
-                <td class="text-center index-item"></td>
-                <td><input type="text" class="form-control" name="produto_nome[]" required></td>
-                <td><input type="number" class="form-control" name="produto_qtd[]" required></td>
-                <td>
-                    <select class="form-select" name="produto_unidade[]">
-                        <option value="un">Unidade (un)</option>
-                        <option value="mL">Mililitros (mL)</option>
-                        <option value="L">Litros (L)</option>
-                        <option value="g">Gramas (g)</option>
-                        <option value="kg">Quilogramas (kg)</option>
-                        <option value="caixa">Caixa</option>
-                    </select>
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-item">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(novaLinha);
+    // --- ADICIONAR ITEM ---
+    btnAdd.addEventListener('click', function() {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="text-muted-light small fw-bold"></td>
+            <td><input type="text" class="form-control form-control-dark product-name" placeholder="Nome do Reagente" required></td>
+            <td><input type="number" step="0.01" class="form-control form-control-dark product-qty" placeholder="0.00" required></td>
+            <td>
+                <select class="form-select form-control-dark product-unit">
+                    <option value="L">L</option><option value="mL">mL</option>
+                    <option value="kg">kg</option><option value="g">g</option>
+                    <option value="un">un</option><option value="frasco">frasco</option>
+                </select>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-link text-danger p-0 btn-remover-item">
+                    <i class="bi bi-trash-fill fs-5"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        atualizarNumeracao();
+    });
+
+    // --- REMOVER ITEM ---
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-remover-item');
+        if (btn && tbody.rows.length > 1) {
+            btn.closest('tr').remove();
             atualizarNumeracao();
-        });
-    }
+        }
+    });
 
-    if (tbody) {
-        tbody.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-remove-item');
-            if (btn && !btn.hasAttribute('disabled')) {
-                btn.closest('tr').remove();
-                atualizarNumeracao();
-            }
-        });
-    }
+    // --- BUSCA DINÂMICA: SIPAC -> Nome do Laboratório ---
+    labSipacInput.addEventListener('input', async (e) => {
+        if (labSipacInput.hasAttribute('readonly')) return;
+        const sipac = e.target.value.trim();
+        labNomeInput.value = ''; 
+        if (sipac.length < 4) return;
+        
+        const { data: lab, error } = await supabaseClient
+            .from('Laboratorio')
+            .select('nome_laboratorio')
+            .eq('codigo_sipac', sipac)
+            .maybeSingle();
+        
+        if (!error && lab) labNomeInput.value = lab.nome_laboratorio;
+    });
 
-    atualizarNumeracao();
+    // --- BUSCA DINÂMICA: SIAPE -> Nome do Responsável ---
+    siapeInput.addEventListener('input', async (e) => {
+        if (siapeInput.hasAttribute('readonly')) return;
+        const siape = e.target.value.trim();
+        if (siape.length < 3) return;
 
-    // --- BUSCA DINÂMICA 1: SIPAC -> Nome do Laboratório ---
-    if (labSipacInput) {
-        labSipacInput.addEventListener('input', async (e) => {
-            if (labSipacInput.hasAttribute('readonly')) return;
-            const sipac = e.target.value.trim();
-            labNomeInput.value = ''; // Limpa enquanto digita
-            if (sipac.length < 4) return;
+        const { data: perfil, error } = await supabaseClient
+            .from('Perfis')
+            .select('nome, sobrenome')
+            .eq('identificador', siape)
+            .maybeSingle();
+
+        if (!error && perfil) {
+            nomeRespInput.value = `${perfil.nome} ${perfil.sobrenome}`;
+        }
+    });
+
+    // --- SUBMIT DO FORMULÁRIO COM VALIDAÇÕES ORIGINAIS ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('btn-enviar-solicitacao');
+        const originalText = btnSubmit.innerHTML;
+        
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> VALIDANDO DADOS...';
+
+        const resetBotao = () => { btnSubmit.disabled = false; btnSubmit.innerHTML = originalText; };
+
+        try {
+            const sipacDigitado = labSipacInput.value.trim();
+            const nomeLabDigitado = labNomeInput.value.trim();
+            const siapeDigitado = siapeInput.value.trim();
+            const nomeRespDigitado = nomeRespInput.value.trim();
+
+            // 1. Validação Laboratório
+            const { data: labEncontrado, error: erroLab } = await supabaseClient.from('Laboratorio').select('nome_laboratorio').eq('codigo_sipac', sipacDigitado).maybeSingle();
+            if (erroLab) throw erroLab;
+            if (!labEncontrado) { showToast("Código SIPAC não encontrado.", "error"); resetBotao(); return; }
+            if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { showToast("Nome do laboratório não confere com o SIPAC.", "error"); resetBotao(); return; }
+
+            // 2. Validação SIAPE
+            const { data: perfilEncontrado, error: erroPerfil } = await supabaseClient.from('Perfis').select('nome, sobrenome').eq('identificador', siapeDigitado).maybeSingle();
+            if (erroPerfil) throw erroPerfil;
+            if (!perfilEncontrado) { showToast("SIAPE não encontrado na base de usuários.", "error"); resetBotao(); return; }
             
-            const { data: lab, error } = await supabaseClient
-                .from('Laboratorio') // Verifique se é 'laboratorios' ou 'Laboratorio'
-                .select('nome_laboratorio')
-                .eq('codigo_sipac', sipac)
-                .maybeSingle();
-            
-            if (!error && lab) labNomeInput.value = lab.nome_laboratorio;
-        });
-    }
+            const nomeBanco = `${perfilEncontrado.nome} ${perfilEncontrado.sobrenome}`.trim().toLowerCase();
+            if (nomeBanco !== nomeRespDigitado.trim().toLowerCase()) { showToast("Nome do responsável não confere com o SIAPE.", "error"); resetBotao(); return; }
 
-    // --- BUSCA DINÂMICA 2: SIAPE -> Nome do Responsável (NOVO) ---
-    if (siapeInput) {
-        siapeInput.addEventListener('input', async (e) => {
-            // Se o campo estiver bloqueado (veio do perfil do usuario logado), não altera
-            if (siapeInput.hasAttribute('readonly')) return;
+            // 3. Montagem da Lista de Produtos
+            const listaProdutos = Array.from(tbody.rows).map(row => ({
+                nome: row.querySelector('.product-name').value,
+                quantidade: row.querySelector('.product-qty').value,
+                unidade: row.querySelector('.product-unit').value
+            }));
 
-            const siape = e.target.value.trim();
-            // nomeRespInput.value = ''; // Opcional: limpar enquanto digita. Pode ser chato se o usuário estiver digitando o nome primeiro.
-            
-            // Só busca se tiver pelo menos 3 digitos para evitar queries desnecessárias
-            if (siape.length < 3) return;
+            // 4. Envio do Payload Completo
+            const payload = {
+                responsavel_nome: nomeRespDigitado,
+                responsavel_siape: siapeDigitado,
+                responsavel_cpf: document.getElementById('responsavel-cpf').value,
+                responsavel_email: document.getElementById('responsavel-email').value,
+                responsavel_telefone: document.getElementById('responsavel-telefone').value,
+                titulo_projeto: document.getElementById('projeto-titulo').value,
+                orgao_financiador: document.getElementById('projeto-orgao').value,
+                registro_numero: document.getElementById('projeto-registro').value,
+                periodo_execucao: document.getElementById('projeto-periodo').value,
+                lab_nome: nomeLabDigitado,
+                lab_sipac: sipacDigitado,
+                produtos: listaProdutos,
+                status: 'pendente'
+            };
 
-            const { data: perfil, error } = await supabaseClient
-                .from('Perfis') // Verifique se é 'perfis' ou 'Perfis'
-                .select('nome, sobrenome')
-                .eq('identificador', siape)
-                .maybeSingle();
+            const { error } = await supabaseClient.from('projetos').insert([payload]);
+            if (error) throw error;
 
-            if (!error && perfil) {
-                // Se encontrou, preenche o nome automaticamente
-                nomeRespInput.value = `${perfil.nome} ${perfil.sobrenome}`;
-            }
-        });
-    }
+            showToast("Solicitação enviada com sucesso!", "success");
+            form.reset();
+            tbody.innerHTML = '';
+            // Reinicia a página para estado inicial limpo mas com dados do usuário
+            location.reload(); 
 
-    // --- SUBMIT DO FORMULÁRIO ---
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btnSubmit = form.querySelector('button[type="submit"]');
-            const originalText = btnSubmit.innerHTML;
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Validando...';
+        } catch (err) {
+            console.error(err);
+            showToast("Erro ao processar: " + err.message, "error");
+            resetBotao();
+        }
+    });
 
-            const resetBotao = () => { if (btnSubmit.disabled) { btnSubmit.disabled = false; btnSubmit.innerHTML = originalText; } };
-
-            try {
-                const sipacDigitado = labSipacInput.value.trim();
-                const nomeLabDigitado = labNomeInput.value.trim();
-                const siapeDigitado = siapeInput.value.trim();
-                const nomeRespDigitado = nomeRespInput.value.trim();
-
-                // Validações Básicas
-                if (!nomeLabDigitado || !sipacDigitado || !siapeDigitado || !nomeRespDigitado) { 
-                    alert("Preencha todos os campos obrigatórios."); resetBotao(); return; 
-                }
-
-                // 2. Validação LABORATÓRIO
-                const { data: labEncontrado, error: erroLab } = await supabaseClient.from('Laboratorio').select('id, nome_laboratorio').eq('codigo_sipac', sipacDigitado).maybeSingle();
-                if (erroLab) throw new Error(erroLab.message);
-                if (!labEncontrado) { alert("Código SIPAC não encontrado."); resetBotao(); return; }
-                if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { alert("Nome do laboratório não bate com o SIPAC."); resetBotao(); return; }
-
-                // 3. Validação REQUERENTE (SIAPE/Matrícula)
-                // Nota: Usamos 'Perfis' com P maiúsculo aqui para seguir o padrão que você mostrou antes,
-                // mas certifique-se se é 'perfis' ou 'Perfis'. O JS é case-sensitive para strings, mas o Supabase costuma aceitar lowercase.
-                const { data: perfilEncontrado, error: erroPerfil } = await supabaseClient.from('Perfis').select('nome, sobrenome').eq('identificador', siapeDigitado).maybeSingle();
-                
-                if (erroPerfil) throw new Error(erroPerfil.message);
-                if (!perfilEncontrado) { alert("SIAPE/Matrícula não encontrado na base de usuários."); resetBotao(); return; }
-                
-                const nomeBanco = `${perfilEncontrado.nome} ${perfilEncontrado.sobrenome}`.trim().toLowerCase().replace(/\s+/g, ' ');
-                const nomeDigitado = nomeRespDigitado.trim().toLowerCase().replace(/\s+/g, ' ');
-                if (nomeBanco !== nomeDigitado) { alert("Nome do responsável não confere com o SIAPE informado."); resetBotao(); return; }
-
-                // Envio
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
-                const formData = new FormData(form);
-                const nomes = formData.getAll('produto_nome[]');
-                const qtds = formData.getAll('produto_qtd[]');
-                const unidades = formData.getAll('produto_unidade[]');
-                const listaProdutos = nomes.map((nome, i) => ({ nome: nome, quantidade: qtds[i], unidade: unidades[i] }));
-
-                const payload = {
-                    responsavel_nome: nomeRespDigitado,
-                    responsavel_siape: siapeDigitado,
-                    responsavel_cpf: document.getElementById('responsavel-cpf').value,
-                    responsavel_email: document.getElementById('responsavel-email').value,
-                    responsavel_telefone: document.getElementById('responsavel-telefone').value,
-                    titulo_projeto: document.getElementById('projeto-titulo').value,
-                    orgao_financiador: document.getElementById('projeto-orgao').value,
-                    registro_numero: document.getElementById('projeto-registro').value,
-                    periodo_execucao: document.getElementById('projeto-periodo').value,
-                    lab_nome: nomeLabDigitado,
-                    lab_sipac: sipacDigitado,
-                    produtos: listaProdutos,
-                    status: 'pendente'
-                };
-
-                const { error } = await supabaseClient.from('projetos').insert([payload]);
-                if (error) throw error;
-
-                alert("Solicitação enviada com sucesso!");
-                form.reset();
-                atualizarNumeracao();
-                await preencherDadosUsuario(); 
-                carregarMeusProjetos();
-
-            } catch (err) {
-                console.error(err);
-                alert("Erro: " + err.message);
-            } finally {
-                resetBotao();
-            }
-        });
-    }
+    // Inicia com 1 linha
+    if (tbody.rows.length === 0) btnAdd.click();
 }
