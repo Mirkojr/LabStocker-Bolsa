@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabaseClient.js';
-// MUDANÇA: Importando o gerenciador de sessão (para suportar Admin)
-import { getCurrentLabId } from './sessionManager.js';
+import { getCurrentLabId } from './labContext.js';
 
+// --- Seletores de Elementos ---
 const listaResiduos = document.getElementById('lista-residuos');
 const formResiduo = document.getElementById('form-residuo');
 const spinner = document.getElementById('spinner-res');
@@ -19,19 +19,57 @@ const btnNovoResiduo = document.querySelector('[data-bs-target="#modal-residuo"]
 
 let MEU_LAB_ID = null;
 
+function showToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
+    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
+    if (tipo === 'warning') { iconClass = 'bi-exclamation-triangle-fill'; typeClass = 'toast-warning'; }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-box ${typeClass}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${iconClass} fs-4 me-3"></i>
+            <span class="fw-semibold text-dark">${mensagem}</span>
+        </div>
+        <button type="button" class="btn-close ms-3"></button>
+    `;
+
+    toast.querySelector('.btn-close').onclick = () => {
+        toast.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4000);
+}
+
+// ===============================================
+// LÓGICA DE INICIALIZAÇÃO
+// ===============================================
+
 async function init() {
     try {
-        // MUDANÇA: Usamos a nova função que suporta o "Modo Admin"
+        // Busca o ID do laboratório atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
         
         if (MEU_LAB_ID) {
             fetchResiduos();
         } else {
-            listaResiduos.innerHTML = '<div class="col-12 text-center text-danger">Erro: Laboratório não identificado.</div>';
+            listaResiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratório não identificado. Verifique sua sessão.</div>';
         }
+
     } catch (error) {
-        console.error(error);
-        listaResiduos.innerHTML = '<div class="col-12 text-center text-danger">Erro ao carregar dados.</div>';
+        console.error('Erro no init:', error);
+        showToast("Erro ao carregar dados de sessão.", "error");
     }
 }
 
@@ -48,190 +86,125 @@ async function fetchResiduos() {
 
         if (error) throw error;
 
-        if (data.length === 0) {
-            listaResiduos.innerHTML = '<div class="col-12 text-center text-muted">Nenhum resíduo registrado.</div>';
-        } else {
-            renderResiduos(data);
-        }
+        renderResiduos(data);
 
     } catch (error) {
-        console.error(error);
-        listaResiduos.innerHTML = '<div class="col-12 text-center text-danger">Erro ao buscar resíduos.</div>';
+        console.error('Erro ao buscar resíduos:', error.message);
+        showToast("Erro ao carregar o inventário de resíduos.", "error");
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
-function renderResiduos(itens) {
-    listaResiduos.innerHTML = '';
+/**
+ * Renderiza os cards de resíduos seguindo o padrão Dark Glass
+ */
+function renderResiduos(residuos) {
+    if (residuos.length === 0) {
+        listaResiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum resíduo registrado para este laboratório.</div>';
+        return;
+    }
 
-    itens.forEach(item => {
-        // Configuração visual
-        let icone = 'bi-question-circle';
-        let corBorda = 'border-secondary';
-        let corTexto = 'text-secondary';
-
-        if (item.tipo_perigo === 'Inflamavel') {
-            icone = 'bi-fire';
-            corBorda = 'border-warning';
-            corTexto = 'text-warning';
-        } else if (item.tipo_perigo === 'Toxico') {
-            icone = 'bi-radioactive';
-            corBorda = 'border-success';
-            corTexto = 'text-success';
-        } else if (item.tipo_perigo === 'Corrosivo') {
-            icone = 'bi-droplet-half';
-            corBorda = 'border-secondary';
-            corTexto = 'text-dark';
-        } else if (item.tipo_perigo === 'Biologico') {
-            icone = 'bi-virus';
-            corBorda = 'border-danger';
-            corTexto = 'text-danger';
-        }
-
-        // --- LÓGICA DOS BOTÕES ---
-        let statusBadge = 'bg-primary';
-        let btnAcao = ''; 
-        let btnEditar = '';
-
-        if (item.status === 'Em Aberto') {
-            // Estado 1: Aberto
-            statusBadge = 'bg-primary';
-            
-            btnEditar = `
-                <button class="btn btn-sm btn-outline-secondary btn-editar me-1" 
-                    data-id="${item.id}"
-                    data-descricao="${item.descricao}"
-                    data-tipo="${item.tipo_perigo}"
-                    data-qtd="${item.quantidade}"
-                    data-unidade="${item.unidade_medida}">
-                    <i class="bi bi-pencil"></i>
-                </button>
-            `;
-            
-            btnAcao = `<button class="btn btn-sm btn-outline-dark btn-fechar w-100" data-id="${item.id}">Marcar como Cheio</button>`;
-
-        } else if (item.status === 'Cheio') {
-            // Estado 2: Cheio
-            statusBadge = 'bg-warning text-dark';
-            
-            btnEditar = `
-                <button class="btn btn-sm btn-outline-secondary btn-editar me-1" 
-                    data-id="${item.id}"
-                    data-descricao="${item.descricao}"
-                    data-tipo="${item.tipo_perigo}"
-                    data-qtd="${item.quantidade}"
-                    data-unidade="${item.unidade_medida}">
-                    <i class="bi bi-pencil"></i>
-                </button>
-            `;
-
-            btnAcao = `
-                <div class="d-flex gap-1 w-100">
-                    <button class="btn btn-sm btn-outline-secondary btn-reabrir w-50" data-id="${item.id}" title="Voltar para Aberto">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger btn-descartar w-100" data-id="${item.id}">
-                        Descartar
-                    </button>
-                </div>
-            `;
-
-        } else if (item.status === 'Descartado') {
-            // Estado 3: Finalizado
-            statusBadge = 'bg-secondary';
-            btnAcao = `<span class="text-muted small d-block text-center w-100">Finalizado</span>`;
-        }
-
-        const data = new Date(item.data_criacao).toLocaleDateString('pt-BR');
-
-        const cardHtml = `
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 ${corBorda} shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge ${statusBadge}">${item.status}</span>
-                            <i class="bi ${icone} ${corTexto}" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <h5 class="card-title">${item.descricao}</h5>
-                        <p class="card-text text-muted small">
-                            Tipo: <strong>${item.tipo_perigo}</strong><br>
-                            Volume: ${item.quantidade} ${item.unidade_medida}<br>
-                            Criado em: ${data}
-                        </p>
-                        <div class="mt-3 d-flex align-items-center">
-                            ${btnEditar}
-                            ${btnAcao}
-                        </div>
+    residuos.forEach(res => {
+        const isAberto = res.status === 'Em Aberto';
+        const statusClass = isAberto ? 'bg-warning text-dark' : 'bg-success text-white';
+        const dataF = new Date(res.data_criacao).toLocaleDateString('pt-BR');
+        
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        col.innerHTML = `
+            <div class="card h-100 border-white border-opacity-10 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255,255,255,0.03);">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge ${statusClass} rounded-pill px-3">${res.status}</span>
+                        <small class="text-muted-light">${dataF}</small>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">${res.descricao}</h5>
+                    <p class="small text-muted-light mb-3">
+                        <i class="bi bi-shield-exclamation me-1"></i> ${res.tipo_perigo} | 
+                        <strong>${res.quantidade} ${res.unidade_medida}</strong>
+                    </p>
+                    
+                    <div class="d-flex gap-2 border-top border-white border-opacity-10 pt-3">
+                        ${isAberto ? `
+                            <button class="btn btn-sm btn-outline-info rounded-pill flex-grow-1 btn-editar" 
+                                data-id="${res.id}" data-desc="${res.descricao}" data-tipo="${res.tipo_perigo}" 
+                                data-qtd="${res.quantidade}" data-unidade="${res.unidade_medida}">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-success rounded-pill px-3 btn-descartar" data-id="${res.id}">
+                                <i class="bi bi-check-lg"></i> Descartar
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill flex-grow-1 btn-reabrir" data-id="${res.id}">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                            </button>
+                        `}
                     </div>
                 </div>
             </div>
         `;
-        listaResiduos.innerHTML += cardHtml;
+        listaResiduos.appendChild(col);
     });
+}
+
+// ===============================================
+// FORMULÁRIO E AÇÕES (CRUD)
+// ===============================================
+
+function handleEditClick(btn) {
+    const d = btn.dataset;
+    editIdInput.value = d.id;
+    descInput.value = d.desc;
+    tipoInput.value = d.tipo;
+    qtdInput.value = d.qtd;
+    unidadeInput.value = d.unidade;
+
+    modalTitle.textContent = 'Editar Registro de Resíduo';
+    modalSubmitBtn.textContent = 'Atualizar Registro';
+    modalResiduo.show();
 }
 
 async function handleFormSubmit(e) {
     e.preventDefault();
 
     const id = editIdInput.value;
-    const dados = {
+    const payload = {
         id_laboratorio: MEU_LAB_ID,
         descricao: descInput.value,
         tipo_perigo: tipoInput.value,
-        quantidade: qtdInput.value,
+        quantidade: parseFloat(qtdInput.value),
         unidade_medida: unidadeInput.value
     };
-
-    if (!id) delete dados.status; // Se novo, deixa o banco usar o default 'Em Aberto'
 
     try {
         let query;
         if (id) {
-            query = supabaseClient.from('Residuo').update(dados).eq('id', id);
+            query = supabaseClient.from('Residuo').update(payload).eq('id', id);
         } else {
-            query = supabaseClient.from('Residuo').insert(dados);
+            payload.status = 'Em Aberto';
+            query = supabaseClient.from('Residuo').insert([payload]);
         }
 
         const { error } = await query;
         if (error) throw error;
 
-        alert(id ? "Resíduo atualizado!" : "Resíduo registrado!");
+        showToast(id ? "Registro atualizado com sucesso!" : "Resíduo adicionado ao inventário.", "success");
         modalResiduo.hide();
         fetchResiduos();
 
     } catch (error) {
-        console.error(error);
-        alert("Erro: " + error.message);
+        console.error('Erro ao salvar:', error.message);
+        showToast("Erro ao salvar dados: " + error.message, "error");
     }
-}
-
-function handleEditClick(btn) {
-    const { id, descricao, tipo, qtd, unidade } = btn.dataset;
-
-    editIdInput.value = id;
-    descInput.value = descricao;
-    tipoInput.value = tipo;
-    qtdInput.value = qtd;
-    unidadeInput.value = unidade;
-
-    modalTitle.textContent = 'Editar Resíduo';
-    modalSubmitBtn.textContent = 'Salvar Alterações';
-    modalResiduo.show();
-}
-
-function resetModal() {
-    formResiduo.reset();
-    editIdInput.value = '';
-    modalTitle.textContent = 'Novo Resíduo Químico';
-    modalSubmitBtn.textContent = 'Registrar';
 }
 
 async function atualizarStatus(id, novoStatus) {
     let msg = `Deseja alterar o status para: ${novoStatus}?`;
-    if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltará a ficar disponível para uso.";
-    if (novoStatus === 'Descartado') msg = "Confirmar envio para incineração? Isso finalizará o ciclo do resíduo.";
+    if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltará a figurar como um descarte pendente.";
+    if (novoStatus === 'Descartado') msg = "Confirmar o descarte final deste resíduo? Esta ação finalizará o controle deste item.";
 
+    // Mantemos o confirm nativo para ações críticas, mas o resultado é via Toast
     if (!confirm(msg)) return;
 
     try {
@@ -241,37 +214,45 @@ async function atualizarStatus(id, novoStatus) {
             .eq('id', id);
 
         if (error) throw error;
+        
+        showToast(`Resíduo atualizado para ${novoStatus}.`, "success");
         fetchResiduos();
 
     } catch (error) {
-        alert("Erro: " + error.message);
+        console.error('Erro ao atualizar status:', error.message);
+        showToast("Erro na atualização: " + error.message, "error");
     }
 }
+
+// ===============================================
+// EVENTOS E INICIALIZAÇÃO
+// ===============================================
 
 document.addEventListener('DOMContentLoaded', init);
 formResiduo.addEventListener('submit', handleFormSubmit);
 
-// Delegação de Eventos
+// Reset do modal ao abrir para novo registro
+if (btnNovoResiduo) {
+    btnNovoResiduo.addEventListener('click', () => {
+        formResiduo.reset();
+        editIdInput.value = '';
+        modalTitle.textContent = 'Registrar Novo Resíduo';
+        modalSubmitBtn.textContent = 'Registrar';
+    });
+}
+
+// Delegação de Eventos para botões dinâmicos
 listaResiduos.addEventListener('click', (e) => {
-    // Botão Editar (Lápis)
     const btnEdit = e.target.closest('.btn-editar');
     if (btnEdit) handleEditClick(btnEdit);
 
-    // Botão Desfazer (Seta Circular)
     const btnReabrir = e.target.closest('.btn-reabrir');
     if (btnReabrir) {
         atualizarStatus(btnReabrir.dataset.id, 'Em Aberto');
     }
 
-    // Botões de Ação Direta
-    if (e.target.classList.contains('btn-fechar')) {
-        atualizarStatus(e.target.dataset.id, 'Cheio');
-    }
-    if (e.target.classList.contains('btn-descartar')) {
-        atualizarStatus(e.target.dataset.id, 'Descartado');
+    const btnDescartar = e.target.closest('.btn-descartar');
+    if (btnDescartar) {
+        atualizarStatus(btnDescartar.dataset.id, 'Descartado');
     }
 });
-
-if (btnNovoResiduo) {
-    btnNovoResiduo.addEventListener('click', resetModal);
-}
