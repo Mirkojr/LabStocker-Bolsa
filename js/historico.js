@@ -1,24 +1,63 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId } from './sessionManager.js';
+import { getCurrentLabId } from './labContext.js';
 
+// --- Seletores de Elementos ---
 const listaHistorico = document.getElementById('lista-historico');
 const inputBusca = document.getElementById('busca-historico');
 const spinner = document.getElementById('spinner-hist');
 
+// --- Variáveis de Estado ---
 let MEU_LAB_ID = null;
 let HISTORICO_CACHE = []; 
 
+
+function showToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
+    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
+    if (tipo === 'warning') { iconClass = 'bi-exclamation-triangle-fill'; typeClass = 'toast-warning'; }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-box ${typeClass}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${iconClass} fs-4 me-3"></i>
+            <span class="fw-semibold text-dark">${mensagem}</span>
+        </div>
+        <button type="button" class="btn-close ms-3" aria-label="Close"></button>
+    `;
+
+    toast.querySelector('.btn-close').onclick = () => {
+        toast.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4000);
+}
+
+
 async function init() {
     try {
+        // Busca o ID do laboratório atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
+        
         if (MEU_LAB_ID) {
             fetchHistorico();
         } else {
-            listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro: Laboratório não identificado.</div>';
+            listaHistorico.innerHTML = '<div class="text-center text-warning p-5">Laboratório não identificado.</div>';
         }
     } catch (error) {
-        console.error(error);
-        listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro ao carregar dados.</div>';
+        console.error('Erro no init:', error);
+        showToast("Erro ao carregar dados do laboratório.", "error");
     }
 }
 
@@ -27,9 +66,9 @@ async function fetchHistorico() {
     listaHistorico.innerHTML = '';
 
     try {
-        // Faremos 3 buscas simultâneas para compor o histórico completo
+        // Realizamos as 3 buscas simultâneas para compor a linha do tempo
 
-        // 1. Transferências (Trocas entre labs)
+        // 1. Transferências (Trocas aprovadas onde o lab participou)
         const queryTransf = supabaseClient
             .from('Transferencia')
             .select(`
@@ -41,7 +80,7 @@ async function fetchHistorico() {
             .or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`)
             .order('data_solicitacao', { ascending: false });
 
-        // 2. Resíduos (Descartes)
+        // 2. Resíduos (Itens marcados como Descartados)
         const queryResiduos = supabaseClient
             .from('Residuo')
             .select('*')
@@ -49,22 +88,22 @@ async function fetchHistorico() {
             .eq('status', 'Descartado')
             .order('data_criacao', { ascending: false });
 
-        // 3. Movimentações (Entradas/Compras) - NOVO!
+        // 3. Movimentações (Entradas/Compras diretas no estoque)
         const queryMov = supabaseClient
             .from('Movimentacao')
             .select('*')
             .eq('id_laboratorio', MEU_LAB_ID)
-            .eq('tipo', 'ENTRADA') // Por enquanto só estamos gravando entradas aqui
+            .eq('tipo', 'ENTRADA')
             .order('data_movimentacao', { ascending: false });
 
-        // Executa tudo junto
+        // Executa todas as promessas em paralelo para performance
         const [resTransf, resResiduos, resMov] = await Promise.all([queryTransf, queryResiduos, queryMov]);
 
         if (resTransf.error) throw resTransf.error;
         if (resResiduos.error) throw resResiduos.error;
         if (resMov.error) throw resMov.error;
 
-        // --- Unificação e Formatação ---
+        // --- Unificação e Marcação de Metadados ---
         
         const listaTransf = resTransf.data.map(item => ({
             ...item, 
@@ -84,31 +123,38 @@ async function fetchHistorico() {
             data_ordenacao: item.data_movimentacao
         }));
 
-        // Junta tudo e ordena
+        // Junta tudo em uma única array e ordena por data decrescente
         const listaCompleta = [...listaTransf, ...listaResiduos, ...listaMov];
         listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
         HISTORICO_CACHE = listaCompleta;
 
         if (listaCompleta.length === 0) {
-            listaHistorico.innerHTML = '<div class="list-group-item text-muted text-center">Nenhuma movimentação registrada.</div>';
+            listaHistorico.innerHTML = `
+                <div class="text-center py-5 text-muted-light">
+                    <i class="bi bi-clock-history fs-1 opacity-25"></i>
+                    <p class="mt-3">Nenhuma movimentação registrada até o momento.</p>
+                </div>`;
         } else {
             renderHistorico(listaCompleta);
         }
 
     } catch (error) {
-        console.error(error);
-        listaHistorico.innerHTML = '<div class="list-group-item text-danger text-center">Erro ao carregar histórico.</div>';
+        console.error('Erro ao buscar histórico:', error);
+        showToast("Falha ao reconstruir a linha do tempo.", "error");
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
+/**
+ * Renderiza os itens na interface seguindo o padrão Dark Glass
+ */
 function renderHistorico(itens) {
     listaHistorico.innerHTML = '';
 
     itens.forEach(item => {
-        // Formata a data e hora (Item 2 da sua lista)
+        // Formatação de data e hora para exibição amigável
         const dataObj = new Date(item.data_ordenacao);
         const dataFormatada = dataObj.toLocaleDateString('pt-BR');
         const horaFormatada = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -119,99 +165,90 @@ function renderHistorico(itens) {
         // TIPO 1: ENTRADA DE ESTOQUE (COMPRA)
         if (item.tipo_registro === 'ENTRADA_ESTOQUE') {
             html = `
-                <div class="list-group-item list-group-item-action border-start border-4 border-primary">
+                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="bi bi-bag-plus-fill text-primary" style="font-size: 1.5rem;"></i>
+                        <div class="bg-primary bg-opacity-25 rounded-circle p-3 me-3">
+                            <i class="bi bi-cart-plus-fill text-primary fs-4"></i>
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-dark">${item.item_nome}</h6>
-                                <span class="badge bg-primary">Compra / Entrada</span>
+                                <h6 class="mb-0 fw-bold text-white">${item.item_nome}</h6>
+                                <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">Compra</span>
                             </div>
-                            <p class="mb-1 small text-muted">Item cadastrado no estoque.</p>
+                            <p class="mb-1 small text-muted-light">Novo item adicionado ao inventário.</p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">Qtd: <strong>${item.quantidade} ${item.unidade}</strong></small>
-                                <small class="text-muted">${dataCompleta}</small>
+                                <small class="text-white-50">Qtd: <strong>${item.quantidade} ${item.unidade}</strong></small>
+                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
         // TIPO 2: RESÍDUO (DESCARTE)
         else if (item.tipo_registro === 'RESIDUO') {
             html = `
-                <div class="list-group-item list-group-item-action border-start border-4 border-dark">
+                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="bi bi-trash-fill text-dark" style="font-size: 1.5rem;"></i>
+                        <div class="bg-secondary bg-opacity-25 rounded-circle p-3 me-3">
+                            <i class="bi bi-trash3-fill text-white-50 fs-4"></i>
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-dark">${item.descricao}</h6>
-                                <span class="badge bg-secondary">Descarte</span>
+                                <h6 class="mb-0 fw-bold text-white">${item.descricao}</h6>
+                                <span class="badge bg-secondary text-uppercase" style="font-size: 0.65rem;">Descarte</span>
                             </div>
-                            <p class="mb-1 small text-muted">
-                                Enviado para incineração (${item.tipo_perigo})
+                            <p class="mb-1 small text-muted-light">
+                                Enviado para tratamento (${item.tipo_perigo})
                             </p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">Vol: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
-                                <small class="text-muted">${dataCompleta}</small>
+                                <small class="text-white-50">Vol: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
+                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         } 
         // TIPO 3: TRANSFERÊNCIA (TROCA)
         else {
-            const euFizOPedido = item.id_lab_origem === MEU_LAB_ID; 
-            let corIcone, icone, labParceiroNome, textoAcao, corBorda;
+            const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID); 
+            let cor, icone, textoAcao;
     
-            if (euFizOPedido) { // ENTRADA (Recebido)
-                corIcone = 'text-success';
-                icone = 'bi-arrow-down-circle-fill';
-                corBorda = 'border-success';
-                labParceiroNome = item.LabDestino ? item.LabDestino.nome_laboratorio : 'Lab Desconhecido'; 
-                textoAcao = `Recebido de <strong>${labParceiroNome}</strong>`;
-            } else { // SAÍDA (Enviado)
-                corIcone = 'text-danger';
-                icone = 'bi-arrow-up-circle-fill';
-                corBorda = 'border-danger';
-                labParceiroNome = item.LabOrigem ? item.LabOrigem.nome_laboratorio : 'Lab Desconhecido';
-                textoAcao = `Enviado para <strong>${labParceiroNome}</strong>`;
+            if (euFizOPedido) { // RECEBIDO (Entrada por troca)
+                cor = 'success';
+                icone = 'bi-arrow-down-left-circle-fill';
+                const labParceiro = item.LabDestino?.nome_laboratorio || 'Lab Externo'; 
+                textoAcao = `Recebido de <strong>${labParceiro}</strong>`;
+            } else { // ENVIADO (Saída por troca)
+                cor = 'danger';
+                icone = 'bi-arrow-up-right-circle-fill';
+                const labParceiro = item.LabOrigem?.nome_laboratorio || 'Lab Externo';
+                textoAcao = `Enviado para <strong>${labParceiro}</strong>`;
             }
             
             const nomeReagente = item.EstoqueLab?.Reagente?.nome || 'Item desconhecido';
             const unidade = item.EstoqueLab?.unidade_medida || '';
     
-            // Define cor do badge de status
-            let badgeClass = 'bg-secondary';
-            if (item.status === 'Aprovado') badgeClass = 'bg-success';
-            if (item.status === 'Recusado') badgeClass = 'bg-danger';
-            if (item.status === 'Pendente') badgeClass = 'bg-warning text-dark';
+            let statusBadgeClass = item.status === 'Aprovado' ? 'bg-success' : 'bg-warning text-dark';
     
             html = `
-                <div class="list-group-item list-group-item-action border-start border-4 ${corBorda}">
+                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="bi ${icone} ${corIcone}" style="font-size: 1.5rem;"></i>
+                        <div class="bg-${cor} bg-opacity-25 rounded-circle p-3 me-3">
+                            <i class="bi ${icone} text-${cor} fs-4"></i>
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold">${nomeReagente}</h6>
-                                <span class="badge ${badgeClass}">${item.status}</span>
+                                <h6 class="mb-0 fw-bold text-white">${nomeReagente}</h6>
+                                <span class="badge ${statusBadgeClass} text-uppercase" style="font-size: 0.65rem;">${item.status}</span>
                             </div>
-                            <p class="mb-1 small">${textoAcao}</p>
+                            <p class="mb-1 small text-muted-light">${textoAcao}</p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
-                                <small class="text-muted">${dataCompleta}</small>
+                                <small class="text-white-50">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
+                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         listaHistorico.innerHTML += html;
@@ -229,7 +266,7 @@ inputBusca.addEventListener('keyup', () => {
         if (item.tipo_registro === 'ENTRADA_ESTOQUE') {
             textoPesquisavel = item.item_nome.toLowerCase();
         } else if (item.tipo_registro === 'RESIDUO') {
-            textoPesquisavel = (item.descricao + item.tipo_perigo).toLowerCase();
+            textoPesquisavel = (item.descricao + (item.tipo_perigo || '')).toLowerCase();
         } else {
             const nomeReagente = item.EstoqueLab?.Reagente?.nome || '';
             const nomeOrigem = item.LabOrigem?.nome_laboratorio || '';
