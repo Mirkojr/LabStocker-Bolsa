@@ -1,9 +1,7 @@
 // Este é o nosso "módulo" central
 // Importamos a função createClient da biblioteca global do Supabase
 import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js@2";
-
-const SUPABASE_URL = 'https://fucerkwfydblamwtsmjm.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1Y2Vya3dmeWRibGFtd3RzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMzMwOTAsImV4cCI6MjA5NTgwOTA5MH0.78MxwdgNP4eg2fkVOmOjmClu5o6ICsFHtJSp6zakLGY';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 
 // Criamos e EXPORTAMOS o cliente
