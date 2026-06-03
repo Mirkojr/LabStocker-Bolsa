@@ -1,6 +1,7 @@
 import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import { buscarPerfisPorLaboratorio } from './services/perfisService.js';
 
 const listaUsuariosEl = document.getElementById('lista-usuarios');
 const spinner = document.getElementById('spinner-users');
@@ -26,11 +27,7 @@ async function fetchUsuarios() {
     listaUsuariosEl.innerHTML = '';
 
     try {
-        const { data, error } = await supabaseClient
-            .from('Perfis')
-            .select('*')
-            .eq('id_laboratorio', MEU_LAB_ID)
-            .order('nome');
+        const { data, error } = await buscarPerfisPorLaboratorio(MEU_LAB_ID);
 
         if (error) throw error;
         renderUsuarios(data);

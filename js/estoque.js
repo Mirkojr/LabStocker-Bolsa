@@ -1,6 +1,12 @@
-import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import {
+    excluirItemEstoque,
+    listarEstoquePorLaboratorio,
+    registrarMovimentacaoEntradaEstoque,
+    salvarItemEstoque,
+} from './services/estoqueService.js';
+import { listarReagentesParaEstoque } from './services/reagentesService.js';
 
 // --- Seletores ---
 const listaEstoqueEl = document.getElementById('lista-estoque');
@@ -31,16 +37,7 @@ async function fetchEstoque(labId, filtroNome = '') {
     listaEstoqueEl.innerHTML = '';
 
     try {
-        let query = supabaseClient
-            .from('EstoqueLab')
-            .select(`
-                id, quantidade, unidade_medida, data_validade, observacoes_operacionais, id_reagente,
-                Reagente ( nome ) 
-            `)
-            .eq('id_laboratorio', labId)
-            .order('data_validade'); // Ordena para ver os vencimentos primeiro
-            
-        const { data, error } = await query;
+        const { data, error } = await listarEstoquePorLaboratorio(labId);
         if (error) throw error;
 
         const itensFiltrados = data.filter(item => 
@@ -142,7 +139,7 @@ function renderEstoque(itens) {
 
 async function fetchReagentesParaModal() {
     try {
-        const { data, error } = await supabaseClient.from('Reagente').select('id, nome').order('nome');
+        const { data, error } = await listarReagentesParaEstoque();
         if (error) throw error;
         
         selectReagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
@@ -175,13 +172,13 @@ async function handleFormSubmitEstoque(evento) {
     try {
         let query;
         if (id) {
-            query = supabaseClient.from('EstoqueLab').update(dadosForm).eq('id', id);
+            query = await salvarItemEstoque(id, dadosForm);
         } else {
-            query = supabaseClient.from('EstoqueLab').insert(dadosForm);
-            
+            query = await salvarItemEstoque(null, dadosForm);
+
             // Mantendo sua lógica de histórico
             const nomeReagente = selectReagente.options[selectReagente.selectedIndex].text;
-            await supabaseClient.from('Movimentacao').insert({
+            await registrarMovimentacaoEntradaEstoque({
                 id_laboratorio: ID_LAB_DO_USUARIO,
                 tipo: 'ENTRADA',
                 item_nome: nomeReagente,
@@ -191,7 +188,7 @@ async function handleFormSubmitEstoque(evento) {
             });
         }
 
-        const { error } = await query;
+        const { error } = query;
         if (error) throw error;
 
         showToast(id ? 'Item atualizado com sucesso!' : 'Item adicionado ao estoque!', 'success');
@@ -223,7 +220,7 @@ async function handleDeleteClickEstoque(button) {
     // Ainda usamos confirm nativo aqui por ser mais rápido, mas pode ser melhorado depois
     if (confirm('Tem certeza que deseja excluir este item?')) {
         try {
-            const { error } = await supabaseClient.from('EstoqueLab').delete().eq('id', id);
+            const { error } = await excluirItemEstoque(id);
             if (error) throw error;
             showToast('Item removido do estoque.', 'warning');
             fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);

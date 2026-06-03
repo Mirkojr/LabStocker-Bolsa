@@ -2,6 +2,7 @@ import { checkIsAdmin } from './sessionManager.js';
 import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
 import { formatarCPF, formatarTelefone } from './utils/formatters.js';
+import { buscarPerfilPorEmail, buscarPerfilPorIdentificador } from './services/perfisService.js';
 
 // ==========================================
 // FUNÇÕES UTILITÁRIAS DE FORMATAÇÃO E UI
@@ -54,11 +55,7 @@ async function preencherDadosUsuario() {
     campoEmail.value = user.email;
     bloquearCampo(campoEmail);
 
-    const { data: perfil, error } = await supabaseClient
-        .from('Perfis') 
-        .select('nome, sobrenome, identificador, id_laboratorio')
-        .eq('email', user.email)
-        .maybeSingle();
+    const { data: perfil, error } = await buscarPerfilPorEmail(user.email);
 
     if (error) { console.error(error); return; }
 
@@ -284,11 +281,7 @@ function iniciarLogicaFormulario() {
         const siape = e.target.value.trim();
         if (siape.length < 3) return;
 
-        const { data: perfil, error } = await supabaseClient
-            .from('Perfis')
-            .select('nome, sobrenome')
-            .eq('identificador', siape)
-            .maybeSingle();
+        const { data: perfil, error } = await buscarPerfilPorIdentificador(siape);
 
         if (!error && perfil) {
             nomeRespInput.value = `${perfil.nome} ${perfil.sobrenome}`;
@@ -319,7 +312,7 @@ function iniciarLogicaFormulario() {
             if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { showToast("Nome do laboratório não confere com o SIPAC.", "error"); resetBotao(); return; }
 
             // 2. Validação SIAPE
-            const { data: perfilEncontrado, error: erroPerfil } = await supabaseClient.from('Perfis').select('nome, sobrenome').eq('identificador', siapeDigitado).maybeSingle();
+            const { data: perfilEncontrado, error: erroPerfil } = await buscarPerfilPorIdentificador(siapeDigitado);
             if (erroPerfil) throw erroPerfil;
             if (!perfilEncontrado) { showToast("SIAPE não encontrado na base de usuários.", "error"); resetBotao(); return; }
             

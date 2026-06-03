@@ -1,5 +1,9 @@
-import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
+import {
+    excluirReagente,
+    listarReagentes,
+    salvarReagente,
+} from './services/reagentesService.js';
 
 // --- Seletores de Elementos ---
 const listaReagentesEl = document.getElementById('lista-reagentes');
@@ -32,11 +36,7 @@ async function fetchReagentes(filtroNome = '') {
     listaReagentesEl.innerHTML = '';
 
     try {
-        let query = supabaseClient.from('Reagente').select('*').order('nome');
-        if (filtroNome) {
-            query = query.ilike('nome', `%${filtroNome}%`);
-        }
-        const { data, error } = await query;
+        const { data, error } = await listarReagentes(filtroNome);
         if (error) throw error;
 
         if (data.length === 0) {
@@ -123,14 +123,7 @@ async function handleFormSubmit(evento) {
     };
 
     try {
-        let query;
-        if (id) {
-            query = supabaseClient.from('Reagente').update(dadosForm).eq('id', id);
-        } else {
-            query = supabaseClient.from('Reagente').insert(dadosForm);
-        }
-
-        const { error } = await query;
+        const { error } = await salvarReagente(id || null, dadosForm);
         if (error) throw error;
 
         showToast(id ? 'Reagente atualizado!' : 'Reagente cadastrado!', 'success');
@@ -172,7 +165,7 @@ btnConfirmarExclusao.addEventListener('click', async () => {
     modalConfirmacao.hide();
 
     try {
-        const { error } = await supabaseClient.from('Reagente').delete().eq('id', ID_PARA_EXCLUIR);
+        const { error } = await excluirReagente(ID_PARA_EXCLUIR);
         
         if (error) {
             // Tratamento de erro de chave estrangeira (FK)

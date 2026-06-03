@@ -1,5 +1,6 @@
 
 import { supabaseClient } from './supabaseClient.js';
+import { criarPerfilUsuario } from './services/perfisService.js';
 
 
 console.log('Cliente importado em register.js');
@@ -68,16 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- ETAPA 3: Criar o perfil do usuário na nossa tabela 'Perfis' ---
             // (Requer uma NOVA política RLS na tabela 'Perfis')
             
-            const { error: profileError } = await supabaseClient
-                .from('Perfis')
-                .insert({
-                    id: userId, // O ID do 'auth.users' (ligação 1-para-1)
-                    nome: nome,
-                    sobrenome: sobrenome,
-                    identificador: identificador,
-                    tipo_identificador: tipoIdentificador,
-                    id_laboratorio: laboratorioId // O UUID que encontramos na Etapa 1
-                });
+            const { error: profileError } = await criarPerfilUsuario({
+                id: userId, // O ID do 'auth.users' (ligação 1-para-1)
+                nome: nome,
+                sobrenome: sobrenome,
+                identificador: identificador,
+                tipo_identificador: tipoIdentificador,
+                id_laboratorio: laboratorioId // O UUID que encontramos na Etapa 1
+            });
 
             if (profileError) throw profileError;
 

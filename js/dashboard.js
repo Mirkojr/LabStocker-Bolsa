@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
+import { buscarNomePorId } from './services/perfisService.js';
 
 // Seletores
 const logoutButton = document.getElementById('btn-logout');
@@ -54,11 +55,7 @@ async function loadUserName() {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (user) {
-            const { data, error } = await supabaseClient
-                .from('Perfis')
-                .select('nome')
-                .eq('id', user.id)
-                .single();
+            const { data, error } = await buscarNomePorId(user.id);
 
             if (error) throw error;
             if (data) greetingElement.textContent = `Olá, ${data.nome}!`;
