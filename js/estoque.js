@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
+import { showToast } from './utils/toast.js';
 
 // --- Seletores ---
 const listaEstoqueEl = document.getElementById('lista-estoque');
@@ -20,52 +21,6 @@ const validadeInput = document.getElementById('estoque-validade');
 const observacoesInput = document.getElementById('estoque-observacoes');
 
 let ID_LAB_DO_USUARIO = null;
-
-// ===============================================
-// 1. SISTEMA DE NOTIFICAÇÃO (TOAST)
-// ===============================================
-function showToast(mensagem, tipo = 'success') {
-    const container = document.getElementById('toast-container');
-    
-    // Configurações visuais por tipo
-    let iconClass = 'bi-check-circle-fill';
-    let typeClass = 'toast-success';
-    
-    if (tipo === 'error') {
-        iconClass = 'bi-x-circle-fill';
-        typeClass = 'toast-error';
-    } else if (tipo === 'warning') {
-        iconClass = 'bi-exclamation-triangle-fill';
-        typeClass = 'toast-warning';
-    }
-
-    // Cria o elemento HTML da notificação
-    const toast = document.createElement('div');
-    toast.className = `toast-box ${typeClass}`;
-    toast.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="bi ${iconClass} fs-4 me-3"></i>
-            <span class="fw-semibold text-dark">${mensagem}</span>
-        </div>
-        <button type="button" class="btn-close ms-3" aria-label="Close"></button>
-    `;
-
-    // Botão de fechar manual
-    toast.querySelector('.btn-close').onclick = () => {
-        toast.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => toast.remove(), 500);
-    };
-
-    container.appendChild(toast);
-
-    // Remove automaticamente após 4 segundos
-    setTimeout(() => {
-        if(toast.parentElement) {
-            toast.style.animation = 'fadeOut 0.5s forwards';
-            setTimeout(() => toast.remove(), 500);
-        }
-    }, 4000);
-}
 
 // ===============================================
 // 2. LÓGICA DO ESTOQUE

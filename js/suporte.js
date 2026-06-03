@@ -1,36 +1,10 @@
 import { supabaseClient } from './supabaseClient.js';
+import { showToast } from './utils/toast.js';
 
 // --- Seletores ---
 const formFeedback = document.getElementById('form-feedback');
 const tipoSelect = document.getElementById('tipo-feedback');
 const msgInput = document.getElementById('msg-feedback');
-// --- Funções ---
-function showToast(mensagem, tipo = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
-    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
-    if (tipo === 'warning') { iconClass = 'bi-exclamation-triangle-fill'; typeClass = 'toast-warning'; }
-
-    const toast = document.createElement('div');
-    toast.className = `toast-box ${typeClass}`;
-    toast.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="bi ${iconClass} fs-4 me-3"></i>
-            <span class="fw-semibold text-dark">${mensagem}</span>
-        </div>
-        <button type="button" class="btn-close ms-3"></button>`;
-    
-    toast.querySelector('.btn-close').onclick = () => {
-        toast.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => toast.remove(), 500);
-    };
-
-    container.appendChild(toast);
-    setTimeout(() => { if(toast.parentElement) { toast.style.animation = 'fadeOut 0.5s forwards'; setTimeout(() => toast.remove(), 500); } }, 4000);
-}
-
 async function enviarFeedback(e) {
     e.preventDefault();
 

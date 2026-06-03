@@ -1,26 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-
-// --- SISTEMA DE NOTIFICAÇÃO (TOAST) ---
-function showToast(mensagem, tipo = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
-    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
-
-    const toast = document.createElement('div');
-    toast.className = `toast-box ${typeClass}`;
-    toast.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="bi ${iconClass} fs-4 me-3"></i>
-            <span class="fw-semibold text-dark">${mensagem}</span>
-        </div>
-        <button type="button" class="btn-close ms-3"></button>`;
-    
-    toast.querySelector('.btn-close').onclick = () => toast.remove();
-    container.appendChild(toast);
-    setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
-}
+import { showToast } from './utils/toast.js';
 
 // --- LÓGICA DO FORMULÁRIO ---
 document.addEventListener('DOMContentLoaded', () => {

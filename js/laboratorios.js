@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from './sessionManager.js';
+import { showToast } from './utils/toast.js';
 
 // --- Seletores Principais ---
 const gridLabs = document.getElementById('grid-laboratorios');
@@ -28,29 +29,6 @@ let SOU_ADMIN = false;
 let LABS_CACHE = []; 
 let ESTOQUE_ATUAL_CACHE = [];
 let LAB_ATUAL_NOME = "";
-
-function showToast(mensagem, tipo = 'success') {
-    const container = document.getElementById('toast-container');
-    let iconClass = 'bi-check-circle-fill', typeClass = 'toast-success';
-    if (tipo === 'error') { iconClass = 'bi-x-circle-fill'; typeClass = 'toast-error'; }
-    if (tipo === 'warning') { iconClass = 'bi-exclamation-triangle-fill'; typeClass = 'toast-warning'; }
-
-    const toast = document.createElement('div');
-    toast.className = `toast-box ${typeClass}`;
-    toast.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="bi ${iconClass} fs-4 me-3"></i>
-            <span class="fw-semibold text-dark">${mensagem}</span>
-        </div>
-        <button type="button" class="btn-close ms-3"></button>`;
-    
-    toast.querySelector('.btn-close').onclick = () => {
-        toast.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => toast.remove(), 500);
-    };
-    container.appendChild(toast);
-    setTimeout(() => { if(toast.parentElement) { toast.style.animation = 'fadeOut 0.5s forwards'; setTimeout(() => toast.remove(), 500); } }, 4000);
-}
 
 
 async function init() {
