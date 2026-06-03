@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId } from './labContext.js';
+import { getCurrentLabId } from './sessionManager.js';
 
 const listaUsuariosEl = document.getElementById('lista-usuarios');
 const spinner = document.getElementById('spinner-users');

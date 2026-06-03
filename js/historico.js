@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId } from './labContext.js';
+import { getCurrentLabId } from './sessionManager.js';
 
 // --- Seletores de Elementos ---
 const listaHistorico = document.getElementById('lista-historico');

@@ -1,4 +1,4 @@
-import { checkIsAdmin } from './labContext.js';
+import { checkIsAdmin } from './sessionManager.js';
 import { supabaseClient } from './supabaseClient.js';
 
 // ==========================================

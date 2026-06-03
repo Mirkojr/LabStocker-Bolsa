@@ -2,11 +2,24 @@
 // Importamos a função createClient da biblioteca global do Supabase
 import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js@2";
 
-const SUPABASE_URL = 'https://tnhjibckjzjthgmlpimw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaGppYmNranpqdGhnbWxwaW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MTI4NjEsImV4cCI6MjA3ODA4ODg2MX0.R3pw9Xmxj-Q2F9JWTNz-Bjh-aFftvoxDefLKKhDCllQ';
+const SUPABASE_URL = 'https://fucerkwfydblamwtsmjm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1Y2Vya3dmeWRibGFtd3RzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMzMwOTAsImV4cCI6MjA5NTgwOTA5MH0.78MxwdgNP4eg2fkVOmOjmClu5o6ICsFHtJSp6zakLGY';
+
 
 // Criamos e EXPORTAMOS o cliente
 export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const testConnection = async () => {
+  const { data, error } = await supabaseClient.from('Laboratorio').select('id').limit(1);
+
+  if (error) {
+    console.error('Erro na conexão:', error.message);
+  } else {
+    console.log('Conexão com Supabase estabelecida com sucesso!');
+  }
+};
+
+testConnection();
 
 // Nota: Tive que usar uma URL completa no import acima porque 
 // não estamos usando um gerenciador de pacotes (npm).

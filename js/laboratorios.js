@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from './labContext.js';
+import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from './sessionManager.js';
 
 // --- Seletores Principais ---
 const gridLabs = document.getElementById('grid-laboratorios');
