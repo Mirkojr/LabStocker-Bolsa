@@ -112,7 +112,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         
         if (!MODO_GLOBAL) qMov = qMov.eq('id_laboratorio', MEU_LAB_ID);
 
-        let qTransf = supabaseClient.from('Transferencia')
+        let qTransf = supabaseClient.from('transferencia')
             .select(`*, LabOrigem:id_lab_origem(nome_laboratorio), LabDestino:id_lab_destino(nome_laboratorio), estoquelab:id_item_estoque(reagente(nome), unidade_medida)`)
             .gte('data_solicitacao', inicioISO)
             .lte('data_solicitacao', fimISO);

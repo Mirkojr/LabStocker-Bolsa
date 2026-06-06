@@ -199,7 +199,7 @@ formSolicitacao.addEventListener('submit', async (e) => {
     }
 
     try {
-        const { error } = await supabaseClient.from('Transferencia').insert({
+        const { error } = await supabaseClient.from('transferencia').insert({
             id_lab_origem: labOrigem,
             id_lab_destino: MEU_LAB_ID, // Eu sou o destino
             id_item_estoque: idItem,

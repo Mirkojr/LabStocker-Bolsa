@@ -38,7 +38,7 @@ async function fetchHistorico() {
 
         // 1. Transferências (Trocas aprovadas onde o lab participou)
         const queryTransf = supabaseClient
-            .from('Transferencia')
+            .from('transferencia')
             .select(`
                 id, quantidade_transferida, status, data_solicitacao, id_lab_origem, id_lab_destino,
                 LabOrigem:id_lab_origem ( nome_laboratorio ),

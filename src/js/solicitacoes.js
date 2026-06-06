@@ -36,7 +36,7 @@ async function fetchPedidosRecebidos() {
     try {
         // Busca transferências onde EU sou o ORIGEM (alguém quer algo meu) ou DESTINO conforme sua lógica original
         const { data, error } = await supabaseClient
-            .from('Transferencia')
+            .from('transferencia')
             .select(`
                 id,
                 quantidade_transferida,
@@ -131,7 +131,7 @@ async function handleRecusar(id) {
 
     try {
         const { error } = await supabaseClient
-            .from('Transferencia')
+            .from('transferencia')
             .update({ status: 'Recusado' })
             .eq('id', id);
             
