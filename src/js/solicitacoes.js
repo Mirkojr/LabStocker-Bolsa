@@ -1,55 +1,37 @@
-import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import { listarSolicitacoesPendentes, aprovarTransferencia, recusarTransferencia } from './services/transferenciasService.js';
 
 // --- Seletores ---
 const listaPedidos = document.getElementById('lista-pedidos');
 const spinner = document.getElementById('spinner-solic');
 let MEU_LAB_ID = null;
 
-
-
-
-
 async function init() {
     try {
-        // Busca o ID do laboratório atual (suporta modo Admin)
+        // Busca o ID do laboratorio atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
-        
+
         if (MEU_LAB_ID) {
             fetchPedidosRecebidos();
         } else {
-            listaPedidos.innerHTML = '<div class="text-center text-warning p-5">Laboratório não identificado.</div>';
+            listaPedidos.innerHTML = '<div class="text-center text-warning p-5">Laboratorio nao identificado.</div>';
         }
     } catch (error) {
         console.error(error);
-        showToast("Erro ao carregar dados da sessão.", "error");
+        showToast("Erro ao carregar dados da sessao.", "error");
     }
 }
 
 async function fetchPedidosRecebidos() {
     if (!spinner || !listaPedidos) return;
-    
+
     spinner.classList.remove('d-none');
     listaPedidos.innerHTML = '';
 
     try {
-        // Busca transferências onde EU sou o ORIGEM (alguém quer algo meu) ou DESTINO conforme sua lógica original
-        const { data, error } = await supabaseClient
-            .from('transferencia')
-            .select(`
-                id,
-                quantidade_transferida,
-                data_solicitacao,
-                laboratorio:id_lab_origem ( nome_laboratorio ),
-                estoquelab:id_item_estoque (
-                    unidade_medida,
-                    reagente ( nome )
-                )
-            `)
-            .eq('id_lab_destino', MEU_LAB_ID)
-            .eq('status', 'pendente')
-            .order('data_solicitacao', { ascending: false });
+        // Busca transferencias pendentes onde EU sou o destino
+        const { data, error } = await listarSolicitacoesPendentes(MEU_LAB_ID);
 
         if (error) throw error;
 
@@ -57,7 +39,7 @@ async function fetchPedidosRecebidos() {
             listaPedidos.innerHTML = `
                 <div class="text-center py-5 text-muted-light">
                     <i class="bi bi-inbox fs-1 opacity-25"></i>
-                    <p class="mt-3">Nenhuma solicitação pendente no momento.</p>
+                    <p class="mt-3">Nenhuma solicitacao pendente no momento.</p>
                 </div>`;
         } else {
             renderPedidos(data);
@@ -82,7 +64,7 @@ function renderPedidos(pedidos) {
         const div = document.createElement('div');
         div.className = 'list-group-item bg-transparent border-white border-opacity-10 mb-3 p-4 rounded-4 shadow-sm';
         div.style.background = 'rgba(255, 255, 255, 0.03)';
-        
+
         div.innerHTML = `
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div class="mb-3 mb-md-0">
@@ -107,37 +89,32 @@ function renderPedidos(pedidos) {
     });
 }
 
-
-
 async function handleAprovar(id) {
-    if (!confirm("Confirmar a transferência? Esta ação debitará o item do seu estoque imediatamente.")) return;
+    if (!confirm("Confirmar a transferencia? Esta acao debitara o item do seu estoque imediatamente.")) return;
 
     try {
-        // Chama a função RPC complexa do banco que cuida de toda a transação
-        const { error } = await supabaseClient.rpc('aprovar_transferencia', { p_transfer_id: id });
+        // Chama a funcao RPC complexa do banco (via service) que cuida de toda a transacao
+        const { error } = await aprovarTransferencia(id);
         if (error) throw error;
 
-        showToast("Transferência aprovada! estoques atualizados com sucesso.", "success");
+        showToast("Transferencia aprovada! estoques atualizados com sucesso.", "success");
         fetchPedidosRecebidos();
 
     } catch (error) {
         console.error(error);
-        showToast("Erro ao processar aprovação: " + error.message, "error");
+        showToast("Erro ao processar aprovacao: " + error.message, "error");
     }
 }
 
 async function handleRecusar(id) {
-    if (!confirm("Deseja realmente recusar esta solicitação?")) return;
+    if (!confirm("Deseja realmente recusar esta solicitacao?")) return;
 
     try {
-        const { error } = await supabaseClient
-            .from('transferencia')
-            .update({ status: 'Recusado' })
-            .eq('id', id);
-            
+        const { error } = await recusarTransferencia(id);
+
         if (error) throw error;
 
-        showToast("Solicitação recusada e notificada.", "warning");
+        showToast("Solicitacao recusada e notificada.", "warning");
         fetchPedidosRecebidos();
 
     } catch (error) {

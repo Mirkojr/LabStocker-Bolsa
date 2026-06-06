@@ -1,6 +1,8 @@
-import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import { listarLaboratorios } from './services/laboratoriosService.js';
+import { listarEstoqueDisponivelPorLaboratorio } from './services/estoqueService.js';
+import { criarSolicitacao } from './services/transferenciasService.js';
 
 // --- Seletores Principais ---
 const gridLabs = document.getElementById('grid-laboratorios');
@@ -14,7 +16,7 @@ const listaestoqueExt = document.getElementById('lista-estoque-externo');
 const tituloLabSelecionado = document.getElementById('titulo-lab-selecionado');
 const buscaestoqueExtInput = document.getElementById('busca-estoque-externo');
 
-// Modal Solicitação
+// Modal Solicitacao
 const modalSolicitarEl = document.getElementById('modal-solicitar');
 const modalSolicitar = new bootstrap.Modal(modalSolicitarEl);
 const formSolicitacao = document.getElementById('form-solicitacao');
@@ -23,7 +25,7 @@ const unidadeSolicitadaSpan = document.getElementById('unidade-solicitada');
 const textoSolicitacao = document.getElementById('texto-solicitacao');
 const erroQtd = document.getElementById('erro-qtd');
 
-// --- Variáveis de Estado (Sua lógica original de cache) ---
+// --- Variaveis de Estado (cache) ---
 let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
 let LABS_CACHE = []; 
@@ -38,17 +40,14 @@ async function init() {
         SOU_ADMIN = await checkIsAdmin();
         await fetchlaboratorios();
     } catch (e) {
-        showToast("Falha na conexão com o banco.", "error");
+        showToast("Falha na conexao com o banco.", "error");
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
 async function fetchlaboratorios() {
-    const { data, error } = await supabaseClient
-        .from('laboratorio')
-        .select('*')
-        .order('nome_laboratorio');
+    const { data, error } = await listarLaboratorios();
 
     if (error) throw error;
     LABS_CACHE = data; 
@@ -57,16 +56,16 @@ async function fetchlaboratorios() {
 
 function renderlaboratorios(labs) {
     gridLabs.innerHTML = '';
-    
+
     if (labs.length === 0) {
-        gridLabs.innerHTML = '<div class="col-12 text-center py-5 text-muted">Nenhum laboratório encontrado.</div>';
+        gridLabs.innerHTML = '<div class="col-12 text-center py-5 text-muted">Nenhum laboratorio encontrado.</div>';
         return;
     }
 
     labs.forEach(lab => {
         const isMeuLab = String(lab.id) === String(MEU_LAB_ID);
-        
-        // Lógica de Admin (Personificação)
+
+        // Logica de Admin (Personificacao)
         let btnAdmin = '';
         if (SOU_ADMIN) {
             btnAdmin = `
@@ -89,7 +88,7 @@ function renderlaboratorios(labs) {
                     
                     <button class="btn ${isMeuLab ? 'btn-light disabled border' : 'btn-primary'} w-100 rounded-pill fw-bold btn-ver-estoque py-2" 
                         data-id="${lab.id}" data-nome="${lab.nome_laboratorio}">
-                        ${isMeuLab ? 'Seu Laboratório' : '<i class="bi bi-eye me-2"></i>Ver estoque'}
+                        ${isMeuLab ? 'Seu Laboratorio' : '<i class="bi bi-eye me-2"></i>Ver estoque'}
                     </button>
                     ${btnAdmin}
                 </div>
@@ -98,7 +97,7 @@ function renderlaboratorios(labs) {
     });
 }
 
-// --- Lógica de Busca (Debounce para performance) ---
+// --- Logica de Busca ---
 buscaLabInput.addEventListener('keyup', () => {
     const termo = buscaLabInput.value.toLowerCase();
     const filtrados = LABS_CACHE.filter(l => 
@@ -116,14 +115,10 @@ async function fetchestoqueExterno(labId, labNome) {
     modalestoqueExt.show();
 
     try {
-        const { data, error } = await supabaseClient
-            .from('estoquelab')
-            .select('*, reagente(nome)')
-            .eq('id_laboratorio', labId)
-            .gt('quantidade', 0);
+        const { data, error } = await listarEstoqueDisponivelPorLaboratorio(labId);
 
         if (error) throw error;
-        
+
         ESTOQUE_ATUAL_CACHE = data; 
         renderestoqueExterno(ESTOQUE_ATUAL_CACHE);
     } catch (e) {
@@ -133,9 +128,9 @@ async function fetchestoqueExterno(labId, labNome) {
 
 function renderestoqueExterno(itens) {
     listaestoqueExt.innerHTML = '';
-    
+
     if (itens.length === 0) {
-        listaestoqueExt.innerHTML = '<div class="p-5 text-center text-muted">Não há reagentes disponíveis neste lab.</div>';
+        listaestoqueExt.innerHTML = '<div class="p-5 text-center text-muted">Nao ha reagentes disponiveis neste lab.</div>';
         return;
     }
 
@@ -169,25 +164,24 @@ buscaestoqueExtInput.addEventListener('keyup', () => {
 });
 
 
-
 function abrirModalSolicitacao(btn) {
     const { id, nome, unidade, max, lab } = btn.dataset;
-    
+
     document.getElementById('solic-item-id').value = id;
     document.getElementById('solic-lab-destino').value = lab;
     document.getElementById('solic-max-qtd').value = max;
-    
+
     qtdSolicitadaInput.value = '';
     unidadeSolicitadaSpan.textContent = unidade;
-    textoSolicitacao.innerHTML = `Você está solicitando <strong>${nome}</strong>.<br>Disponível: ${max} ${unidade}`;
+    textoSolicitacao.innerHTML = `Voce esta solicitando <strong>${nome}</strong>.<br>Disponivel: ${max} ${unidade}`;
     erroQtd.classList.add('d-none');
-    
+
     modalSolicitar.show();
 }
 
 formSolicitacao.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const idItem = document.getElementById('solic-item-id').value;
     const labOrigem = document.getElementById('solic-lab-destino').value; // O lab dono do item
     const qtd = parseFloat(qtdSolicitadaInput.value);
@@ -199,7 +193,7 @@ formSolicitacao.addEventListener('submit', async (e) => {
     }
 
     try {
-        const { error } = await supabaseClient.from('transferencia').insert({
+        const { error } = await criarSolicitacao({
             id_lab_origem: labOrigem,
             id_lab_destino: MEU_LAB_ID, // Eu sou o destino
             id_item_estoque: idItem,
@@ -209,7 +203,7 @@ formSolicitacao.addEventListener('submit', async (e) => {
 
         if (error) throw error;
 
-        showToast("Solicitação enviada! Aguarde a aprovação do laboratório.", "success");
+        showToast("Solicitacao enviada! Aguarde a aprovacao do laboratorio.", "success");
         modalSolicitar.hide();
         modalestoqueExt.hide();
     } catch (e) {
@@ -219,25 +213,24 @@ formSolicitacao.addEventListener('submit', async (e) => {
 
 
 document.addEventListener('click', (e) => {
-    // Botão Ver estoque
+    // Botao Ver estoque
     const btnVer = e.target.closest('.btn-ver-estoque');
     if (btnVer) fetchestoqueExterno(btnVer.dataset.id, btnVer.dataset.nome);
 
-    // Botão Solicitar
+    // Botao Solicitar
     const btnSol = e.target.closest('.btn-solicitar');
     if (btnSol) abrirModalSolicitacao(btnSol);
 
-    // Botão de Admin
+    // Botao de Admin
     const btnAdmin = e.target.closest('.btn-gerenciar-admin');
     if (btnAdmin) {
         const { id, nome } = btnAdmin.dataset;
-        // Confirm nativo é ok para ações de risco, mas o toast avisa depois
-        if(confirm(`ATENÇÃO: Você entrará no sistema como se fosse do laboratório "${nome}". Continuar?`)) {
+        if(confirm(`ATENCAO: Voce entrara no sistema como se fosse do laboratorio "${nome}". Continuar?`)) {
             setAdminLabContext(id, nome);
             window.location.href = 'dashboard.html';
         }
     }
 });
 
-// Inicialização
+// Inicializacao
 document.addEventListener('DOMContentLoaded', init);

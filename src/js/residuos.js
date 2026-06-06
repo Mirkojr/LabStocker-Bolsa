@@ -1,6 +1,6 @@
-import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import { listarResiduosPorLaboratorio, salvarResiduo, atualizarStatusResiduo } from './services/residuosService.js';
 
 // --- Seletores de Elementos ---
 const listaresiduos = document.getElementById('lista-residuos');
@@ -21,23 +21,23 @@ const btnNovoresiduo = document.querySelector('[data-bs-target="#modal-residuo"]
 let MEU_LAB_ID = null;
 
 // ===============================================
-// LÓGICA DE INICIALIZAÇÃO
+// LOGICA DE INICIALIZACAO
 // ===============================================
 
 async function init() {
     try {
-        // Busca o ID do laboratório atual (suporta modo Admin)
+        // Busca o ID do laboratorio atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
-        
+
         if (MEU_LAB_ID) {
             fetchresiduos();
         } else {
-            listaresiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratório não identificado. Verifique sua sessão.</div>';
+            listaresiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratorio nao identificado. Verifique sua sessao.</div>';
         }
 
     } catch (error) {
         console.error('Erro no init:', error);
-        showToast("Erro ao carregar dados de sessão.", "error");
+        showToast("Erro ao carregar dados de sessao.", "error");
     }
 }
 
@@ -46,30 +46,26 @@ async function fetchresiduos() {
     listaresiduos.innerHTML = '';
 
     try {
-        const { data, error } = await supabaseClient
-            .from('residuo')
-            .select('*')
-            .eq('id_laboratorio', MEU_LAB_ID)
-            .order('data_criacao', { ascending: false });
+        const { data, error } = await listarResiduosPorLaboratorio(MEU_LAB_ID);
 
         if (error) throw error;
 
         renderresiduos(data);
 
     } catch (error) {
-        console.error('Erro ao buscar resíduos:', error.message);
-        showToast("Erro ao carregar o inventário de resíduos.", "error");
+        console.error('Erro ao buscar residuos:', error.message);
+        showToast("Erro ao carregar o inventario de residuos.", "error");
     } finally {
         spinner.classList.add('d-none');
     }
 }
 
 /**
- * Renderiza os cards de resíduos seguindo o padrão Dark Glass
+ * Renderiza os cards de residuos seguindo o padrao Dark Glass
  */
 function renderresiduos(residuos) {
     if (residuos.length === 0) {
-        listaresiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum resíduo registrado para este laboratório.</div>';
+        listaresiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum residuo registrado para este laboratorio.</div>';
         return;
     }
 
@@ -77,7 +73,7 @@ function renderresiduos(residuos) {
         const isAberto = res.status === 'Em Aberto';
         const statusClass = isAberto ? 'bg-warning text-dark' : 'bg-success text-white';
         const dataF = new Date(res.data_criacao).toLocaleDateString('pt-BR');
-        
+
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-4';
         col.innerHTML = `
@@ -117,7 +113,7 @@ function renderresiduos(residuos) {
 }
 
 // ===============================================
-// FORMULÁRIO E AÇÕES (CRUD)
+// FORMULARIO E ACOES (CRUD)
 // ===============================================
 
 function handleEditClick(btn) {
@@ -128,7 +124,7 @@ function handleEditClick(btn) {
     qtdInput.value = d.qtd;
     unidadeInput.value = d.unidade;
 
-    modalTitle.textContent = 'Editar Registro de Resíduo';
+    modalTitle.textContent = 'Editar Registro de Residuo';
     modalSubmitBtn.textContent = 'Atualizar Registro';
     modalresiduo.show();
 }
@@ -146,18 +142,15 @@ async function handleFormSubmit(e) {
     };
 
     try {
-        let query;
-        if (id) {
-            query = supabaseClient.from('residuo').update(payload).eq('id', id);
-        } else {
+        // Em novos registros definimos o status inicial; edicoes preservam o status atual
+        if (!id) {
             payload.status = 'Em Aberto';
-            query = supabaseClient.from('residuo').insert([payload]);
         }
 
-        const { error } = await query;
+        const { error } = await salvarResiduo(id, payload);
         if (error) throw error;
 
-        showToast(id ? "Registro atualizado com sucesso!" : "Resíduo adicionado ao inventário.", "success");
+        showToast(id ? "Registro atualizado com sucesso!" : "Residuo adicionado ao inventario.", "success");
         modalresiduo.hide();
         fetchresiduos();
 
@@ -169,31 +162,28 @@ async function handleFormSubmit(e) {
 
 async function atualizarStatus(id, novoStatus) {
     let msg = `Deseja alterar o status para: ${novoStatus}?`;
-    if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltará a figurar como um descarte pendente.";
-    if (novoStatus === 'Descartado') msg = "Confirmar o descarte final deste resíduo? Esta ação finalizará o controle deste item.";
+    if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltara a figurar como um descarte pendente.";
+    if (novoStatus === 'Descartado') msg = "Confirmar o descarte final deste residuo? Esta acao finalizara o controle deste item.";
 
-    // Mantemos o confirm nativo para ações críticas, mas o resultado é via Toast
+    // Mantemos o confirm nativo para acoes criticas, mas o resultado e via Toast
     if (!confirm(msg)) return;
 
     try {
-        const { error } = await supabaseClient
-            .from('residuo')
-            .update({ status: novoStatus })
-            .eq('id', id);
+        const { error } = await atualizarStatusResiduo(id, novoStatus);
 
         if (error) throw error;
-        
-        showToast(`Resíduo atualizado para ${novoStatus}.`, "success");
+
+        showToast(`Residuo atualizado para ${novoStatus}.`, "success");
         fetchresiduos();
 
     } catch (error) {
         console.error('Erro ao atualizar status:', error.message);
-        showToast("Erro na atualização: " + error.message, "error");
+        showToast("Erro na atualizacao: " + error.message, "error");
     }
 }
 
 // ===============================================
-// EVENTOS E INICIALIZAÇÃO
+// EVENTOS E INICIALIZACAO
 // ===============================================
 
 document.addEventListener('DOMContentLoaded', init);
@@ -204,12 +194,12 @@ if (btnNovoresiduo) {
     btnNovoresiduo.addEventListener('click', () => {
         formresiduo.reset();
         editIdInput.value = '';
-        modalTitle.textContent = 'Registrar Novo Resíduo';
+        modalTitle.textContent = 'Registrar Novo Residuo';
         modalSubmitBtn.textContent = 'Registrar';
     });
 }
 
-// Delegação de Eventos para botões dinâmicos
+// Delegacao de Eventos para botoes dinamicos
 listaresiduos.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-editar');
     if (btnEdit) handleEditClick(btnEdit);

@@ -1,6 +1,9 @@
-import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId, checkIsAdmin } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
+import { listarLaboratoriosResumo } from './services/laboratoriosService.js';
+import { listarMovimentacoesPorPeriodo } from './services/movimentacoesService.js';
+import { listarTransferenciasPorPeriodo } from './services/transferenciasService.js';
+import { listarResiduosDescartadosPorPeriodo } from './services/residuosService.js';
 
 // --- Seletores ---
 const formRelatorio = document.getElementById('form-relatorio');
@@ -15,7 +18,6 @@ let MODO_GLOBAL = false;
 let MAPA_LABORATORIOS = {}; 
 
 
-
 async function init() {
     try {
         MEU_LAB_ID = await getCurrentLabId();
@@ -25,13 +27,13 @@ async function init() {
         const labSelecionado = sessionStorage.getItem('ADMIN_SELECTED_LAB_ID');
         if (SOU_ADMIN && !labSelecionado) {
             MODO_GLOBAL = true;
-            if (tituloPagina) tituloPagina.innerHTML = 'Relatório Geral (Todos os Laboratórios)';
-            
-            // Adiciona coluna "Laboratório" se for admin global
+            if (tituloPagina) tituloPagina.innerHTML = 'Relatorio Geral (Todos os Laboratorios)';
+
+            // Adiciona coluna "Laboratorio" se for admin global
             const headerRow = document.querySelector('#tabela-preview thead tr');
-            if (headerRow && !headerRow.innerHTML.includes('Laboratório')) {
+            if (headerRow && !headerRow.innerHTML.includes('Laboratorio')) {
                 const thLab = document.createElement('th');
-                thLab.textContent = 'Laboratório';
+                thLab.textContent = 'Laboratorio';
                 thLab.className = 'py-3';
                 headerRow.insertBefore(thLab, headerRow.children[1]); 
             }
@@ -40,7 +42,7 @@ async function init() {
         await fetchMapalaboratorios();
 
         if (MEU_LAB_ID || MODO_GLOBAL) {
-            // Define datas padrão (últimos 30 dias)
+            // Define datas padrao (ultimos 30 dias)
             const hoje = new Date();
             const trintaDiasAtras = new Date();
             trintaDiasAtras.setDate(hoje.getDate() - 30);
@@ -51,27 +53,25 @@ async function init() {
             // Carrega preview inicial
             carregarDados(dataInicioInput.value, dataFimInput.value, false);
         } else {
-            if (!SOU_ADMIN) showToast("Erro: Laboratório não identificado.", "error");
+            if (!SOU_ADMIN) showToast("Erro: Laboratorio nao identificado.", "error");
         }
     } catch (error) {
         console.error(error);
-        showToast("Erro na inicialização da página.", "error");
+        showToast("Erro na inicializacao da pagina.", "error");
     }
 }
 
 async function fetchMapalaboratorios() {
     try {
-        const { data, error } = await supabaseClient
-            .from('laboratorio')
-            .select('id, nome_laboratorio');
-        
+        const { data, error } = await listarLaboratoriosResumo();
+
         if (!error && data) {
             data.forEach(lab => {
                 MAPA_LABORATORIOS[lab.id] = lab.nome_laboratorio;
             });
         }
     } catch (e) {
-        console.warn("Erro ao carregar mapa de laboratórios:", e);
+        console.warn("Erro ao carregar mapa de laboratorios:", e);
     }
 }
 
@@ -81,56 +81,38 @@ function getNomeLab(id) {
 
 async function carregarDados(dataInicio, dataFim, isDownload) {
     const btnSubmit = formRelatorio.querySelector('button[type="submit"]');
-    
+    let resetBtn;
+
     if (!isDownload) {
         tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando dados...</td></tr>';
     } else {
-        // feedback visual no botão de baixar
+        // feedback visual no botao de baixar
         const originalText = btnSubmit.innerHTML;
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando CSV...';
-        
-        // Função interna para resetar o botão
-        var resetBtn = () => {
+
+        resetBtn = () => {
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = originalText;
         };
     }
 
-    // Configuração de Datas (UTC)
+    // Configuracao de Datas (UTC)
     const inicioISO = new Date(dataInicio).toISOString(); 
     const fimDate = new Date(dataFim);
     fimDate.setUTCHours(23, 59, 59, 999);
     const fimISO = fimDate.toISOString();
 
+    // Em modo global nao filtramos por laboratorio
+    const labFiltro = MODO_GLOBAL ? null : MEU_LAB_ID;
+
     try {
-        // Consultas ao Supabase
-        let qMov = supabaseClient.from('Movimentacao')
-            .select('*') 
-            .gte('data_movimentacao', inicioISO)
-            .lte('data_movimentacao', fimISO);
-        
-        if (!MODO_GLOBAL) qMov = qMov.eq('id_laboratorio', MEU_LAB_ID);
-
-        let qTransf = supabaseClient.from('transferencia')
-            .select(`*, LabOrigem:id_lab_origem(nome_laboratorio), LabDestino:id_lab_destino(nome_laboratorio), estoquelab:id_item_estoque(reagente(nome), unidade_medida)`)
-            .gte('data_solicitacao', inicioISO)
-            .lte('data_solicitacao', fimISO);
-
-        if (!MODO_GLOBAL) {
-            qTransf = qTransf.or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`);
-        }
-
-        let qRes = supabaseClient.from('residuo')
-            .select('*')
-            .eq('status', 'Descartado')
-            .gte('data_criacao', inicioISO)
-            .lte('data_criacao', fimISO);
-
-        if (!MODO_GLOBAL) qRes = qRes.eq('id_laboratorio', MEU_LAB_ID);
-
-        // Executa todas em paralelo
-        const [resMov, resTransf, resRes] = await Promise.all([qMov, qTransf, qRes]);
+        // Consultas via camada de services, executadas em paralelo
+        const [resMov, resTransf, resRes] = await Promise.all([
+            listarMovimentacoesPorPeriodo(inicioISO, fimISO, labFiltro),
+            listarTransferenciasPorPeriodo(inicioISO, fimISO, labFiltro),
+            listarResiduosDescartadosPorPeriodo(inicioISO, fimISO, labFiltro)
+        ]);
 
         // Processamento dos dados
         let lista = [];
@@ -151,17 +133,17 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             });
         }
 
-        // 2. Transferências
+        // 2. Transferencias
         if (resTransf.data) {
             resTransf.data.forEach(t => {
-                let tipoLabel = 'TRANSFERÊNCIA';
+                let tipoLabel = 'TRANSFERENCIA';
                 let labPrincipal = t.LabOrigem?.nome_laboratorio;
                 let detalheTexto = `Para: ${t.LabDestino?.nome_laboratorio}`;
 
                 if (!MODO_GLOBAL) {
                     const souOrigem = t.id_lab_origem === MEU_LAB_ID;
                     const parceiro = souOrigem ? t.LabDestino?.nome_laboratorio : t.LabOrigem?.nome_laboratorio;
-                    tipoLabel = souOrigem ? 'SAÍDA (TROCA)' : 'ENTRADA (TROCA)';
+                    tipoLabel = souOrigem ? 'SAIDA (TROCA)' : 'ENTRADA (TROCA)';
                     labPrincipal = souOrigem ? t.LabOrigem?.nome_laboratorio : t.LabDestino?.nome_laboratorio; 
                     detalheTexto = souOrigem ? `Enviado para ${parceiro}` : `Recebido de ${parceiro}`;
                 }
@@ -188,7 +170,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
                 lista.push({
                     data: r.data_criacao,
                     laboratorio: nomeLab,
-                    tipo: 'SAÍDA (DESCARTE)',
+                    tipo: 'SAIDA (DESCARTE)',
                     item: r.descricao,
                     qtd: r.quantidade,
                     unidade: r.unidade_medida,
@@ -202,39 +184,39 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
 
         if (isDownload) {
             if (lista.length === 0) {
-                showToast("Não há dados para gerar relatório neste período.", "warning");
+                showToast("Nao ha dados para gerar relatorio neste periodo.", "warning");
             } else {
                 gerarCSV(lista);
-                showToast("Relatório gerado com sucesso! Download iniciado.", "success");
+                showToast("Relatorio gerado com sucesso! Download iniciado.", "success");
             }
-            if(resetBtn) resetBtn();
+            if (resetBtn) resetBtn();
         } else {
             renderPreview(lista);
         }
 
     } catch (error) {
         console.error(error);
-        showToast("Erro ao processar dados do relatório.", "error");
-        if(resetBtn) resetBtn();
-        if(!isDownload) tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
+        showToast("Erro ao processar dados do relatorio.", "error");
+        if (resetBtn) resetBtn();
+        if (!isDownload) tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
     }
 }
 
 function renderPreview(lista) {
     tbodyPreview.innerHTML = '';
     if (lista.length === 0) {
-        tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste período.</td></tr>';
+        tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste periodo.</td></tr>';
         return;
     }
 
     lista.forEach(item => {
         const dataF = new Date(item.data).toLocaleDateString('pt-BR');
         let colLab = MODO_GLOBAL ? `<td><span class="badge bg-light text-dark border">${item.laboratorio}</span></td>` : '';
-        
+
         let badgeTipo = 'bg-secondary';
         if(item.tipo.includes('ENTRADA')) badgeTipo = 'bg-success';
-        if(item.tipo.includes('SAÍDA')) badgeTipo = 'bg-danger';
-        if(item.tipo.includes('TRANSFERÊNCIA')) badgeTipo = 'bg-primary';
+        if(item.tipo.includes('SAIDA')) badgeTipo = 'bg-danger';
+        if(item.tipo.includes('TRANSFERENCIA')) badgeTipo = 'bg-primary';
 
         const tr = `
             <tr>

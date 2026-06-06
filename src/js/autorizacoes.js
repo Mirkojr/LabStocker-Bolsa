@@ -1,11 +1,13 @@
 import { checkIsAdmin } from './sessionManager.js';
-import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
 import { formatarCPF, formatarTelefone } from './utils/formatters.js';
 import { buscarPerfilPorId, buscarPerfilPorIdentificador } from './services/perfisService.js';
+import { getUsuarioLogado } from './services/authService.js';
+import { buscarLaboratorioPorId, buscarNomePorSipac } from './services/laboratoriosService.js';
+import { listarProjetosPorEmail, criarProjeto, obterUrlPublica } from './services/projetosService.js';
 
 // ==========================================
-// FUNÇÕES UTILITÁRIAS DE FORMATAÇÃO E UI
+// FUNCOES UTILITARIAS DE FORMATACAO E UI
 // ==========================================
 function formatarUnidade(unidade) {
     if (!unidade) return "";
@@ -16,7 +18,7 @@ function formatarUnidade(unidade) {
 }
 
 // ==========================================
-// LÓGICA DE CARREGAMENTO INICIAL
+// LOGICA DE CARREGAMENTO INICIAL
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     const loadingDiv = document.getElementById('auth-loading');
@@ -30,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Remove tela de loading e mostra o conteúdo
+        // Remove tela de loading e mostra o conteudo
         if (loadingDiv) loadingDiv.classList.add('d-none');
         if (contentDiv) contentDiv.style.display = 'block';
 
@@ -39,16 +41,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         iniciarLogicaFormulario();
 
     } catch (error) {
-        console.error("Erro ao verificar permissões:", error);
-        showToast("Erro na verificação de acesso.", "error");
+        console.error("Erro ao verificar permissoes:", error);
+        showToast("Erro na verificacao de acesso.", "error");
     }
 });
 
 /**
- * Busca dados do perfil logado e pré-preenche o formulário
+ * Busca dados do perfil logado e pre-preenche o formulario
  */
 async function preencherDadosUsuario() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await getUsuarioLogado();
     if (!user) return;
 
     const campoEmail = document.getElementById('responsavel-email');
@@ -66,16 +68,12 @@ async function preencherDadosUsuario() {
 
         campoNome.value = nomeCompleto;
         campoSiape.value = perfil.identificador || '';
-        
+
         bloquearCampo(campoNome);
         bloquearCampo(campoSiape);
 
         if (perfil.id_laboratorio) {
-            const { data: lab, error: erroLab } = await supabaseClient
-                .from('laboratorio') 
-                .select('nome_laboratorio, codigo_sipac')
-                .eq('id', perfil.id_laboratorio)
-                .maybeSingle();
+            const { data: lab, error: erroLab } = await buscarLaboratorioPorId(perfil.id_laboratorio);
 
             if (!erroLab && lab) {
                 const campoLabNome = document.getElementById('lab-nome');
@@ -98,33 +96,29 @@ function bloquearCampo(elemento) {
 }
 
 // ==========================================
-// GESTÃO DO HISTÓRICO DE PROJETOS
+// GESTAO DO HISTORICO DE PROJETOS
 // ==========================================
 async function carregarMeusProjetos() {
     const listaDiv = document.getElementById('lista-meus-projetos');
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await getUsuarioLogado();
 
     if (!user) {
-        listaDiv.innerHTML = '<div class="p-3 text-warning">Usuário não identificado.</div>';
+        listaDiv.innerHTML = '<div class="p-3 text-warning">Usuario nao identificado.</div>';
         return;
     }
 
-    const { data, error } = await supabaseClient
-        .from('projetos')
-        .select('*')
-        .eq('responsavel_email', user.email) 
-        .order('created_at', { ascending: false });
+    const { data, error } = await listarProjetosPorEmail(user.email);
 
     listaDiv.innerHTML = '';
 
     if (error) {
         console.error(error);
-        listaDiv.innerHTML = '<div class="p-3 text-danger small">Erro ao carregar histórico.</div>';
+        listaDiv.innerHTML = '<div class="p-3 text-danger small">Erro ao carregar historico.</div>';
         return;
     }
 
     if (!data || data.length === 0) {
-        listaDiv.innerHTML = '<div class="text-center py-3 text-muted-light small">Você ainda não possui solicitações.</div>';
+        listaDiv.innerHTML = '<div class="text-center py-3 text-muted-light small">Voce ainda nao possui solicitacoes.</div>';
         return;
     }
 
@@ -132,7 +126,7 @@ async function carregarMeusProjetos() {
         const item = document.createElement('button');
         item.className = 'list-group-item bg-transparent border-white border-opacity-10 d-flex justify-content-between align-items-center text-decoration-none py-3';
         item.type = 'button'; 
-        
+
         let badgeClass = proj.status === 'aprovado' ? 'bg-success' : 'bg-warning text-dark';
         let statusTexto = proj.status === 'aprovado' ? 'Aprovado' : 'Pendente';
         let dataCriacao = new Date(proj.created_at).toLocaleDateString('pt-BR');
@@ -162,7 +156,7 @@ function abrirModalDetalhes(proj) {
 
     const listaProd = document.getElementById('modal-lista-produtos');
     listaProd.innerHTML = '';
-    
+
     if (proj.produtos) {
         proj.produtos.forEach((prod, index) => {
             const li = document.createElement('li');
@@ -175,7 +169,7 @@ function abrirModalDetalhes(proj) {
         });
     }
 
-    // Lógica do PDF Assinado
+    // Logica do PDF Assinado
     const footer = document.querySelector('#modalDetalhes .modal-footer');
     const existingDownloadBtn = document.getElementById('modal-btn-download');
     if (existingDownloadBtn) existingDownloadBtn.remove();
@@ -184,15 +178,12 @@ function abrirModalDetalhes(proj) {
         const btnDownload = document.createElement('a');
         btnDownload.id = 'modal-btn-download';
         btnDownload.className = 'btn btn-success rounded-pill px-4 me-auto';
-        
-        const { data: publicUrlData } = supabaseClient
-            .storage
-            .from('documentos-projetos')
-            .getPublicUrl(proj.pdf_assinado_url);
-            
+
+        const { data: publicUrlData } = obterUrlPublica(proj.pdf_assinado_url);
+
         btnDownload.href = publicUrlData.publicUrl;
         btnDownload.target = "_blank";
-        btnDownload.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar Ofício Assinado';
+        btnDownload.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar Oficio Assinado';
         footer.insertBefore(btnDownload, footer.firstChild);
     }
 
@@ -202,13 +193,13 @@ function abrirModalDetalhes(proj) {
 }
 
 // ==========================================
-// LÓGICA DO FORMULÁRIO E BUSCAS DINÂMICAS
+// LOGICA DO FORMULARIO E BUSCAS DINAMICAS
 // ==========================================
 function iniciarLogicaFormulario() {
     const btnAdd = document.getElementById('btn-adicionar-item');
     const tbody = document.getElementById('corpo-tabela-produtos');
     const form = document.getElementById('form-autorizacao');
-    
+
     const labSipacInput = document.getElementById('lab-sipac');
     const labNomeInput = document.getElementById('lab-nome');
     const siapeInput = document.getElementById('responsavel-siape');
@@ -259,23 +250,19 @@ function iniciarLogicaFormulario() {
         }
     });
 
-    // --- BUSCA DINÂMICA: SIPAC -> Nome do Laboratório ---
+    // --- BUSCA DINAMICA: SIPAC -> Nome do Laboratorio ---
     labSipacInput.addEventListener('input', async (e) => {
         if (labSipacInput.hasAttribute('readonly')) return;
         const sipac = e.target.value.trim();
         labNomeInput.value = ''; 
         if (sipac.length < 4) return;
-        
-        const { data: lab, error } = await supabaseClient
-            .from('laboratorio')
-            .select('nome_laboratorio')
-            .eq('codigo_sipac', sipac)
-            .maybeSingle();
-        
+
+        const { data: lab, error } = await buscarNomePorSipac(sipac);
+
         if (!error && lab) labNomeInput.value = lab.nome_laboratorio;
     });
 
-    // --- BUSCA DINÂMICA: SIAPE -> Nome do Responsável ---
+    // --- BUSCA DINAMICA: SIAPE -> Nome do Responsavel ---
     siapeInput.addEventListener('input', async (e) => {
         if (siapeInput.hasAttribute('readonly')) return;
         const siape = e.target.value.trim();
@@ -288,12 +275,12 @@ function iniciarLogicaFormulario() {
         }
     });
 
-    // --- SUBMIT DO FORMULÁRIO COM VALIDAÇÕES ORIGINAIS ---
+    // --- SUBMIT DO FORMULARIO COM VALIDACOES ---
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSubmit = document.getElementById('btn-enviar-solicitacao');
         const originalText = btnSubmit.innerHTML;
-        
+
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> VALIDANDO DADOS...';
 
@@ -305,19 +292,19 @@ function iniciarLogicaFormulario() {
             const siapeDigitado = siapeInput.value.trim();
             const nomeRespDigitado = nomeRespInput.value.trim();
 
-            // 1. Validação Laboratório
-            const { data: labEncontrado, error: erroLab } = await supabaseClient.from('laboratorio').select('nome_laboratorio').eq('codigo_sipac', sipacDigitado).maybeSingle();
+            // 1. Validacao Laboratorio
+            const { data: labEncontrado, error: erroLab } = await buscarNomePorSipac(sipacDigitado);
             if (erroLab) throw erroLab;
-            if (!labEncontrado) { showToast("Código SIPAC não encontrado.", "error"); resetBotao(); return; }
-            if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { showToast("Nome do laboratório não confere com o SIPAC.", "error"); resetBotao(); return; }
+            if (!labEncontrado) { showToast("Codigo SIPAC nao encontrado.", "error"); resetBotao(); return; }
+            if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { showToast("Nome do laboratorio nao confere com o SIPAC.", "error"); resetBotao(); return; }
 
-            // 2. Validação SIAPE
+            // 2. Validacao SIAPE
             const { data: perfilEncontrado, error: erroPerfil } = await buscarPerfilPorIdentificador(siapeDigitado);
             if (erroPerfil) throw erroPerfil;
-            if (!perfilEncontrado) { showToast("SIAPE não encontrado na base de usuários.", "error"); resetBotao(); return; }
-            
+            if (!perfilEncontrado) { showToast("SIAPE nao encontrado na base de usuarios.", "error"); resetBotao(); return; }
+
             const nomeBanco = `${perfilEncontrado.nome} ${perfilEncontrado.sobrenome}`.trim().toLowerCase();
-            if (nomeBanco !== nomeRespDigitado.trim().toLowerCase()) { showToast("Nome do responsável não confere com o SIAPE.", "error"); resetBotao(); return; }
+            if (nomeBanco !== nomeRespDigitado.trim().toLowerCase()) { showToast("Nome do responsavel nao confere com o SIAPE.", "error"); resetBotao(); return; }
 
             // 3. Montagem da Lista de Produtos
             const listaProdutos = Array.from(tbody.rows).map(row => ({
@@ -343,13 +330,13 @@ function iniciarLogicaFormulario() {
                 status: 'pendente'
             };
 
-            const { error } = await supabaseClient.from('projetos').insert([payload]);
+            const { error } = await criarProjeto(payload);
             if (error) throw error;
 
-            showToast("Solicitação enviada com sucesso!", "success");
+            showToast("Solicitacao enviada com sucesso!", "success");
             form.reset();
             tbody.innerHTML = '';
-            // Reinicia a página para estado inicial limpo mas com dados do usuário
+            // Reinicia a pagina para estado inicial limpo mas com dados do usuario
             location.reload(); 
 
         } catch (err) {
