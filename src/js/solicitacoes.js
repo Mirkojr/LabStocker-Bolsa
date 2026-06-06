@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId } from './sessionManager.js';
+import { getCurrentLabId } from './core/sessionManager.js';
 import { showToast } from './utils/toast.js';
 
 // --- Seletores ---
