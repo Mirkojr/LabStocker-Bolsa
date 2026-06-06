@@ -43,14 +43,14 @@ async function fetchHistorico() {
                 id, quantidade_transferida, status, data_solicitacao, id_lab_origem, id_lab_destino,
                 LabOrigem:id_lab_origem ( nome_laboratorio ),
                 LabDestino:id_lab_destino ( nome_laboratorio ),
-                EstoqueLab:id_item_estoque ( unidade_medida, Reagente ( nome ) )
+                estoquelab:id_item_estoque ( unidade_medida, reagente ( nome ) )
             `)
             .or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`)
             .order('data_solicitacao', { ascending: false });
 
         // 2. Resíduos (Itens marcados como Descartados)
-        const queryResiduos = supabaseClient
-            .from('Residuo')
+        const queryresiduos = supabaseClient
+            .from('residuo')
             .select('*')
             .eq('id_laboratorio', MEU_LAB_ID)
             .eq('status', 'Descartado')
@@ -65,10 +65,10 @@ async function fetchHistorico() {
             .order('data_movimentacao', { ascending: false });
 
         // Executa todas as promessas em paralelo para performance
-        const [resTransf, resResiduos, resMov] = await Promise.all([queryTransf, queryResiduos, queryMov]);
+        const [resTransf, resresiduos, resMov] = await Promise.all([queryTransf, queryresiduos, queryMov]);
 
         if (resTransf.error) throw resTransf.error;
-        if (resResiduos.error) throw resResiduos.error;
+        if (resresiduos.error) throw resresiduos.error;
         if (resMov.error) throw resMov.error;
 
         // --- Unificação e Marcação de Metadados ---
@@ -79,7 +79,7 @@ async function fetchHistorico() {
             data_ordenacao: item.data_solicitacao
         }));
 
-        const listaResiduos = resResiduos.data.map(item => ({
+        const listaresiduos = resresiduos.data.map(item => ({
             ...item, 
             tipo_registro: 'RESIDUO',
             data_ordenacao: item.data_criacao
@@ -92,7 +92,7 @@ async function fetchHistorico() {
         }));
 
         // Junta tudo em uma única array e ordena por data decrescente
-        const listaCompleta = [...listaTransf, ...listaResiduos, ...listaMov];
+        const listaCompleta = [...listaTransf, ...listaresiduos, ...listaMov];
         listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
         HISTORICO_CACHE = listaCompleta;
@@ -193,8 +193,8 @@ function renderHistorico(itens) {
                 textoAcao = `Enviado para <strong>${labParceiro}</strong>`;
             }
             
-            const nomeReagente = item.EstoqueLab?.Reagente?.nome || 'Item desconhecido';
-            const unidade = item.EstoqueLab?.unidade_medida || '';
+            const nomereagente = item.estoquelab?.reagente?.nome || 'Item desconhecido';
+            const unidade = item.estoquelab?.unidade_medida || '';
     
             let statusBadgeClass = item.status === 'Aprovado' ? 'bg-success' : 'bg-warning text-dark';
     
@@ -206,7 +206,7 @@ function renderHistorico(itens) {
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${nomeReagente}</h6>
+                                <h6 class="mb-0 fw-bold text-white">${nomereagente}</h6>
                                 <span class="badge ${statusBadgeClass} text-uppercase" style="font-size: 0.65rem;">${item.status}</span>
                             </div>
                             <p class="mb-1 small text-muted-light">${textoAcao}</p>
@@ -236,10 +236,10 @@ inputBusca.addEventListener('keyup', () => {
         } else if (item.tipo_registro === 'RESIDUO') {
             textoPesquisavel = (item.descricao + (item.tipo_perigo || '')).toLowerCase();
         } else {
-            const nomeReagente = item.EstoqueLab?.Reagente?.nome || '';
+            const nomereagente = item.estoquelab?.reagente?.nome || '';
             const nomeOrigem = item.LabOrigem?.nome_laboratorio || '';
             const nomeDestino = item.LabDestino?.nome_laboratorio || '';
-            textoPesquisavel = (nomeReagente + nomeOrigem + nomeDestino).toLowerCase();
+            textoPesquisavel = (nomereagente + nomeOrigem + nomeDestino).toLowerCase();
         }
         return textoPesquisavel.includes(termo);
     });

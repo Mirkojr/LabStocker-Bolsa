@@ -1,35 +1,35 @@
 import { supabaseClient } from '../supabaseClient.js';
 
-export async function listarEstoquePorLaboratorio(labId) {
+export async function listarestoquePorlaboratorio(labId) {
     return supabaseClient
-        .from('EstoqueLab')
+        .from('estoquelab')
         .select(`
             id, quantidade, unidade_medida, data_validade, observacoes_operacionais, id_reagente,
-            Reagente ( nome )
+            reagente ( nome )
         `)
         .eq('id_laboratorio', labId)
         .order('data_validade');
 }
 
-export async function listarReagentesParaEstoque() {
+export async function listarreagentesParaestoque() {
     return supabaseClient
-        .from('Reagente')
+        .from('reagente')
         .select('id, nome')
         .order('nome');
 }
 
-export async function salvarItemEstoque(id, dadosForm) {
+export async function salvarItemestoque(id, dadosForm) {
     if (id) {
-        return supabaseClient.from('EstoqueLab').update(dadosForm).eq('id', id);
+        return supabaseClient.from('estoquelab').update(dadosForm).eq('id', id);
     }
 
-    return supabaseClient.from('EstoqueLab').insert(dadosForm);
+    return supabaseClient.from('estoquelab').insert(dadosForm);
 }
 
-export async function registrarMovimentacaoEntradaEstoque(dados) {
+export async function registrarMovimentacaoEntradaestoque(dados) {
     return supabaseClient.from('Movimentacao').insert(dados);
 }
 
-export async function excluirItemEstoque(id) {
-    return supabaseClient.from('EstoqueLab').delete().eq('id', id);
+export async function excluirItemestoque(id) {
+    return supabaseClient.from('estoquelab').delete().eq('id', id);
 }

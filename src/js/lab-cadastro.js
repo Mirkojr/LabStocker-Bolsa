@@ -4,10 +4,10 @@ import { showToast } from './utils/toast.js';
 // --- LÓGICA DO FORMULÁRIO ---
 document.addEventListener('DOMContentLoaded', () => {
     
-    const formLaboratorio = document.getElementById('form-laboratorio');
+    const formlaboratorio = document.getElementById('form-laboratorio');
 
-    if (formLaboratorio) {
-        formLaboratorio.addEventListener('submit', async (evento) => {
+    if (formlaboratorio) {
+        formlaboratorio.addEventListener('submit', async (evento) => {
             evento.preventDefault();
 
             const nome = document.getElementById('lab-nome').value;
@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const { data, error } = await supabaseClient
-                    .from('Laboratorio')
+                    .from('laboratorio')
                     .insert([{ nome_laboratorio: nome, codigo_sipac: codigo }])
                     .select();
 
                 if (error) throw error;
 
                 showToast('Laboratório cadastrado com sucesso!', 'success');
-                formLaboratorio.reset();
+                formlaboratorio.reset();
 
             } catch (error) {
                 console.error('Erro:', error);

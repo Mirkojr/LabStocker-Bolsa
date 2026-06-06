@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { getCurrentLabId } from './core/sessionManager.js';
+import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
 
 // --- Seletores ---
@@ -41,10 +41,10 @@ async function fetchPedidosRecebidos() {
                 id,
                 quantidade_transferida,
                 data_solicitacao,
-                Laboratorio:id_lab_origem ( nome_laboratorio ),
-                EstoqueLab:id_item_estoque (
+                laboratorio:id_lab_origem ( nome_laboratorio ),
+                estoquelab:id_item_estoque (
                     unidade_medida,
-                    Reagente ( nome )
+                    reagente ( nome )
                 )
             `)
             .eq('id_lab_destino', MEU_LAB_ID)
@@ -73,10 +73,10 @@ async function fetchPedidosRecebidos() {
 
 function renderPedidos(pedidos) {
     pedidos.forEach(pedido => {
-        const nomeLabSolicitante = pedido.Laboratorio?.nome_laboratorio || "Lab Externo";
-        const nomeReagente = pedido.EstoqueLab?.Reagente?.nome || "Item desconhecido";
+        const nomeLabSolicitante = pedido.laboratorio?.nome_laboratorio || "Lab Externo";
+        const nomereagente = pedido.estoquelab?.reagente?.nome || "Item desconhecido";
         const quantidade = pedido.quantidade_transferida;
-        const unidade = pedido.EstoqueLab?.unidade_medida || "un";
+        const unidade = pedido.estoquelab?.unidade_medida || "un";
         const data = new Date(pedido.data_solicitacao).toLocaleDateString('pt-BR');
 
         const div = document.createElement('div');
@@ -86,7 +86,7 @@ function renderPedidos(pedidos) {
         div.innerHTML = `
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div class="mb-3 mb-md-0">
-                    <h5 class="mb-1 fw-bold text-white">${nomeReagente}</h5>
+                    <h5 class="mb-1 fw-bold text-white">${nomereagente}</h5>
                     <p class="mb-1 text-muted-light">
                         <span class="text-info fw-bold">${nomeLabSolicitante}</span> solicitou 
                         <span class="badge bg-light bg-opacity-10 text-white border border-white border-opacity-25">${quantidade} ${unidade}</span>
@@ -117,7 +117,7 @@ async function handleAprovar(id) {
         const { error } = await supabaseClient.rpc('aprovar_transferencia', { p_transfer_id: id });
         if (error) throw error;
 
-        showToast("Transferência aprovada! Estoques atualizados com sucesso.", "success");
+        showToast("Transferência aprovada! estoques atualizados com sucesso.", "success");
         fetchPedidosRecebidos();
 
     } catch (error) {

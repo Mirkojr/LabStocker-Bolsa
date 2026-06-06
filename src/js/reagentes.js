@@ -1,20 +1,20 @@
 import { showToast } from './utils/toast.js';
 import {
-    excluirReagente,
-    listarReagentes,
-    salvarReagente,
+    excluirreagente,
+    listarreagentes,
+    salvarreagente,
 } from './services/reagentesService.js';
 
 // --- Seletores de Elementos ---
-const listaReagentesEl = document.getElementById('lista-reagentes');
-const formReagente = document.getElementById('form-reagente');
+const listareagentesEl = document.getElementById('lista-reagentes');
+const formreagente = document.getElementById('form-reagente');
 const inputBusca = document.getElementById('input-busca');
 const spinner = document.getElementById('loading-spinner');
 const btnCadastrar = document.querySelector('[data-bs-target="#modal-reagente"]');
 
 // Modais
 const modalEl = document.getElementById('modal-reagente');
-const modalReagente = new bootstrap.Modal(modalEl);
+const modalreagente = new bootstrap.Modal(modalEl);
 
 const modalConfirmEl = document.getElementById('modal-confirmacao');
 const modalConfirmacao = new bootstrap.Modal(modalConfirmEl);
@@ -22,7 +22,7 @@ const btnConfirmarExclusao = document.getElementById('btn-confirmar-exclusao');
 
 // Elementos do Form
 const modalTitle = modalEl.querySelector('.modal-title');
-const modalSubmitBtn = formReagente.querySelector('button[type="submit"]');
+const modalSubmitBtn = formreagente.querySelector('button[type="submit"]');
 const editIdInput = document.getElementById('reagente-edit-id');
 const nomeInput = document.getElementById('reagente-nome');
 const composicaoInput = document.getElementById('reagente-composicao');
@@ -31,22 +31,22 @@ const controladoraInput = document.getElementById('reagente-controladora');
 // Variável para armazenar o ID temporariamente antes de excluir
 let ID_PARA_EXCLUIR = null;
 
-async function fetchReagentes(filtroNome = '') {
+async function fetchreagentes(filtroNome = '') {
     spinner.classList.remove('d-none');
-    listaReagentesEl.innerHTML = '';
+    listareagentesEl.innerHTML = '';
 
     try {
-        const { data, error } = await listarReagentes(filtroNome);
+        const { data, error } = await listarreagentes(filtroNome);
         if (error) throw error;
 
         if (data.length === 0) {
-            listaReagentesEl.innerHTML = `
+            listareagentesEl.innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-eyedropper text-muted" style="font-size: 3rem;"></i>
                     <p class="text-muted mt-3">Nenhum reagente encontrado no catálogo.</p>
                 </div>`;
         } else {
-            renderReagentes(data);
+            renderreagentes(data);
         }
     } catch (error) {
         console.error('Erro:', error.message);
@@ -56,8 +56,8 @@ async function fetchReagentes(filtroNome = '') {
     }
 }
 
-function renderReagentes(reagentes) {
-    listaReagentesEl.innerHTML = '';
+function renderreagentes(reagentes) {
+    listareagentesEl.innerHTML = '';
     
     reagentes.forEach(reagente => {
         let badgeControlado = '';
@@ -107,7 +107,7 @@ function renderReagentes(reagentes) {
                 </div>
             </div>
         `;
-        listaReagentesEl.appendChild(div);
+        listareagentesEl.appendChild(div);
     });
 }
 
@@ -123,12 +123,12 @@ async function handleFormSubmit(evento) {
     };
 
     try {
-        const { error } = await salvarReagente(id || null, dadosForm);
+        const { error } = await salvarreagente(id || null, dadosForm);
         if (error) throw error;
 
-        showToast(id ? 'Reagente atualizado!' : 'Reagente cadastrado!', 'success');
-        modalReagente.hide();
-        fetchReagentes(inputBusca.value);
+        showToast(id ? 'reagente atualizado!' : 'reagente cadastrado!', 'success');
+        modalreagente.hide();
+        fetchreagentes(inputBusca.value);
 
     } catch (error) {
         console.error('Erro:', error.message);
@@ -145,10 +145,10 @@ function handleEditClick(button) {
     composicaoInput.value = composicao;
     controladoraInput.value = controladora;
 
-    modalTitle.textContent = 'Editar Reagente';
+    modalTitle.textContent = 'Editar reagente';
     modalSubmitBtn.textContent = 'Atualizar';
 
-    modalReagente.show();
+    modalreagente.show();
 }
 
 // --- CLIQUE BOTÃO EXCLUIR (ABRE O MODAL) ---
@@ -165,19 +165,19 @@ btnConfirmarExclusao.addEventListener('click', async () => {
     modalConfirmacao.hide();
 
     try {
-        const { error } = await excluirReagente(ID_PARA_EXCLUIR);
+        const { error } = await excluirreagente(ID_PARA_EXCLUIR);
         
         if (error) {
             // Tratamento de erro de chave estrangeira (FK)
             if (error.code === '23503') {
-                showToast('Não é possível excluir: Reagente em uso no estoque.', 'warning');
+                showToast('Não é possível excluir: reagente em uso no estoque.', 'warning');
                 return;
             }
             throw error;
         }
         
-        showToast('Reagente excluído com sucesso.', 'success');
-        fetchReagentes(inputBusca.value);
+        showToast('reagente excluído com sucesso.', 'success');
+        fetchreagentes(inputBusca.value);
 
     } catch (error) {
         showToast('Erro ao excluir: ' + error.message, 'error');
@@ -187,28 +187,28 @@ btnConfirmarExclusao.addEventListener('click', async () => {
 });
 
 function resetModal() {
-    formReagente.reset();
+    formreagente.reset();
     editIdInput.value = '';
-    modalTitle.textContent = 'Cadastrar Novo Reagente';
+    modalTitle.textContent = 'Cadastrar Novo reagente';
     modalSubmitBtn.textContent = 'Salvar';
 }
 
 // --- Listeners de Inicialização ---
 document.addEventListener('DOMContentLoaded', () => {
-    fetchReagentes();
+    fetchreagentes();
 });
 
-formReagente.addEventListener('submit', handleFormSubmit);
+formreagente.addEventListener('submit', handleFormSubmit);
 
 let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        fetchReagentes(inputBusca.value);
+        fetchreagentes(inputBusca.value);
     }, 300);
 });
 
-listaReagentesEl.addEventListener('click', (e) => {
+listareagentesEl.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-edit');
     const btnDelete = e.target.closest('.btn-delete');
 

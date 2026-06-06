@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // --- ETAPA 1: Encontrar o ID do Laboratório usando o Código SIPAC ---
-            // (Requer a política RLS de Leitura na tabela 'Laboratorio' que já fizemos)
+            // (Requer a política RLS de Leitura na tabela 'laboratorio' que já fizemos)
             
             const { data: labData, error: labError } = await supabaseClient
-                .from('Laboratorio')
+                .from('laboratorio')
                 .select('id') // Queremos o 'id' (uuid)
                 .eq('codigo_sipac', codigoSipac) // Onde o 'codigo_sipac' for igual ao que o usuário digitou
                 .single(); // Esperamos APENAS um resultado
@@ -52,30 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const laboratorioId = labData.id; // Este é o UUID do laboratório que precisamos!
 
-            // --- ETAPA 2: Criar o usuário na Autenticação do Supabase ---
-            // (Isso cria a linha na tabela 'auth.users')
-            
-            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-                email: email,
-                password: senha,
-            });
-
-            if (authError) throw authError;
-
-            // Se a confirmação de email estiver DESATIVADA (veja nota abaixo), 
-            // o usuário já está logado e temos o ID dele.
-            const userId = authData.user.id;
-
-            // --- ETAPA 3: Criar o perfil do usuário na nossa tabela 'Perfis' ---
-            // (Requer uma NOVA política RLS na tabela 'Perfis')
-            
-            const { error: profileError } = await criarPerfilUsuario({
-                id: userId, // O ID do 'auth.users' (ligação 1-para-1)
+            // --- ETAPA 2 e 3: Criar o usuário no Auth e o perfil vinculado ---
+            const { error: profileError } = await criarPerfilUsuario(email, senha, {
                 nome: nome,
                 sobrenome: sobrenome,
                 identificador: identificador,
                 tipo_identificador: tipoIdentificador,
-                id_laboratorio: laboratorioId // O UUID que encontramos na Etapa 1
+                id_laboratorio: laboratorioId,
             });
 
             if (profileError) throw profileError;

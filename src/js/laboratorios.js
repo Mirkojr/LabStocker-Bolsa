@@ -7,12 +7,12 @@ const gridLabs = document.getElementById('grid-laboratorios');
 const buscaLabInput = document.getElementById('busca-lab');
 const spinner = document.getElementById('spinner-lab');
 
-// Modal Estoque Externo
-const modalEstoqueExtEl = document.getElementById('modal-estoque-externo');
-const modalEstoqueExt = new bootstrap.Modal(modalEstoqueExtEl);
-const listaEstoqueExt = document.getElementById('lista-estoque-externo');
+// Modal estoque Externo
+const modalestoqueExtEl = document.getElementById('modal-estoque-externo');
+const modalestoqueExt = new bootstrap.Modal(modalestoqueExtEl);
+const listaestoqueExt = document.getElementById('lista-estoque-externo');
 const tituloLabSelecionado = document.getElementById('titulo-lab-selecionado');
-const buscaEstoqueExtInput = document.getElementById('busca-estoque-externo');
+const buscaestoqueExtInput = document.getElementById('busca-estoque-externo');
 
 // Modal Solicitação
 const modalSolicitarEl = document.getElementById('modal-solicitar');
@@ -36,7 +36,7 @@ async function init() {
     try {
         MEU_LAB_ID = await getCurrentLabId();
         SOU_ADMIN = await checkIsAdmin();
-        await fetchLaboratorios();
+        await fetchlaboratorios();
     } catch (e) {
         showToast("Falha na conexão com o banco.", "error");
     } finally {
@@ -44,18 +44,18 @@ async function init() {
     }
 }
 
-async function fetchLaboratorios() {
+async function fetchlaboratorios() {
     const { data, error } = await supabaseClient
-        .from('Laboratorio')
+        .from('laboratorio')
         .select('*')
         .order('nome_laboratorio');
 
     if (error) throw error;
     LABS_CACHE = data; 
-    renderLaboratorios(LABS_CACHE);
+    renderlaboratorios(LABS_CACHE);
 }
 
-function renderLaboratorios(labs) {
+function renderlaboratorios(labs) {
     gridLabs.innerHTML = '';
     
     if (labs.length === 0) {
@@ -89,7 +89,7 @@ function renderLaboratorios(labs) {
                     
                     <button class="btn ${isMeuLab ? 'btn-light disabled border' : 'btn-primary'} w-100 rounded-pill fw-bold btn-ver-estoque py-2" 
                         data-id="${lab.id}" data-nome="${lab.nome_laboratorio}">
-                        ${isMeuLab ? 'Seu Laboratório' : '<i class="bi bi-eye me-2"></i>Ver Estoque'}
+                        ${isMeuLab ? 'Seu Laboratório' : '<i class="bi bi-eye me-2"></i>Ver estoque'}
                     </button>
                     ${btnAdmin}
                 </div>
@@ -105,37 +105,37 @@ buscaLabInput.addEventListener('keyup', () => {
         l.nome_laboratorio.toLowerCase().includes(termo) || 
         l.codigo_sipac.toLowerCase().includes(termo)
     );
-    renderLaboratorios(filtrados);
+    renderlaboratorios(filtrados);
 });
 
 
-async function fetchEstoqueExterno(labId, labNome) {
+async function fetchestoqueExterno(labId, labNome) {
     LAB_ATUAL_NOME = labNome;
-    tituloLabSelecionado.innerHTML = `<i class="bi bi-building me-2"></i>Estoque: ${labNome}`;
-    listaEstoqueExt.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-    modalEstoqueExt.show();
+    tituloLabSelecionado.innerHTML = `<i class="bi bi-building me-2"></i>estoque: ${labNome}`;
+    listaestoqueExt.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    modalestoqueExt.show();
 
     try {
         const { data, error } = await supabaseClient
-            .from('EstoqueLab')
-            .select('*, Reagente(nome)')
+            .from('estoquelab')
+            .select('*, reagente(nome)')
             .eq('id_laboratorio', labId)
             .gt('quantidade', 0);
 
         if (error) throw error;
         
         ESTOQUE_ATUAL_CACHE = data; 
-        renderEstoqueExterno(ESTOQUE_ATUAL_CACHE);
+        renderestoqueExterno(ESTOQUE_ATUAL_CACHE);
     } catch (e) {
         showToast("Erro ao carregar estoque externo.", "error");
     }
 }
 
-function renderEstoqueExterno(itens) {
-    listaEstoqueExt.innerHTML = '';
+function renderestoqueExterno(itens) {
+    listaestoqueExt.innerHTML = '';
     
     if (itens.length === 0) {
-        listaEstoqueExt.innerHTML = '<div class="p-5 text-center text-muted">Não há reagentes disponíveis neste lab.</div>';
+        listaestoqueExt.innerHTML = '<div class="p-5 text-center text-muted">Não há reagentes disponíveis neste lab.</div>';
         return;
     }
 
@@ -144,28 +144,28 @@ function renderEstoqueExterno(itens) {
         div.className = 'list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom';
         div.innerHTML = `
             <div>
-                <h6 class="mb-0 fw-bold text-dark">${item.Reagente.nome}</h6>
+                <h6 class="mb-0 fw-bold text-dark">${item.reagente.nome}</h6>
                 <span class="badge bg-light text-primary border">${item.quantidade} ${item.unidade_medida}</span>
             </div>
             <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold btn-solicitar" 
                 data-id="${item.id}" 
-                data-nome="${item.Reagente.nome}" 
+                data-nome="${item.reagente.nome}" 
                 data-unidade="${item.unidade_medida}" 
                 data-max="${item.quantidade}" 
                 data-lab="${item.id_laboratorio}">
                 Solicitar
             </button>`;
-        listaEstoqueExt.appendChild(div);
+        listaestoqueExt.appendChild(div);
     });
 }
 
 // Filtro dentro do modal de estoque
-buscaEstoqueExtInput.addEventListener('keyup', () => {
-    const termo = buscaEstoqueExtInput.value.toLowerCase();
+buscaestoqueExtInput.addEventListener('keyup', () => {
+    const termo = buscaestoqueExtInput.value.toLowerCase();
     const filtrados = ESTOQUE_ATUAL_CACHE.filter(i => 
-        i.Reagente.nome.toLowerCase().includes(termo)
+        i.reagente.nome.toLowerCase().includes(termo)
     );
-    renderEstoqueExterno(filtrados);
+    renderestoqueExterno(filtrados);
 });
 
 
@@ -211,7 +211,7 @@ formSolicitacao.addEventListener('submit', async (e) => {
 
         showToast("Solicitação enviada! Aguarde a aprovação do laboratório.", "success");
         modalSolicitar.hide();
-        modalEstoqueExt.hide();
+        modalestoqueExt.hide();
     } catch (e) {
         showToast("Erro ao processar pedido.", "error");
     }
@@ -219,9 +219,9 @@ formSolicitacao.addEventListener('submit', async (e) => {
 
 
 document.addEventListener('click', (e) => {
-    // Botão Ver Estoque
+    // Botão Ver estoque
     const btnVer = e.target.closest('.btn-ver-estoque');
-    if (btnVer) fetchEstoqueExterno(btnVer.dataset.id, btnVer.dataset.nome);
+    if (btnVer) fetchestoqueExterno(btnVer.dataset.id, btnVer.dataset.nome);
 
     // Botão Solicitar
     const btnSol = e.target.closest('.btn-solicitar');

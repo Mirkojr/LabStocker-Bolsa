@@ -2,7 +2,7 @@ import { checkIsAdmin } from './sessionManager.js';
 import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
 import { formatarCPF, formatarTelefone } from './utils/formatters.js';
-import { buscarPerfilPorEmail, buscarPerfilPorIdentificador } from './services/perfisService.js';
+import { buscarPerfilPorId, buscarPerfilPorIdentificador } from './services/perfisService.js';
 
 // ==========================================
 // FUNÇÕES UTILITÁRIAS DE FORMATAÇÃO E UI
@@ -55,7 +55,7 @@ async function preencherDadosUsuario() {
     campoEmail.value = user.email;
     bloquearCampo(campoEmail);
 
-    const { data: perfil, error } = await buscarPerfilPorEmail(user.email);
+    const { data: perfil, error } = await buscarPerfilPorId(user.id);
 
     if (error) { console.error(error); return; }
 
@@ -72,7 +72,7 @@ async function preencherDadosUsuario() {
 
         if (perfil.id_laboratorio) {
             const { data: lab, error: erroLab } = await supabaseClient
-                .from('Laboratorio') 
+                .from('laboratorio') 
                 .select('nome_laboratorio, codigo_sipac')
                 .eq('id', perfil.id_laboratorio)
                 .maybeSingle();
@@ -231,7 +231,7 @@ function iniciarLogicaFormulario() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="text-muted-light small fw-bold"></td>
-            <td><input type="text" class="form-control form-control-dark product-name" placeholder="Nome do Reagente" required></td>
+            <td><input type="text" class="form-control form-control-dark product-name" placeholder="Nome do reagente" required></td>
             <td><input type="number" step="0.01" class="form-control form-control-dark product-qty" placeholder="0.00" required></td>
             <td>
                 <select class="form-select form-control-dark product-unit">
@@ -267,7 +267,7 @@ function iniciarLogicaFormulario() {
         if (sipac.length < 4) return;
         
         const { data: lab, error } = await supabaseClient
-            .from('Laboratorio')
+            .from('laboratorio')
             .select('nome_laboratorio')
             .eq('codigo_sipac', sipac)
             .maybeSingle();
@@ -306,7 +306,7 @@ function iniciarLogicaFormulario() {
             const nomeRespDigitado = nomeRespInput.value.trim();
 
             // 1. Validação Laboratório
-            const { data: labEncontrado, error: erroLab } = await supabaseClient.from('Laboratorio').select('nome_laboratorio').eq('codigo_sipac', sipacDigitado).maybeSingle();
+            const { data: labEncontrado, error: erroLab } = await supabaseClient.from('laboratorio').select('nome_laboratorio').eq('codigo_sipac', sipacDigitado).maybeSingle();
             if (erroLab) throw erroLab;
             if (!labEncontrado) { showToast("Código SIPAC não encontrado.", "error"); resetBotao(); return; }
             if (labEncontrado.nome_laboratorio.trim().toLowerCase() !== nomeLabDigitado.toLowerCase()) { showToast("Nome do laboratório não confere com o SIPAC.", "error"); resetBotao(); return; }

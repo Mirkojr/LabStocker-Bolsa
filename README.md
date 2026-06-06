@@ -16,7 +16,7 @@
 - **Transferências** de itens entre laboratórios (solicitar/responder)
 - **Relatórios e histórico** de movimentações
 - **Painel de administração**: usuários, permissões, laboratórios e catálogo
-- **Feedback / suporte** ao usuário
+- **feedback / suporte** ao usuário
 
 ## 🛠️ Tecnologias
 

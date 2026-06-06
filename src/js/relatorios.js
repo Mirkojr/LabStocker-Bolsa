@@ -37,7 +37,7 @@ async function init() {
             }
         }
 
-        await fetchMapaLaboratorios();
+        await fetchMapalaboratorios();
 
         if (MEU_LAB_ID || MODO_GLOBAL) {
             // Define datas padrão (últimos 30 dias)
@@ -59,10 +59,10 @@ async function init() {
     }
 }
 
-async function fetchMapaLaboratorios() {
+async function fetchMapalaboratorios() {
     try {
         const { data, error } = await supabaseClient
-            .from('Laboratorio')
+            .from('laboratorio')
             .select('id, nome_laboratorio');
         
         if (!error && data) {
@@ -85,7 +85,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
     if (!isDownload) {
         tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando dados...</td></tr>';
     } else {
-        // Feedback visual no botão de baixar
+        // feedback visual no botão de baixar
         const originalText = btnSubmit.innerHTML;
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando CSV...';
@@ -113,7 +113,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         if (!MODO_GLOBAL) qMov = qMov.eq('id_laboratorio', MEU_LAB_ID);
 
         let qTransf = supabaseClient.from('Transferencia')
-            .select(`*, LabOrigem:id_lab_origem(nome_laboratorio), LabDestino:id_lab_destino(nome_laboratorio), EstoqueLab:id_item_estoque(Reagente(nome), unidade_medida)`)
+            .select(`*, LabOrigem:id_lab_origem(nome_laboratorio), LabDestino:id_lab_destino(nome_laboratorio), estoquelab:id_item_estoque(reagente(nome), unidade_medida)`)
             .gte('data_solicitacao', inicioISO)
             .lte('data_solicitacao', fimISO);
 
@@ -121,7 +121,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
             qTransf = qTransf.or(`id_lab_origem.eq.${MEU_LAB_ID},id_lab_destino.eq.${MEU_LAB_ID}`);
         }
 
-        let qRes = supabaseClient.from('Residuo')
+        let qRes = supabaseClient.from('residuo')
             .select('*')
             .eq('status', 'Descartado')
             .gte('data_criacao', inicioISO)
@@ -166,8 +166,8 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
                     detalheTexto = souOrigem ? `Enviado para ${parceiro}` : `Recebido de ${parceiro}`;
                 }
 
-                const nomeItem = t.EstoqueLab?.Reagente?.nome || 'Item desconhecido';
-                const un = t.EstoqueLab?.unidade_medida || '';
+                const nomeItem = t.estoquelab?.reagente?.nome || 'Item desconhecido';
+                const un = t.estoquelab?.unidade_medida || '';
 
                 lista.push({
                     data: t.data_solicitacao,
@@ -252,7 +252,7 @@ function renderPreview(lista) {
 
 function gerarCSV(lista) {
     let header = "Data,Tipo,Item,Quantidade,Unidade,Detalhes";
-    if (MODO_GLOBAL) header = "Data,Laboratorio,Tipo,Item,Quantidade,Unidade,Detalhes";
+    if (MODO_GLOBAL) header = "Data,laboratorio,Tipo,Item,Quantidade,Unidade,Detalhes";
     let csvContent = header + "\n";
 
     lista.forEach(row => {

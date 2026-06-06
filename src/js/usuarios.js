@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabaseClient.js';
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
-import { buscarPerfisPorLaboratorio } from './services/perfisService.js';
+import { buscarPerfisPorlaboratorio } from './services/perfisService.js';
 
 const listaUsuariosEl = document.getElementById('lista-usuarios');
 const spinner = document.getElementById('spinner-users');
@@ -27,7 +27,7 @@ async function fetchUsuarios() {
     listaUsuariosEl.innerHTML = '';
 
     try {
-        const { data, error } = await buscarPerfisPorLaboratorio(MEU_LAB_ID);
+        const { data, error } = await buscarPerfisPorlaboratorio(MEU_LAB_ID);
 
         if (error) throw error;
         renderUsuarios(data);

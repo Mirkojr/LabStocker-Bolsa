@@ -25,7 +25,7 @@ async function fetchLabs() {
     listaLabs.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
     
     const { data, error } = await supabaseClient
-        .from('Laboratorio')
+        .from('laboratorio')
         .select('*')
         .order('nome_laboratorio');
 
@@ -81,7 +81,7 @@ async function handleCadastro(e) {
 
     try {
         const { error } = await supabaseClient
-            .from('Laboratorio')
+            .from('laboratorio')
             .insert({ nome_laboratorio: nome, codigo_sipac: sipac });
 
         if (error) throw error;
@@ -105,7 +105,7 @@ async function handleDelete(id) {
 
     try {
         const { error } = await supabaseClient
-            .from('Laboratorio')
+            .from('laboratorio')
             .delete()
             .eq('id', id);
 

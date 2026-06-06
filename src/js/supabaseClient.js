@@ -8,7 +8,7 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const testConnection = async () => {
-  const { data, error } = await supabaseClient.from('Laboratorio').select('id').limit(1);
+  const { data, error } = await supabaseClient.from('laboratorio').select('id').limit(1);
 
   if (error) {
     console.error('Erro na conexão:', error.message);

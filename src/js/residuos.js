@@ -3,11 +3,11 @@ import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
 
 // --- Seletores de Elementos ---
-const listaResiduos = document.getElementById('lista-residuos');
-const formResiduo = document.getElementById('form-residuo');
+const listaresiduos = document.getElementById('lista-residuos');
+const formresiduo = document.getElementById('form-residuo');
 const spinner = document.getElementById('spinner-res');
 const modalEl = document.getElementById('modal-residuo');
-const modalResiduo = new bootstrap.Modal(modalEl);
+const modalresiduo = new bootstrap.Modal(modalEl);
 
 const editIdInput = document.getElementById('edit-residuo-id');
 const descInput = document.getElementById('res-descricao');
@@ -15,8 +15,8 @@ const tipoInput = document.getElementById('res-tipo');
 const qtdInput = document.getElementById('res-qtd');
 const unidadeInput = document.getElementById('res-unidade');
 const modalTitle = modalEl.querySelector('.modal-title');
-const modalSubmitBtn = formResiduo.querySelector('button[type="submit"]');
-const btnNovoResiduo = document.querySelector('[data-bs-target="#modal-residuo"]');
+const modalSubmitBtn = formresiduo.querySelector('button[type="submit"]');
+const btnNovoresiduo = document.querySelector('[data-bs-target="#modal-residuo"]');
 
 let MEU_LAB_ID = null;
 
@@ -30,9 +30,9 @@ async function init() {
         MEU_LAB_ID = await getCurrentLabId();
         
         if (MEU_LAB_ID) {
-            fetchResiduos();
+            fetchresiduos();
         } else {
-            listaResiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratório não identificado. Verifique sua sessão.</div>';
+            listaresiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratório não identificado. Verifique sua sessão.</div>';
         }
 
     } catch (error) {
@@ -41,20 +41,20 @@ async function init() {
     }
 }
 
-async function fetchResiduos() {
+async function fetchresiduos() {
     spinner.classList.remove('d-none');
-    listaResiduos.innerHTML = '';
+    listaresiduos.innerHTML = '';
 
     try {
         const { data, error } = await supabaseClient
-            .from('Residuo')
+            .from('residuo')
             .select('*')
             .eq('id_laboratorio', MEU_LAB_ID)
             .order('data_criacao', { ascending: false });
 
         if (error) throw error;
 
-        renderResiduos(data);
+        renderresiduos(data);
 
     } catch (error) {
         console.error('Erro ao buscar resíduos:', error.message);
@@ -67,9 +67,9 @@ async function fetchResiduos() {
 /**
  * Renderiza os cards de resíduos seguindo o padrão Dark Glass
  */
-function renderResiduos(residuos) {
+function renderresiduos(residuos) {
     if (residuos.length === 0) {
-        listaResiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum resíduo registrado para este laboratório.</div>';
+        listaresiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum resíduo registrado para este laboratório.</div>';
         return;
     }
 
@@ -112,7 +112,7 @@ function renderResiduos(residuos) {
                 </div>
             </div>
         `;
-        listaResiduos.appendChild(col);
+        listaresiduos.appendChild(col);
     });
 }
 
@@ -130,7 +130,7 @@ function handleEditClick(btn) {
 
     modalTitle.textContent = 'Editar Registro de Resíduo';
     modalSubmitBtn.textContent = 'Atualizar Registro';
-    modalResiduo.show();
+    modalresiduo.show();
 }
 
 async function handleFormSubmit(e) {
@@ -148,18 +148,18 @@ async function handleFormSubmit(e) {
     try {
         let query;
         if (id) {
-            query = supabaseClient.from('Residuo').update(payload).eq('id', id);
+            query = supabaseClient.from('residuo').update(payload).eq('id', id);
         } else {
             payload.status = 'Em Aberto';
-            query = supabaseClient.from('Residuo').insert([payload]);
+            query = supabaseClient.from('residuo').insert([payload]);
         }
 
         const { error } = await query;
         if (error) throw error;
 
         showToast(id ? "Registro atualizado com sucesso!" : "Resíduo adicionado ao inventário.", "success");
-        modalResiduo.hide();
-        fetchResiduos();
+        modalresiduo.hide();
+        fetchresiduos();
 
     } catch (error) {
         console.error('Erro ao salvar:', error.message);
@@ -177,14 +177,14 @@ async function atualizarStatus(id, novoStatus) {
 
     try {
         const { error } = await supabaseClient
-            .from('Residuo')
+            .from('residuo')
             .update({ status: novoStatus })
             .eq('id', id);
 
         if (error) throw error;
         
         showToast(`Resíduo atualizado para ${novoStatus}.`, "success");
-        fetchResiduos();
+        fetchresiduos();
 
     } catch (error) {
         console.error('Erro ao atualizar status:', error.message);
@@ -197,12 +197,12 @@ async function atualizarStatus(id, novoStatus) {
 // ===============================================
 
 document.addEventListener('DOMContentLoaded', init);
-formResiduo.addEventListener('submit', handleFormSubmit);
+formresiduo.addEventListener('submit', handleFormSubmit);
 
 // Reset do modal ao abrir para novo registro
-if (btnNovoResiduo) {
-    btnNovoResiduo.addEventListener('click', () => {
-        formResiduo.reset();
+if (btnNovoresiduo) {
+    btnNovoresiduo.addEventListener('click', () => {
+        formresiduo.reset();
         editIdInput.value = '';
         modalTitle.textContent = 'Registrar Novo Resíduo';
         modalSubmitBtn.textContent = 'Registrar';
@@ -210,7 +210,7 @@ if (btnNovoResiduo) {
 }
 
 // Delegação de Eventos para botões dinâmicos
-listaResiduos.addEventListener('click', (e) => {
+listaresiduos.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-editar');
     if (btnEdit) handleEditClick(btnEdit);
 

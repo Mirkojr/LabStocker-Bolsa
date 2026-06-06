@@ -1,26 +1,26 @@
 import { getCurrentLabId } from './sessionManager.js';
 import { showToast } from './utils/toast.js';
 import {
-    excluirItemEstoque,
-    listarEstoquePorLaboratorio,
-    registrarMovimentacaoEntradaEstoque,
-    salvarItemEstoque,
+    excluirItemestoque,
+    listarestoquePorlaboratorio,
+    registrarMovimentacaoEntradaestoque,
+    salvarItemestoque,
 } from './services/estoqueService.js';
-import { listarReagentesParaEstoque } from './services/reagentesService.js';
+import { listarreagentesParaestoque } from './services/reagentesService.js';
 
 // --- Seletores ---
-const listaEstoqueEl = document.getElementById('lista-estoque');
-const formEstoque = document.getElementById('form-estoque');
+const listaestoqueEl = document.getElementById('lista-estoque');
+const formestoque = document.getElementById('form-estoque');
 const inputBusca = document.getElementById('input-busca-estoque');
 const spinner = document.getElementById('loading-spinner-estoque');
 const modalEl = document.getElementById('modal-estoque');
-const modalEstoque = new bootstrap.Modal(modalEl);
+const modalestoque = new bootstrap.Modal(modalEl);
 
 // Elementos do Form
 const modalTitle = modalEl.querySelector('.modal-title');
-const modalSubmitBtn = formEstoque.querySelector('button[type="submit"]');
+const modalSubmitBtn = formestoque.querySelector('button[type="submit"]');
 const editIdInput = document.getElementById('estoque-edit-id');
-const selectReagente = document.getElementById('estoque-reagente');
+const selectreagente = document.getElementById('estoque-reagente');
 const quantidadeInput = document.getElementById('estoque-quantidade');
 const unidadeInput = document.getElementById('estoque-unidade');
 const validadeInput = document.getElementById('estoque-validade');
@@ -32,26 +32,26 @@ let ID_LAB_DO_USUARIO = null;
 // 2. LÓGICA DO ESTOQUE
 // ===============================================
 
-async function fetchEstoque(labId, filtroNome = '') {
+async function fetchestoque(labId, filtroNome = '') {
     spinner.classList.remove('d-none');
-    listaEstoqueEl.innerHTML = '';
+    listaestoqueEl.innerHTML = '';
 
     try {
-        const { data, error } = await listarEstoquePorLaboratorio(labId);
+        const { data, error } = await listarestoquePorlaboratorio(labId);
         if (error) throw error;
 
         const itensFiltrados = data.filter(item => 
-            !filtroNome || (item.Reagente && item.Reagente.nome.toLowerCase().includes(filtroNome.toLowerCase()))
+            !filtroNome || (item.reagente && item.reagente.nome.toLowerCase().includes(filtroNome.toLowerCase()))
         );
 
         if (itensFiltrados.length === 0) {
-            listaEstoqueEl.innerHTML = `
+            listaestoqueEl.innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
                     <p class="text-muted mt-3">Nenhum item encontrado.</p>
                 </div>`;
         } else {
-            renderEstoque(itensFiltrados);
+            renderestoque(itensFiltrados);
         }
     } catch (error) {
         console.error('Erro:', error.message);
@@ -61,8 +61,8 @@ async function fetchEstoque(labId, filtroNome = '') {
     }
 }
 
-function renderEstoque(itens) {
-    listaEstoqueEl.innerHTML = '';
+function renderestoque(itens) {
+    listaestoqueEl.innerHTML = '';
 
     itens.forEach(item => {
         // Lógica visual para Validade
@@ -103,7 +103,7 @@ function renderEstoque(itens) {
                         <i class="bi bi-flask fs-4"></i>
                     </div>
                     <div>
-                        <h5 class="mb-1 fw-bold text-dark">${item.Reagente.nome}</h5>
+                        <h5 class="mb-1 fw-bold text-dark">${item.reagente.nome}</h5>
                         <div class="mb-1">
                             <span class="text-primary fw-bold fs-5">${item.quantidade}</span> 
                             <small class="text-muted text-uppercase fw-bold">${item.unidade_medida}</small>
@@ -133,18 +133,18 @@ function renderEstoque(itens) {
                 </div>
             </div>
         `;
-        listaEstoqueEl.appendChild(div);
+        listaestoqueEl.appendChild(div);
     });
 }
 
-async function fetchReagentesParaModal() {
+async function fetchreagentesParaModal() {
     try {
-        const { data, error } = await listarReagentesParaEstoque();
+        const { data, error } = await listarreagentesParaestoque();
         if (error) throw error;
         
-        selectReagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
+        selectreagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
         data.forEach(reagente => {
-            selectReagente.innerHTML += `<option value="${reagente.id}">${reagente.nome}</option>`;
+            selectreagente.innerHTML += `<option value="${reagente.id}">${reagente.nome}</option>`;
         });
     } catch (error) {
         console.error('Erro:', error.message);
@@ -152,7 +152,7 @@ async function fetchReagentesParaModal() {
     }
 }
 
-async function handleFormSubmitEstoque(evento) {
+async function handleFormSubmitestoque(evento) {
     evento.preventDefault();
     if (!ID_LAB_DO_USUARIO) {
         showToast('Sessão inválida. Recarregue a página.', 'error');
@@ -162,7 +162,7 @@ async function handleFormSubmitEstoque(evento) {
     const id = editIdInput.value;
     const dadosForm = {
         id_laboratorio: ID_LAB_DO_USUARIO,
-        id_reagente: selectReagente.value,
+        id_reagente: selectreagente.value,
         quantidade: parseFloat(quantidadeInput.value),
         unidade_medida: unidadeInput.value,
         data_validade: validadeInput.value || null,
@@ -172,16 +172,16 @@ async function handleFormSubmitEstoque(evento) {
     try {
         let query;
         if (id) {
-            query = await salvarItemEstoque(id, dadosForm);
+            query = await salvarItemestoque(id, dadosForm);
         } else {
-            query = await salvarItemEstoque(null, dadosForm);
+            query = await salvarItemestoque(null, dadosForm);
 
             // Mantendo sua lógica de histórico
-            const nomeReagente = selectReagente.options[selectReagente.selectedIndex].text;
-            await registrarMovimentacaoEntradaEstoque({
+            const nomereagente = selectreagente.options[selectreagente.selectedIndex].text;
+            await registrarMovimentacaoEntradaestoque({
                 id_laboratorio: ID_LAB_DO_USUARIO,
                 tipo: 'ENTRADA',
-                item_nome: nomeReagente,
+                item_nome: nomereagente,
                 quantidade: dadosForm.quantidade,
                 unidade: dadosForm.unidade_medida,
                 observacao: 'Cadastro inicial no estoque'
@@ -193,8 +193,8 @@ async function handleFormSubmitEstoque(evento) {
 
         showToast(id ? 'Item atualizado com sucesso!' : 'Item adicionado ao estoque!', 'success');
         
-        modalEstoque.hide();
-        fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+        modalestoque.hide();
+        fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
 
     } catch (error) {
         console.error('Erro:', error.message);
@@ -202,69 +202,69 @@ async function handleFormSubmitEstoque(evento) {
     }
 }
 
-function handleEditClickEstoque(button) {
+function handleEditClickestoque(button) {
     const { id, reagenteId, quantidade, unidade, validade, observacoes } = button.dataset;
     editIdInput.value = id;
-    selectReagente.value = reagenteId;
+    selectreagente.value = reagenteId;
     quantidadeInput.value = quantidade;
     unidadeInput.value = unidade;
     validadeInput.value = validade;
     observacoesInput.value = observacoes;
     modalTitle.textContent = 'Editar Item';
     modalSubmitBtn.textContent = 'Salvar Alterações';
-    modalEstoque.show();
+    modalestoque.show();
 }
 
-async function handleDeleteClickEstoque(button) {
+async function handleDeleteClickestoque(button) {
     const id = button.dataset.id;
     // Ainda usamos confirm nativo aqui por ser mais rápido, mas pode ser melhorado depois
     if (confirm('Tem certeza que deseja excluir este item?')) {
         try {
-            const { error } = await excluirItemEstoque(id);
+            const { error } = await excluirItemestoque(id);
             if (error) throw error;
             showToast('Item removido do estoque.', 'warning');
-            fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+            fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
         } catch (error) {
             showToast('Erro ao excluir: ' + error.message, 'error');
         }
     }
 }
 
-function resetModalEstoque() {
-    formEstoque.reset();
+function resetModalestoque() {
+    formestoque.reset();
     editIdInput.value = '';
-    modalTitle.textContent = 'Adicionar Item ao Estoque';
-    modalSubmitBtn.textContent = 'Salvar no Estoque';
-    selectReagente.value = "";
+    modalTitle.textContent = 'Adicionar Item ao estoque';
+    modalSubmitBtn.textContent = 'Salvar no estoque';
+    selectreagente.value = "";
 }
 
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', async () => {
     ID_LAB_DO_USUARIO = await getCurrentLabId();
     if (ID_LAB_DO_USUARIO) {
-        fetchEstoque(ID_LAB_DO_USUARIO);
-        fetchReagentesParaModal();
+        fetchestoque(ID_LAB_DO_USUARIO);
+        fetchreagentesParaModal();
     } else {
         showToast('Laboratório não identificado. Faça login novamente.', 'error');
     }
 });
 
-formEstoque.addEventListener('submit', handleFormSubmitEstoque);
+formestoque.addEventListener('submit', handleFormSubmitestoque);
 
 let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        if (ID_LAB_DO_USUARIO) fetchEstoque(ID_LAB_DO_USUARIO, inputBusca.value);
+        if (ID_LAB_DO_USUARIO) fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
     }, 300);
 });
 
-listaEstoqueEl.addEventListener('click', (e) => {
+listaestoqueEl.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-edit-estoque');
     const btnDelete = e.target.closest('.btn-delete-estoque');
 
-    if (btnEdit) handleEditClickEstoque(btnEdit);
-    if (btnDelete) handleDeleteClickEstoque(btnDelete);
+    if (btnEdit) handleEditClickestoque(btnEdit);
+    if (btnDelete) handleDeleteClickestoque(btnDelete);
 });
 
-modalEl.addEventListener('hidden.bs.modal', resetModalEstoque);
+modalEl.addEventListener('hidden.bs.modal', resetModalestoque);

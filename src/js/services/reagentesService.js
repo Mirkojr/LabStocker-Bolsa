@@ -1,7 +1,7 @@
 import { supabaseClient } from '../supabaseClient.js';
 
-export async function listarReagentes(filtroNome = '') {
-    let query = supabaseClient.from('Reagente').select('*').order('nome');
+export async function listarreagentes(filtroNome = '') {
+    let query = supabaseClient.from('reagente').select('*').order('nome');
 
     if (filtroNome) {
         query = query.ilike('nome', `%${filtroNome}%`);
@@ -10,21 +10,21 @@ export async function listarReagentes(filtroNome = '') {
     return query;
 }
 
-export async function listarReagentesParaEstoque() {
+export async function listarreagentesParaestoque() {
     return supabaseClient
-        .from('Reagente')
+        .from('reagente')
         .select('id, nome')
         .order('nome');
 }
 
-export async function salvarReagente(id, dadosForm) {
+export async function salvarreagente(id, dadosForm) {
     if (id) {
-        return supabaseClient.from('Reagente').update(dadosForm).eq('id', id);
+        return supabaseClient.from('reagente').update(dadosForm).eq('id', id);
     }
 
-    return supabaseClient.from('Reagente').insert(dadosForm);
+    return supabaseClient.from('reagente').insert(dadosForm);
 }
 
-export async function excluirReagente(id) {
-    return supabaseClient.from('Reagente').delete().eq('id', id);
+export async function excluirreagente(id) {
+    return supabaseClient.from('reagente').delete().eq('id', id);
 }

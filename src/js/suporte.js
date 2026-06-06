@@ -2,17 +2,17 @@ import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
 
 // --- Seletores ---
-const formFeedback = document.getElementById('form-feedback');
+const formfeedback = document.getElementById('form-feedback');
 const tipoSelect = document.getElementById('tipo-feedback');
 const msgInput = document.getElementById('msg-feedback');
-async function enviarFeedback(e) {
+async function enviarfeedback(e) {
     e.preventDefault();
 
     const tipo = tipoSelect.value;
     const mensagem = msgInput.value;
-    const btnSubmit = formFeedback.querySelector('button');
+    const btnSubmit = formfeedback.querySelector('button');
 
-    // Feedback visual de carregamento
+    // feedback visual de carregamento
     const textoOriginal = btnSubmit.innerHTML;
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ENVIANDO...';
@@ -23,9 +23,9 @@ async function enviarFeedback(e) {
 
         if (!user) throw new Error("A sessão expirou. Faça login novamente.");
 
-        // Salva na tabela 'Feedback'
+        // Salva na tabela 'feedback'
         const { error } = await supabaseClient
-            .from('Feedback')
+            .from('feedback')
             .insert({
                 user_id: user.id,
                 tipo: tipo,
@@ -37,7 +37,7 @@ async function enviarFeedback(e) {
 
         // Sucesso
         showToast("Obrigado! Sua mensagem foi enviada à equipe técnica.", "success");
-        formFeedback.reset();
+        formfeedback.reset();
 
     } catch (error) {
         console.error('Erro suporte:', error);
@@ -51,7 +51,7 @@ async function enviarFeedback(e) {
 
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', () => {
-    if (formFeedback) {
-        formFeedback.addEventListener('submit', enviarFeedback);
+    if (formfeedback) {
+        formfeedback.addEventListener('submit', enviarfeedback);
     }
 });
