@@ -30,22 +30,23 @@
 
 ```
 labstocker/
-├─ css/                 # Estilos
 ├─ docs/                # Documentação do projeto
-├─ imagens/             # Assets
-├─ modelos/             # Modelos/templates
-├─ pages/               # Páginas HTML (dashboard, estoque, reagentes, etc.)
-├─ js/
-│  ├─ config/           # Configurações
-│  ├─ core/             # Núcleo da aplicação
-│  ├─ services/         # Acesso ao banco (estoque, perfis, reagentes...)
-│  ├─ utils/            # Utilitários
-│  ├─ supabaseClient.js # Inicialização do cliente Supabase
-│  ├─ authGuard.js      # Proteção de rotas
-│  ├─ sessionManager.js # Gestão de sessão
-│  └─ *.js              # Um arquivo por página
-├─ index.html           # Página inicial / login
-└─ .env.example         # Modelo de variáveis de ambiente
+└─ src/
+   ├─ .env              # Variáveis de ambiente locais
+   ├─ .gitignore        # Arquivos ignorados pelo Git
+   ├─ auth.js           # Autenticação na página de login
+   ├─ index.html        # Página inicial / login
+   ├─ css/              # Estilos
+   ├─ imagens/          # Assets
+   │  └─ favicon/
+   ├─ js/
+   │  ├─ config/        # Configurações
+   │  ├─ core/          # Núcleo da aplicação
+   │  ├─ services/      # Acesso ao banco (estoque, perfis, reagentes...)
+   │  ├─ utils/         # Utilitários
+   │  └─ *.js           # Arquivos js para páginas específicas
+   ├─ modelos/          # Modelos/templates
+   └─ pages/            # Páginas HTML (dashboard, estoque, reagentes, etc.)
 ```
 
 ## ✅ Pré-requisitos
@@ -71,7 +72,7 @@ cd labstocker
 
 ### 3. Configurar as variáveis de ambiente
 
-Crie um arquivo `.env` na raiz a partir do `.env.example`:
+Crie um arquivo `.env` dentro de `src/` com as credenciais do Supabase:
 
 ```bash
 SUPABASE_URL=https://SEU-PROJETO.supabase.co
@@ -81,7 +82,7 @@ SUPABASE_ANON_KEY=sua-anon-key-aqui
 <aside>
 ⚠️
 
-Nunca comite o arquivo `.env` nem qualquer arquivo com senhas. Garanta que `.env` está no `.gitignore`. A **anon key** é pública (a segurança vem da RLS); a **service_role key** jamais deve aparecer no front-end.
+Nunca comite o arquivo `.env` nem qualquer arquivo com senhas. Garanta que `.env` está listado no `.gitignore`. A **anon key** é pública (a segurança vem da RLS); a **service_role key** jamais deve aparecer no front-end.
 
 </aside>
 
