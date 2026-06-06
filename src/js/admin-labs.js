@@ -1,15 +1,15 @@
-import { supabaseClient } from './supabaseClient.js';
 import { checkIsAdmin } from './sessionManager.js';
+import { listarLaboratorios, criarLaboratorio, excluirLaboratorio } from './services/laboratoriosService.js';
 
 const formLab = document.getElementById('form-lab');
 const listaLabs = document.getElementById('lista-labs');
 
-// 1. Verificação de Segurança ao Carregar
+// 1. Verificacao de Seguranca ao Carregar
 async function init() {
     try {
         const isAdmin = await checkIsAdmin();
         if (!isAdmin) {
-            alert("Acesso Negado: Esta página é restrita para administradores.");
+            alert("Acesso Negado: Esta pagina e restrita para administradores.");
             window.location.href = 'dashboard.html';
             return;
         }
@@ -20,18 +20,15 @@ async function init() {
     }
 }
 
-// 2. Buscar Lista de Laboratórios
+// 2. Buscar Lista de Laboratorios
 async function fetchLabs() {
     listaLabs.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
-    
-    const { data, error } = await supabaseClient
-        .from('laboratorio')
-        .select('*')
-        .order('nome_laboratorio');
+
+    const { data, error } = await listarLaboratorios();
 
     if (error) {
         console.error(error);
-        listaLabs.innerHTML = '<div class="alert alert-danger">Erro ao carregar laboratórios.</div>';
+        listaLabs.innerHTML = '<div class="alert alert-danger">Erro ao carregar laboratorios.</div>';
         return;
     }
 
@@ -41,9 +38,9 @@ async function fetchLabs() {
 // 3. Renderizar na Tela
 function renderLabs(labs) {
     listaLabs.innerHTML = '';
-    
+
     if (labs.length === 0) {
-        listaLabs.innerHTML = '<div class="text-muted text-center">Nenhum laboratório cadastrado.</div>';
+        listaLabs.innerHTML = '<div class="text-muted text-center">Nenhum laboratorio cadastrado.</div>';
         return;
     }
 
@@ -63,10 +60,10 @@ function renderLabs(labs) {
     });
 }
 
-// 4. Cadastrar Novo Laboratório
+// 4. Cadastrar Novo Laboratorio
 async function handleCadastro(e) {
     e.preventDefault();
-    
+
     const nomeInput = document.getElementById('lab-nome');
     const sipacInput = document.getElementById('lab-sipac');
     const btnSubmit = formLab.querySelector('button');
@@ -80,13 +77,11 @@ async function handleCadastro(e) {
     btnSubmit.textContent = 'Salvando...';
 
     try {
-        const { error } = await supabaseClient
-            .from('laboratorio')
-            .insert({ nome_laboratorio: nome, codigo_sipac: sipac });
+        const { error } = await criarLaboratorio({ nome_laboratorio: nome, codigo_sipac: sipac });
 
         if (error) throw error;
 
-        alert("Laboratório criado com sucesso!");
+        alert("Laboratorio criado com sucesso!");
         formLab.reset();
         fetchLabs(); // Atualiza a lista
 
@@ -99,24 +94,21 @@ async function handleCadastro(e) {
     }
 }
 
-// 5. Excluir Laboratório
+// 5. Excluir Laboratorio
 async function handleDelete(id) {
-    if(!confirm("ATENÇÃO: Tem certeza que deseja excluir este laboratório?")) return;
+    if(!confirm("ATENCAO: Tem certeza que deseja excluir este laboratorio?")) return;
 
     try {
-        const { error } = await supabaseClient
-            .from('laboratorio')
-            .delete()
-            .eq('id', id);
+        const { error } = await excluirLaboratorio(id);
 
         if (error) {
-            // Se houver erro de chave estrangeira (FK), avisa o usuário
+            // Se houver erro de chave estrangeira (FK), avisa o usuario
             if (error.code === '23503') {
-                throw new Error("Não é possível excluir: Existem usuários ou estoque vinculados a este laboratório.");
+                throw new Error("Nao e possivel excluir: Existem usuarios ou estoque vinculados a este laboratorio.");
             }
             throw error;
         }
-        
+
         fetchLabs(); // Atualiza a lista
 
     } catch (error) {
@@ -124,7 +116,7 @@ async function handleDelete(id) {
     }
 }
 
-// Inicialização e Event Listeners
+// Inicializacao e Event Listeners
 document.addEventListener('DOMContentLoaded', init);
 
 if (formLab) {

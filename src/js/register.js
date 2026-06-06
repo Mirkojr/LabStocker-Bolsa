@@ -1,20 +1,18 @@
-
-import { supabaseClient } from './supabaseClient.js';
+import { buscarIdPorSipac } from './services/laboratoriosService.js';
 import { criarPerfilUsuario } from './services/perfisService.js';
 
+console.log('register.js carregado');
 
-console.log('Cliente importado em register.js');
-
-// --- 2. LÓGICA DE CADASTRO ---
+// --- LOGICA DE CADASTRO ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const formRegister = document.getElementById('form-register');
 
     formRegister.addEventListener('submit', async (evento) => {
         evento.preventDefault();
 
-        // Coletar todos os dados do formulário
+        // Coletar todos os dados do formulario
         const email = document.getElementById('register-email').value;
         const senha = document.getElementById('register-senha').value;
         const confirmarSenha = document.getElementById('register-confirmar-senha').value;
@@ -22,37 +20,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const sobrenome = document.getElementById('register-sobrenome').value;
         const codigoSipac = document.getElementById('register-sipac').value;
         const identificador = document.getElementById('register-identificador').value;
-        
-        // Pega o valor do botão de rádio (SIAPE ou MATRICULA)
+
+        // Pega o valor do botao de radio (SIAPE ou MATRICULA)
         const tipoIdentificador = document.querySelector('input[name="tipo_identificador"]:checked')?.value;
 
-        // --- VALIDAÇÕES INICIAIS ---
+        // --- VALIDACOES INICIAIS ---
         if (senha !== confirmarSenha) {
-            alert('As senhas não coincidem!');
+            alert('As senhas nao coincidem!');
             return;
         }
         if (!tipoIdentificador) {
-            alert('Por favor, selecione se é Técnico ou Aluno.');
+            alert('Por favor, selecione se e Tecnico ou Aluno.');
             return;
         }
 
         try {
-            // --- ETAPA 1: Encontrar o ID do Laboratório usando o Código SIPAC ---
-            // (Requer a política RLS de Leitura na tabela 'laboratorio' que já fizemos)
-            
-            const { data: labData, error: labError } = await supabaseClient
-                .from('laboratorio')
-                .select('id') // Queremos o 'id' (uuid)
-                .eq('codigo_sipac', codigoSipac) // Onde o 'codigo_sipac' for igual ao que o usuário digitou
-                .single(); // Esperamos APENAS um resultado
+            // --- ETAPA 1: Encontrar o ID do Laboratorio usando o Codigo SIPAC ---
+            const { data: labData, error: labError } = await buscarIdPorSipac(codigoSipac);
 
             if (labError || !labData) {
-                throw new Error('Código SIPAC do laboratório não encontrado ou inválido.');
+                throw new Error('Codigo SIPAC do laboratorio nao encontrado ou invalido.');
             }
-            
-            const laboratorioId = labData.id; // Este é o UUID do laboratório que precisamos!
 
-            // --- ETAPA 2 e 3: Criar o usuário no Auth e o perfil vinculado ---
+            const laboratorioId = labData.id; // UUID do laboratorio
+
+            // --- ETAPA 2 e 3: Criar o usuario no Auth e o perfil vinculado ---
             const { error: profileError } = await criarPerfilUsuario(email, senha, {
                 nome: nome,
                 sobrenome: sobrenome,
@@ -64,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileError) throw profileError;
 
             // SUCESSO!
-            alert('Cadastro realizado com sucesso! Você será redirecionado para o login.');
-            window.location.href = '../index.html'; // Manda o usuário de volta para a tela de login
+            alert('Cadastro realizado com sucesso! Voce sera redirecionado para o login.');
+            window.location.href = '../index.html';
 
         } catch (error) {
             console.error('Erro no cadastro:', error.message);

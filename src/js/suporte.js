@@ -1,10 +1,12 @@
-import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
+import { getUsuarioLogado } from './services/authService.js';
+import { enviarFeedback } from './services/feedbackService.js';
 
 // --- Seletores ---
 const formfeedback = document.getElementById('form-feedback');
 const tipoSelect = document.getElementById('tipo-feedback');
 const msgInput = document.getElementById('msg-feedback');
+
 async function enviarfeedback(e) {
     e.preventDefault();
 
@@ -18,38 +20,36 @@ async function enviarfeedback(e) {
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ENVIANDO...';
 
     try {
-        // Pega o usuário logado para vincular ao feedback
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        // Pega o usuario logado para vincular ao feedback
+        const { data: { user } } = await getUsuarioLogado();
 
-        if (!user) throw new Error("A sessão expirou. Faça login novamente.");
+        if (!user) throw new Error("A sessao expirou. Faca login novamente.");
 
-        // Salva na tabela 'feedback'
-        const { error } = await supabaseClient
-            .from('feedback')
-            .insert({
-                user_id: user.id,
-                tipo: tipo,
-                mensagem: mensagem,
-                status: 'Pendente'
-            });
+        // Salva na tabela 'feedback' via camada de service
+        const { error } = await enviarFeedback({
+            user_id: user.id,
+            tipo: tipo,
+            mensagem: mensagem,
+            status: 'Pendente'
+        });
 
         if (error) throw error;
 
         // Sucesso
-        showToast("Obrigado! Sua mensagem foi enviada à equipe técnica.", "success");
+        showToast("Obrigado! Sua mensagem foi enviada a equipe tecnica.", "success");
         formfeedback.reset();
 
     } catch (error) {
         console.error('Erro suporte:', error);
         showToast("Erro ao enviar: " + error.message, "error");
     } finally {
-        // Restaura o botão original
+        // Restaura o botao original
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = textoOriginal;
     }
 }
 
-// --- Inicialização ---
+// --- Inicializacao ---
 document.addEventListener('DOMContentLoaded', () => {
     if (formfeedback) {
         formfeedback.addEventListener('submit', enviarfeedback);

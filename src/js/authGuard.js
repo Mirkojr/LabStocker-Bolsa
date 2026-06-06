@@ -1,17 +1,15 @@
-import { supabaseClient } from './supabaseClient.js';
+import { getSessao } from './services/authService.js';
 
-// Esta é uma função auto-executável que roda assim que o script é carregado
+// Funcao auto-executavel que roda assim que o script e carregado
 (async () => {
-    // Pega a sessão atual do usuário
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    // Pega a sessao atual do usuario via camada de service
+    const { data: { session } } = await getSessao();
 
     if (!session) {
-        // Se NÃO houver sessão (usuário não logado)
-        alert('Você precisa estar logado para acessar esta página.');
-        // Redireciona para a página de login
+        // Se NAO houver sessao (usuario nao logado)
+        alert('Voce precisa estar logado para acessar esta pagina.');
         window.location.href = '../index.html';
     } else {
-        // Se houver sessão, apenas exibe no console (para teste)
-        console.log('Usuário autenticado:', session.user.email);
+        console.log('Usuario autenticado:', session.user.email);
     }
 })();

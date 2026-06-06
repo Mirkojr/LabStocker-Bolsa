@@ -1,5 +1,5 @@
-import { supabaseClient } from './supabaseClient.js';
 import { showToast } from './utils/toast.js';
+import { getUsuarioLogado, logout } from './services/authService.js';
 import { buscarNomePorId } from './services/perfisService.js';
 
 // Seletores
@@ -17,7 +17,7 @@ async function loadDashboardInfo() {
 
         const btnSairModo = document.createElement('button');
         btnSairModo.className = "btn btn-sm btn-outline-warning mt-3 d-block mx-auto fw-bold rounded-pill"; 
-        btnSairModo.textContent = "Sair do Laboratório (Voltar ao Admin)";
+        btnSairModo.textContent = "Sair do Laboratorio (Voltar ao Admin)";
         
         btnSairModo.onclick = () => {
             sessionStorage.removeItem('ADMIN_SELECTED_LAB_ID');
@@ -40,7 +40,7 @@ async function loadDashboardInfo() {
                 btnContainer.className = "text-center mb-4";
                 btnContainer.innerHTML = `
                     <a href="admin-labs.html" class="btn btn-warning fw-bold shadow-sm rounded-pill px-4">
-                        <i class="bi bi-plus-circle-fill me-2"></i> Gerenciar Laboratórios
+                        <i class="bi bi-plus-circle-fill me-2"></i> Gerenciar Laboratorios
                     </a>
                 `;
                 greetingElement.after(btnContainer);
@@ -53,12 +53,12 @@ async function loadDashboardInfo() {
 
 async function loadUserName() {
     try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data: { user } } = await getUsuarioLogado();
         if (user) {
             const { data, error } = await buscarNomePorId(user.id);
 
             if (error) throw error;
-            if (data) greetingElement.textContent = `Olá, ${data.nome}!`;
+            if (data) greetingElement.textContent = `Ola, ${data.nome}!`;
         }
     } catch (error) {
         greetingElement.textContent = 'Bem-vindo(a)!';
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('ADMIN_SELECTED_LAB_ID');
             sessionStorage.removeItem('ADMIN_SELECTED_LAB_NAME');
             
-            const { error } = await supabaseClient.auth.signOut();
+            const { error } = await logout();
             if (error) {
                 showToast('Erro ao sair.', 'error');
             } else {
-                showToast('Sessão encerrada. Até logo!', 'success');
+                showToast('Sessao encerrada. Ate logo!', 'success');
                 setTimeout(() => window.location.href = '../index.html', 1500);
             }
         });
