@@ -70,23 +70,8 @@ cd labstocker
 2. No **SQL Editor**, rode o script de criação das tabelas e políticas de RLS (veja o documento de schema do projeto).
 3. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
 
-### 3. Configurar as variáveis de ambiente
 
-Crie um arquivo `.env` dentro de `src/` com as credenciais do Supabase:
-
-```bash
-SUPABASE_URL=https://SEU-PROJETO.supabase.co
-SUPABASE_ANON_KEY=sua-anon-key-aqui
-```
-
-<aside>
-⚠️
-
-Nunca comite o arquivo `.env` nem qualquer arquivo com senhas. Garanta que `.env` está listado no `.gitignore`. A **anon key** é pública (a segurança vem da RLS); a **service_role key** jamais deve aparecer no front-end.
-
-</aside>
-
-### 4. Rodar localmente
+### 3. Rodar localmente
 
 **Opção A — com Vite (recomendado):**
 
