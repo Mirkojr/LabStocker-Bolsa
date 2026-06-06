@@ -11,6 +11,14 @@ export async function listarestoquePorlaboratorio(labId) {
         .order('data_validade');
 }
 
+export async function listarEstoqueDisponivelPorLaboratorio(labId) {
+    return supabaseClient
+        .from('estoquelab')
+        .select('*, reagente(nome)')
+        .eq('id_laboratorio', labId)
+        .gt('quantidade', 0);
+}
+
 export async function listarreagentesParaestoque() {
     return supabaseClient
         .from('reagente')

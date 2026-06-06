@@ -32,6 +32,14 @@ export async function buscarNomePorId(usuarioId) {
         .single();
 }
 
+export async function buscarFlagAdminPorId(usuarioId) {
+    return supabaseClient
+        .from('perfis')
+        .select('is_admin')
+        .eq('id', usuarioId)
+        .single();
+}
+
 export async function criarPerfilUsuario(email, password, data) {
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
