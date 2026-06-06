@@ -48,7 +48,7 @@ async function fetchPedidosRecebidos() {
                 )
             `)
             .eq('id_lab_destino', MEU_LAB_ID)
-            .eq('status', 'Pendente')
+            .eq('status', 'pendente')
             .order('data_solicitacao', { ascending: false });
 
         if (error) throw error;
