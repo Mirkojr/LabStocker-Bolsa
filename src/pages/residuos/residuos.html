@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Resíduos - LabStocker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .filter-badge {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.7);
+        }
+        .filter-badge:hover, .filter-badge.active {
+            background: #FFD700;
+            color: #132E4B;
+            border-color: #FFD700;
+        }
+    </style>
+</head>
+<body style="background-color: #132E4B;">
+
+    <script type="module" src="../../shared/authGuard.js"></script>
+
+    <div id="toast-container"></div>
+
+    <div class="container my-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+            <div class="d-flex align-items-center">
+                <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-arrow-left fw-bold"></i>
+                </a>
+                <div>
+                    <h2 class="mb-0 fw-bold">Gestão de Resíduos</h2>
+                    <p class="mb-0 opacity-75 small">Controle de descartes e inventário de efluentes</p>
+                </div>
+            </div>
+            
+            <button class="btn btn-danger fw-bold shadow-lg px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#modal-residuo">
+                <i class="bi bi-plus-lg me-2"></i> Novo Frasco
+            </button>
+        </div>
+
+        <div class="glass-panel-dark">
+            
+            <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+                <span class="badge rounded-pill px-3 py-2 filter-badge active">Todos</span>
+                <span class="badge rounded-pill px-3 py-2 filter-badge">Inflamável</span>
+                <span class="badge rounded-pill px-3 py-2 filter-badge">Corrosivo</span>
+                <span class="badge rounded-pill px-3 py-2 filter-badge">Biológico</span>
+            </div>
+            
+            <div id="spinner-res" class="text-center py-5 d-none">
+                <div class="spinner-border text-danger" role="status"></div>
+                <p class="mt-2 text-muted-light">Sincronizando inventário...</p>
+            </div>
+
+            <div class="row g-4" id="lista-residuos">
+                </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-residuo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold">Registrar Novo Resíduo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form id="form-residuo">
+                    <input type="hidden" id="edit-residuo-id">
+                    
+                    <div class="modal-body p-4 bg-light">
+                        <div class="mb-3">
+                            <label for="res-descricao" class="form-label fw-bold small text-secondary">Descrição do Material</label>
+                            <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-descricao" placeholder="Ex: Mistura de Solventes Orgânicos" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="res-tipo" class="form-label fw-bold small text-secondary">Tipo de Perigo Principal</label>
+                            <select class="form-select rounded-pill border-0 shadow-sm px-3" id="res-tipo" required>
+                                <option value="" disabled selected>Selecione a categoria...</option>
+                                <option value="Inflamavel">Inflamável</option>
+                                <option value="Toxico">Tóxico</option>
+                                <option value="Corrosivo">Corrosivo (Ácido/Base)</option>
+                                <option value="Biologico">Biológico</option>
+                                <option value="Outro">Outro / Mistura</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label for="res-qtd" class="form-label fw-bold small text-secondary">Quantidade</label>
+                                <input type="number" step="0.01" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-qtd" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="res-unidade" class="form-label fw-bold small text-secondary">Unidade</label>
+                                <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-unidade" placeholder="Ex: L, mL, Kg" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 bg-light pt-0 pb-4 px-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow">
+                            SALVAR REGISTRO
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="residuos.js"></script>
+</body>
+</html>
