@@ -8,6 +8,7 @@ ALTER TABLE public.estoquelab ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.residuo ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transferencia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projetos ENABLE ROW LEVEL SECURITY;
 
 -- ==========================================
 -- POLÍTICAS: LABORATÓRIO
@@ -56,3 +57,21 @@ CREATE POLICY "Gerenciar transferencias" ON public.transferencia
 -- ==========================================
 CREATE POLICY "Criar feedback" ON public.feedback FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Ver feedbacks" ON public.feedback FOR SELECT TO authenticated USING (auth.uid() = user_id OR am_i_admin());
+
+-- ==========================================
+-- POLÍTICAS: PROJETOS (Solicitações de autorização)
+-- ==========================================
+-- Usuário comum cria a própria solicitação
+CREATE POLICY "Criar propria solicitacao" ON public.projetos
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id OR responsavel_email = auth.email());
+
+-- Usuário vê as próprias; admin vê todas
+CREATE POLICY "Ver solicitacoes" ON public.projetos
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id OR responsavel_email = auth.email() OR am_i_admin());
+
+-- Somente admin atualiza (aprovar / recusar / dados administrativos)
+CREATE POLICY "Admin gerencia solicitacoes" ON public.projetos
+    FOR UPDATE TO authenticated
+    USING (am_i_admin()) WITH CHECK (am_i_admin());

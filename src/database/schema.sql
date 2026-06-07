@@ -83,3 +83,36 @@ CREATE TABLE public.feedback (
   CONSTRAINT feedback_pkey PRIMARY KEY (id),
   CONSTRAINT feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
+
+-- 4. SOLICITACOES DE AUTORIZACAO (PROJETOS)
+CREATE TABLE public.projetos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone DEFAULT now(),
+  user_id uuid DEFAULT auth.uid(),
+  responsavel_nome text NOT NULL,
+  responsavel_siape text,
+  responsavel_cpf text,
+  responsavel_email text NOT NULL,
+  responsavel_telefone text,
+  titulo_projeto text NOT NULL,
+  orgao_financiador text,
+  registro_numero text,
+  periodo_execucao text,
+  lab_nome text,
+  lab_sipac text,
+  produtos jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status text NOT NULL DEFAULT 'pendente',
+  motivo_recusa text,
+  -- Campos preenchidos pelo admin durante a aprovacao
+  cargo_responsavel text,
+  departamento_responsavel text,
+  unidade_academica text,
+  local_atividades text,
+  depto_atividades text,
+  orgao_controlador text,
+  documento_url text,
+  pdf_assinado_url text,
+  CONSTRAINT projetos_pkey PRIMARY KEY (id),
+  CONSTRAINT projetos_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL,
+  CONSTRAINT projetos_status_check CHECK (status IN ('pendente', 'aprovado', 'recusado'))
+);
