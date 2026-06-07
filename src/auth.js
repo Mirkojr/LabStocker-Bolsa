@@ -1,6 +1,6 @@
-import { showToast } from './js/utils/toast.js';
-import { login, logout } from './js/services/authService.js';
-import { buscarFlagAdminPorId } from './js/services/perfisService.js';
+import { showToast } from './shared/utils/toast.js';
+import { login, logout } from './shared/services/authService.js';
+import { buscarFlagAdminPorId } from './shared/services/perfisService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const formLogin = document.getElementById('form-login');
@@ -41,9 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setTimeout(() => {
                     if (perfilData && perfilData.is_admin) {
-                        window.location.href = 'pages/dashboard.html';
+                        window.location.href = 'pages/dashboard/dashboard.html';
                     } else {
-                        window.location.href = 'pages/dashboard.html';
+                        window.location.href = 'pages/dashboard/dashboard.html';
                     }
                 }, 1500);
 
