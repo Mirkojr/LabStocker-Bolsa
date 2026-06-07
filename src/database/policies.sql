@@ -9,6 +9,7 @@ ALTER TABLE public.residuo ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transferencia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projetos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Movimentacao" ENABLE ROW LEVEL SECURITY;
 
 -- ==========================================
 -- POLÍTICAS: LABORATÓRIO
@@ -93,3 +94,24 @@ CREATE POLICY "Ver solicitacoes" ON public.projetos
 CREATE POLICY "Admin gerencia solicitacoes" ON public.projetos
     FOR UPDATE TO authenticated
     USING (am_i_admin()) WITH CHECK (am_i_admin());
+
+-- ==========================================
+-- POLÍTICAS: MOVIMENTACAO (entradas de estoque / Historico)
+-- ==========================================
+-- Leitura/escrita restritas ao próprio laboratório (ou admin).
+CREATE POLICY "Ver movimentacoes" ON public."Movimentacao"
+    FOR SELECT TO authenticated
+    USING (id_laboratorio = get_my_lab_id() OR am_i_admin());
+
+CREATE POLICY "Inserir movimentacoes" ON public."Movimentacao"
+    FOR INSERT TO authenticated
+    WITH CHECK (id_laboratorio = get_my_lab_id() OR am_i_admin());
+
+CREATE POLICY "Atualizar movimentacoes" ON public."Movimentacao"
+    FOR UPDATE TO authenticated
+    USING (id_laboratorio = get_my_lab_id() OR am_i_admin())
+    WITH CHECK (id_laboratorio = get_my_lab_id() OR am_i_admin());
+
+CREATE POLICY "Excluir movimentacoes" ON public."Movimentacao"
+    FOR DELETE TO authenticated
+    USING (id_laboratorio = get_my_lab_id() OR am_i_admin());

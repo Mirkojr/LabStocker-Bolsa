@@ -116,3 +116,21 @@ CREATE TABLE public.projetos (
   CONSTRAINT projetos_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL,
   CONSTRAINT projetos_status_check CHECK (status IN ('pendente', 'aprovado', 'recusado'))
 );
+
+-- 5. MOVIMENTACOES DE ESTOQUE (entradas / compras) - usada pela linha do tempo do Historico
+-- ATENCAO: o app acessa esta tabela como "Movimentacao" (M maiusculo), por isso o nome
+-- e criado ENTRE ASPAS para preservar a grafia exata.
+CREATE TABLE public."Movimentacao" (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  id_laboratorio uuid NOT NULL,
+  tipo text NOT NULL DEFAULT 'ENTRADA'::text,
+  item_nome text,
+  quantidade numeric,
+  unidade text,
+  observacao text,
+  data_movimentacao timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "Movimentacao_pkey" PRIMARY KEY (id),
+  CONSTRAINT "Movimentacao_id_laboratorio_fkey" FOREIGN KEY (id_laboratorio) REFERENCES public.laboratorio(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_movimentacao_lab ON public."Movimentacao" (id_laboratorio);
