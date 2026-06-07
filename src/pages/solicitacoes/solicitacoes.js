@@ -30,7 +30,7 @@ async function fetchPedidosRecebidos() {
     listaPedidos.innerHTML = '';
 
     try {
-        // Busca transferencias pendentes onde EU sou o destino
+        // Busca transferencias pendentes onde EU sou a ORIGEM (dono do material solicitado).
         const { data, error } = await listarSolicitacoesPendentes(MEU_LAB_ID);
 
         if (error) throw error;
@@ -55,6 +55,7 @@ async function fetchPedidosRecebidos() {
 
 function renderPedidos(pedidos) {
     pedidos.forEach(pedido => {
+        // 'laboratorio' aqui é o laboratório SOLICITANTE (destino).
         const nomeLabSolicitante = pedido.laboratorio?.nome_laboratorio || "Lab Externo";
         const nomereagente = pedido.estoquelab?.reagente?.nome || "Item desconhecido";
         const quantidade = pedido.quantidade_transferida;

@@ -3,13 +3,17 @@
 -- ------------------------------------------------------------
 -- Executa, de forma transacional, a aprovação de uma transferência
 -- entre laboratórios:
---   1. valida permissão (laboratório de destino ou admin);
+--   1. valida permissão (laboratório de ORIGEM / dono do material, ou admin);
 --   2. valida que a transferência está pendente;
 --   3. valida saldo suficiente no item de estoque de origem;
---   4. DEBITA a quantidade do estoque de origem;
---   5. CREDITA no estoque do laboratório de destino
+--   4. DEBITA a quantidade do estoque de origem (dono);
+--   5. CREDITA no estoque do laboratório de destino (solicitante)
 --      (soma a um item equivalente ou cria um novo);
 --   6. marca a transferência como 'Aprovado'.
+--
+-- Convenção de direção:
+--   id_lab_origem  = dono do reagente (de onde o material sai) -> quem APROVA.
+--   id_lab_destino = quem solicitou / vai receber.
 --
 -- SECURITY DEFINER: necessário para alterar o estoque dos DOIS
 -- laboratórios mesmo com RLS ativa.
@@ -38,8 +42,8 @@ BEGIN
         RAISE EXCEPTION 'Transferência não encontrada.';
     END IF;
 
-    -- 2. Permissão: apenas o laboratório de destino ou um admin pode aprovar
-    IF NOT (v_transfer.id_lab_destino = public.get_my_lab_id() OR public.am_i_admin()) THEN
+    -- 2. Permissão: apenas o laboratório de ORIGEM (dono do material) ou um admin pode aprovar
+    IF NOT (v_transfer.id_lab_origem = public.get_my_lab_id() OR public.am_i_admin()) THEN
         RAISE EXCEPTION 'Sem permissão para aprovar esta transferência.';
     END IF;
 
@@ -65,13 +69,13 @@ BEGIN
             v_item_origem.quantidade, v_qtd;
     END IF;
 
-    -- 6. Debita da origem
+    -- 6. Debita da origem (dono do material)
     UPDATE public.estoquelab
     SET quantidade = quantidade - v_qtd,
         data_atualizacao = now()
     WHERE id = v_item_origem.id;
 
-    -- 7. Credita no destino: procura item equivalente (mesmo reagente + unidade)
+    -- 7. Credita no destino (solicitante): procura item equivalente (mesmo reagente + unidade)
     SELECT id INTO v_item_destino_id
     FROM public.estoquelab
     WHERE id_laboratorio = v_transfer.id_lab_destino

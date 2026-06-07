@@ -1,25 +1,31 @@
 import { supabaseClient } from '../supabaseClient.js';
 
 // Acesso a dados da tabela 'transferencia' (solicitacoes entre laboratorios).
+//
+// Convenção de direção (modelo físico do material):
+//   id_lab_origem  = laboratório DONO do reagente (de onde o material sai). É quem APROVA.
+//   id_lab_destino = laboratório que SOLICITA / vai RECEBER o material.
 
 export async function criarSolicitacao(dados) {
     return supabaseClient.from('transferencia').insert(dados);
 }
 
-export async function listarSolicitacoesPendentes(labDestinoId) {
+// Pedidos pendentes que o laboratório DONO (origem) precisa aprovar.
+// O nome retornado em 'laboratorio' é o do laboratório SOLICITANTE (destino).
+export async function listarSolicitacoesPendentes(labOrigemId) {
     return supabaseClient
         .from('transferencia')
         .select(`
             id,
             quantidade_transferida,
             data_solicitacao,
-            laboratorio:id_lab_origem ( nome_laboratorio ),
+            laboratorio:id_lab_destino ( nome_laboratorio ),
             estoquelab:id_item_estoque (
                 unidade_medida,
                 reagente ( nome )
             )
         `)
-        .eq('id_lab_destino', labDestinoId)
+        .eq('id_lab_origem', labOrigemId)
         .eq('status', 'pendente')
         .order('data_solicitacao', { ascending: false });
 }
