@@ -1,6 +1,6 @@
 // Validações reutilizáveis de campos de formulário.
 
-// Valida CPF brasileiro (com dígitos verificadores).
+// Valida CPF brasileiro (com dígitos verificadores). 
 export function validarCPF(cpf) {
     if (!cpf) return false;
     const c = cpf.replace(/\D/g, '');
