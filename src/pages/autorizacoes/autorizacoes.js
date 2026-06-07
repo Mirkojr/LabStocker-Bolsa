@@ -10,10 +10,31 @@ import { listarProjetosPorEmail, criarProjeto, gerarSignedUrl } from '../../shar
 let emailUsuarioLogado = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await preencherDadosUsuario();
-    await carregarMeusProjetos();
-    iniciarLogicaFormulario();
-    adicionarLinhaProduto();
+    const loadingDiv = document.getElementById('auth-loading');
+    const contentDiv = document.getElementById('main-content');
+
+    try {
+        const isAdmin = await checkIsAdmin();
+        if (isAdmin) {
+            window.location.replace('../admin/admin-autorizacoes.html');
+            return;
+        }
+
+        // Esconde a tela de carregamento e revela o conteúdo
+        if (loadingDiv) loadingDiv.classList.add('d-none');
+        if (contentDiv) contentDiv.style.display = 'block';
+
+        await preencherDadosUsuario();
+        await carregarMeusProjetos();
+        iniciarLogicaFormulario();
+        adicionarLinhaProduto();
+    } catch (e) {
+        console.error('Erro ao inicializar a página de autorizações:', e);
+        // Garante que a tela nunca fique presa no carregamento
+        if (loadingDiv) loadingDiv.classList.add('d-none');
+        if (contentDiv) contentDiv.style.display = 'block';
+        showToast('Erro ao carregar a página de autorizações.', 'error');
+    }
 });
 
 async function preencherDadosUsuario() {
