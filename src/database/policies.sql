@@ -32,13 +32,31 @@ CREATE POLICY "Atualizar proprio perfil" ON public.perfis FOR UPDATE TO authenti
 CREATE POLICY "Inserir proprio perfil" ON public.perfis FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
 -- ==========================================
--- POLÍTICAS: ESTOQUE E RESÍDUOS
+-- POLÍTICAS: ESTOQUE
 -- ==========================================
-CREATE POLICY "Acesso total estoque" ON public.estoquelab 
-    FOR ALL TO authenticated 
-    USING (id_laboratorio = get_my_lab_id() OR am_i_admin()) 
+-- Leitura liberada para qualquer usuário autenticado: permite visualizar o
+-- estoque de OUTROS laboratórios (ex.: para consultar e solicitar transferências).
+CREATE POLICY "Ver estoque" ON public.estoquelab
+    FOR SELECT TO authenticated
+    USING (true);
+
+-- Escrita (inserir/atualizar/excluir) restrita ao próprio laboratório ou admin.
+CREATE POLICY "Inserir estoque proprio lab" ON public.estoquelab
+    FOR INSERT TO authenticated
     WITH CHECK (id_laboratorio = get_my_lab_id() OR am_i_admin());
 
+CREATE POLICY "Atualizar estoque proprio lab" ON public.estoquelab
+    FOR UPDATE TO authenticated
+    USING (id_laboratorio = get_my_lab_id() OR am_i_admin())
+    WITH CHECK (id_laboratorio = get_my_lab_id() OR am_i_admin());
+
+CREATE POLICY "Excluir estoque proprio lab" ON public.estoquelab
+    FOR DELETE TO authenticated
+    USING (id_laboratorio = get_my_lab_id() OR am_i_admin());
+
+-- ==========================================
+-- POLÍTICAS: RESÍDUOS
+-- ==========================================
 CREATE POLICY "Acesso total residuos" ON public.residuo 
     FOR ALL TO authenticated 
     USING (id_laboratorio = get_my_lab_id() OR am_i_admin()) 
