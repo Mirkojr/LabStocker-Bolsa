@@ -25,6 +25,7 @@ CREATE TABLE public.perfis (
   identificador text NOT NULL,
   id_laboratorio uuid,
   is_admin boolean DEFAULT false,
+  email text,
   CONSTRAINT perfis_pkey PRIMARY KEY (id),
   CONSTRAINT perfis_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE,
   CONSTRAINT perfis_id_laboratorio_fkey FOREIGN KEY (id_laboratorio) REFERENCES public.laboratorio(id)

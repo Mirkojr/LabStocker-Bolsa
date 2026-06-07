@@ -1,4 +1,20 @@
--- 1. Função que cria o perfil
+-- Migração: gravar o email do auth.users em public.perfis
+-- Rode este script no SQL Editor do Supabase (uma vez).
+
+-- 1. Adiciona a coluna email (idempotente)
+ALTER TABLE public.perfis ADD COLUMN IF NOT EXISTS email text;
+
+-- (Opcional) garantir e-mail único por perfil:
+-- ALTER TABLE public.perfis ADD CONSTRAINT perfis_email_key UNIQUE (email);
+
+-- 2. Backfill: preenche o email dos perfis já existentes a partir do auth.users
+UPDATE public.perfis p
+SET email = u.email
+FROM auth.users u
+WHERE u.id = p.id
+  AND (p.email IS NULL OR p.email = '');
+
+-- 3. Recria a função do trigger já gravando o email nos novos cadastros
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -20,10 +36,3 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
--- 2. Trigger que dispara a função quando um usuário é criado
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
