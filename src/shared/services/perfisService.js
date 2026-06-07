@@ -67,9 +67,13 @@ export async function criarPerfilUsuario(email, password, data) {
         ...data,
     };
 
+    // IMPORTANTE: o banco tem um trigger (handle_new_user em auth.users) que já
+    // cria a linha em "perfis" a partir do metadata do signUp. Por isso usamos
+    // UPSERT (onConflict: 'id') no lugar de INSERT: se a linha já existir, apenas
+    // atualizamos os campos em vez de estourar "duplicate key (perfis_pkey)".
     const { data: perfilData, error: perfilError } = await supabaseClient
         .from('perfis')
-        .insert(perfilPayload)
+        .upsert(perfilPayload, { onConflict: 'id' })
         .select()
         .single();
 
