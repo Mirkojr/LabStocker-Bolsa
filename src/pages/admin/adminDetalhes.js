@@ -1,10 +1,18 @@
-import { supabaseClient } from '../../shared/supabaseClient.js';
 import { formatarCPF, formatarTelefone } from '../../shared/utils/formatters.js';
+import {
+    buscarProjetoPorId,
+    salvarMinuta,
+    aprovarProjeto,
+    recusarProjeto,
+    enviarDocumento,
+    gerarSignedUrl
+} from '../../shared/services/projetosService.js';
 
 const params = new URLSearchParams(window.location.search);
 const projetoId = params.get('id');
 
 let dadosProjetoAtual = null;
+
 function formatarUnidade(unidade) {
     if (!unidade) return "";
     const u = unidade.toLowerCase().trim();
@@ -12,6 +20,7 @@ function formatarUnidade(unidade) {
     if (u === 'l') return 'L';
     return unidade;
 }
+
 function loadFile(url, callback) {
     PizZipUtils.getBinaryContent(url, callback);
 }
@@ -25,11 +34,7 @@ async function carregarDetalhes() {
         return;
     }
 
-    const { data, error } = await supabaseClient
-        .from('projetos')
-        .select('*')
-        .eq('id', projetoId)
-        .single();
+    const { data, error } = await buscarProjetoPorId(projetoId);
 
     if (error) {
         console.error(error);
@@ -58,13 +63,13 @@ async function carregarDetalhes() {
         data.produtos.forEach((prod, index) => {
             const li = document.createElement('li');
             li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = `<span><strong>${index+1}.</strong> ${prod.nome}</span><span class="badge bg-secondary rounded-pill">${prod.quantidade} ${formatarUnidade(prod.unidade)}</span>`;
+            li.innerHTML = `<span><strong>${index + 1}.</strong> ${prod.nome}</span><span class="badge bg-secondary rounded-pill">${prod.quantidade} ${formatarUnidade(prod.unidade)}</span>`;
             listaProd.appendChild(li);
         });
     }
 
     // --- Lógica da Área Administrativa ---
-    
+
     // Preenche o formulário se já houver dados salvos
     if (data.cargo_responsavel) document.getElementById('admin-cargo').value = data.cargo_responsavel;
     if (data.departamento_responsavel) document.getElementById('admin-depto').value = data.departamento_responsavel;
@@ -74,7 +79,7 @@ async function carregarDetalhes() {
     if (data.orgao_controlador) document.getElementById('admin-orgao').value = data.orgao_controlador;
 
     if (data.status === 'aprovado') {
-        // MODO LEITURA
+        // MODO LEITURA (aprovado)
         document.getElementById('admin-area-pendente').classList.add('d-none');
         document.getElementById('admin-area-aprovado').classList.remove('d-none');
 
@@ -82,19 +87,23 @@ async function carregarDetalhes() {
         document.getElementById('read-depto').textContent = data.departamento_responsavel;
         document.getElementById('read-unidade').textContent = data.unidade_academica;
 
-        if(data.pdf_assinado_url) {
-            const { data: publicPdf } = supabaseClient.storage.from('documentos-projetos').getPublicUrl(data.pdf_assinado_url);
-            document.getElementById('btn-ver-pdf').href = publicPdf.publicUrl;
+        if (data.pdf_assinado_url) {
+            const { data: signedPdf } = await gerarSignedUrl(data.pdf_assinado_url);
+            document.getElementById('btn-ver-pdf').href = signedPdf?.signedUrl || '#';
         }
-        if(data.documento_url) {
-            const { data: publicDocx } = supabaseClient.storage.from('documentos-projetos').getPublicUrl(data.documento_url);
-            document.getElementById('btn-ver-docx').href = publicDocx.publicUrl;
+        if (data.documento_url) {
+            const { data: signedDocx } = await gerarSignedUrl(data.documento_url);
+            document.getElementById('btn-ver-docx').href = signedDocx?.signedUrl || '#';
         }
-
+    } else if (data.status === 'recusado') {
+        // MODO LEITURA (recusado)
+        document.getElementById('admin-area-pendente').classList.add('d-none');
+        document.getElementById('admin-area-recusado').classList.remove('d-none');
+        document.getElementById('read-motivo').textContent = data.motivo_recusa || '-';
     } else {
-        // MODO EDIÇÃO
+        // MODO EDIÇÃO (pendente)
         document.getElementById('admin-area-pendente').classList.remove('d-none');
-        
+
         // Se já existe um DOCX gerado (minuta), mostra o upload do PDF
         if (data.documento_url) {
             document.getElementById('area-upload-pdf').classList.remove('d-none');
@@ -119,7 +128,7 @@ document.getElementById('form-gerar-minuta').addEventListener('submit', async (e
             unidade: document.getElementById('admin-unidade').value,
             local_ativ: document.getElementById('admin-local-ativ').value,
             depto_ativ: document.getElementById('admin-depto-ativ').value,
-            orgao: document.getElementById('admin-orgao').value,
+            orgao: document.getElementById('admin-orgao').value
         };
 
         let produtosFormatados = [];
@@ -132,61 +141,59 @@ document.getElementById('form-gerar-minuta').addEventListener('submit', async (e
             }));
         }
 
-        loadFile("../../modelos/modelo_oficio.docx", async function(error, content) {
-            if (error) throw error;
+        loadFile("../../modelos/modelo_oficio.docx", async function (error, content) {
+            try {
+                if (error) throw error;
 
-            const zip = new PizZip(content);
-            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-            const hoje = new Date();
-            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                const zip = new PizZip(content);
+                const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+                const hoje = new Date();
+                const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-            doc.render({
-                cargo: adminData.cargo,
-                departamento: adminData.departamento,
-                unidade_academica: adminData.unidade,
-                local_atividades: adminData.local_ativ,
-                departamento_atividades: adminData.depto_ativ,
-                orgao_controlador: adminData.orgao,
-                responsavel: dadosProjetoAtual.responsavel_nome,
-                cpf_responsavel: formatarCPF(dadosProjetoAtual.responsavel_cpf),
-                nome_projeto: dadosProjetoAtual.titulo_projeto,
-                financiador: dadosProjetoAtual.orgao_financiador,
-                numero_projeto: dadosProjetoAtual.registro_numero,
-                local: "Fortaleza",
-                dia: hoje.getDate(),
-                mes: meses[hoje.getMonth()],
-                ano: hoje.getFullYear(),
-                itens: produtosFormatados
-            });
+                doc.render({
+                    cargo: adminData.cargo,
+                    departamento: adminData.departamento,
+                    unidade_academica: adminData.unidade,
+                    local_atividades: adminData.local_ativ,
+                    departamento_atividades: adminData.depto_ativ,
+                    orgao_controlador: adminData.orgao,
+                    responsavel: dadosProjetoAtual.responsavel_nome,
+                    cpf_responsavel: formatarCPF(dadosProjetoAtual.responsavel_cpf),
+                    nome_projeto: dadosProjetoAtual.titulo_projeto,
+                    financiador: dadosProjetoAtual.orgao_financiador,
+                    numero_projeto: dadosProjetoAtual.registro_numero,
+                    local: "Fortaleza",
+                    dia: hoje.getDate(),
+                    mes: meses[hoje.getMonth()],
+                    ano: hoje.getFullYear(),
+                    itens: produtosFormatados
+                });
 
-            const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+                const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 
-            saveAs(out, `Minuta_${projetoId}.docx`);
+                saveAs(out, `Minuta_${projetoId}.docx`);
 
-            const nomeArquivo = `minuta_${projetoId}_${Date.now()}.docx`;
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('documentos-projetos').upload(nomeArquivo, out);
-            if (uploadError) throw uploadError;
+                const nomeArquivo = `minuta_${projetoId}_${Date.now()}.docx`;
+                const { data: uploadData, error: uploadError } = await enviarDocumento(nomeArquivo, out);
+                if (uploadError) throw uploadError;
 
-            // Salva apenas os dados e o docx, SEM aprovar
-            const { error: updateError } = await supabaseClient.from('projetos').update({
-                documento_url: uploadData.path,
-                cargo_responsavel: adminData.cargo,
-                departamento_responsavel: adminData.departamento,
-                unidade_academica: adminData.unidade,
-                local_atividades: adminData.local_ativ,
-                depto_atividades: adminData.depto_ativ,
-                orgao_controlador: adminData.orgao
-            }).eq('id', projetoId);
+                // Salva apenas os dados e o docx, SEM aprovar
+                const { error: updateError } = await salvarMinuta(projetoId, {
+                    documento_url: uploadData.path,
+                    dadosAdmin: adminData
+                });
+                if (updateError) throw updateError;
 
-            if (updateError) throw updateError;
-
-            alert("Minuta gerada e baixada! Assine o documento e faça o upload do PDF abaixo.");
-            document.getElementById('area-upload-pdf').classList.remove('d-none');
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+                alert("Minuta gerada e baixada! Assine o documento e faça o upload do PDF abaixo.");
+                document.getElementById('area-upload-pdf').classList.remove('d-none');
+            } catch (innerErr) {
+                console.error(innerErr);
+                alert("Erro: " + innerErr.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         });
-
     } catch (err) {
         console.error(err);
         alert("Erro: " + err.message);
@@ -217,20 +224,14 @@ document.getElementById('form-upload-pdf').addEventListener('submit', async (e) 
 
     try {
         const nomeArquivo = `aprovado_${projetoId}_${Date.now()}.pdf`;
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('documentos-projetos').upload(nomeArquivo, file);
-
+        const { data: uploadData, error: uploadError } = await enviarDocumento(nomeArquivo, file);
         if (uploadError) throw uploadError;
 
-        const { error: updateError } = await supabaseClient.from('projetos').update({
-            status: 'aprovado',
-            pdf_assinado_url: uploadData.path
-        }).eq('id', projetoId);
-
+        const { error: updateError } = await aprovarProjeto(projetoId, uploadData.path);
         if (updateError) throw updateError;
 
         alert("Sucesso! Projeto aprovado e PDF disponibilizado.");
         window.location.reload();
-
     } catch (err) {
         console.error(err);
         alert("Erro ao enviar PDF: " + err.message);
@@ -238,5 +239,36 @@ document.getElementById('form-upload-pdf').addEventListener('submit', async (e) 
         btn.innerHTML = originalText;
     }
 });
+
+// ==========================================
+// 4. RECUSAR SOLICITAÇÃO
+// ==========================================
+const btnRecusar = document.getElementById('btn-recusar');
+if (btnRecusar) {
+    btnRecusar.addEventListener('click', async () => {
+        const motivo = prompt("Informe o motivo da recusa (será mostrado ao requerente):");
+        if (motivo === null) return; // cancelou
+        if (!motivo.trim()) {
+            alert("O motivo é obrigatório para recusar a solicitação.");
+            return;
+        }
+
+        const originalText = btnRecusar.innerHTML;
+        btnRecusar.disabled = true;
+        btnRecusar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Recusando...';
+
+        try {
+            const { error } = await recusarProjeto(projetoId, motivo.trim());
+            if (error) throw error;
+            alert("Solicitação recusada.");
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao recusar: " + err.message);
+            btnRecusar.disabled = false;
+            btnRecusar.innerHTML = originalText;
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', carregarDetalhes);

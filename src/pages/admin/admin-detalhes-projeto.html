@@ -137,6 +137,16 @@
                                         </div>
                                     </div>
 
+                                    <div id="admin-area-recusado" class="d-none text-center">
+                                        <div class="mb-3">
+                                            <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+                                            <h4 class="text-danger mt-2">Solicitação Recusada</h4>
+                                        </div>
+                                        <div class="alert alert-danger text-start small">
+                                            <strong>Motivo:</strong> <span id="read-motivo"></span>
+                                        </div>
+                                    </div>
+
                                     <div id="admin-area-pendente">
                                         
                                         <div class="mb-4">
@@ -194,6 +204,12 @@
                                                     <i class="bi bi-check-lg me-1"></i> Enviar PDF e Aprovar
                                                 </button>
                                             </form>
+                                        </div>
+
+                                        <div class="border-top pt-3 mt-4">
+                                            <button type="button" class="btn btn-outline-danger w-100 btn-sm" id="btn-recusar">
+                                                <i class="bi bi-x-circle me-1"></i> Recusar Solicitação
+                                            </button>
                                         </div>
 
                                     </div>

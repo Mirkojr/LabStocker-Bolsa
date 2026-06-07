@@ -47,15 +47,10 @@
     </div>
 
     <script type="module">
-        import { supabaseClient } from '../../shared/supabaseClient.js';
+        import { listarTodosProjetos } from '../../shared/services/projetosService.js';
 
         async function carregarProjetos() {
-            // Alteração: Removemos o filtro de status para trazer TUDO.
-            // Ordenamos por data de criação (mais recente primeiro)
-            const { data, error } = await supabaseClient
-                .from('projetos')
-                .select('id, titulo_projeto, responsavel_nome, created_at, status')
-                .order('created_at', { ascending: false });
+            const { data, error } = await listarTodosProjetos();
 
             const lista = document.getElementById('lista-projetos');
             lista.innerHTML = '';
@@ -75,13 +70,14 @@
                 const item = document.createElement('a');
                 item.href = `admin-detalhes-projeto.html?id=${proj.id}`;
                 item.className = 'list-group-item list-group-item-action py-3';
-                
+
                 const dataCriacao = new Date(proj.created_at).toLocaleDateString('pt-BR');
-                
-                // Lógica da Etiqueta (Badge)
+
                 let badge = '';
                 if (proj.status === 'aprovado') {
                     badge = `<span class="badge bg-success"><i class="bi bi-check-circle"></i> Aprovado</span>`;
+                } else if (proj.status === 'recusado') {
+                    badge = `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Recusado</span>`;
                 } else {
                     badge = `<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Pendente</span>`;
                 }
