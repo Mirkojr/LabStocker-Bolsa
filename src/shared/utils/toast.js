@@ -1,11 +1,18 @@
-export function showToast(mensagem, tipo = 'success') {
-    const container = document.getElementById('toast-container');
-
+// Garante que exista um container de toasts na pagina.
+// Centralizar isso aqui faz o feedback visual funcionar em QUALQUER tela,
+// sem depender de cada HTML declarar manualmente o #toast-container.
+function obterContainer() {
+    let container = document.getElementById('toast-container');
     if (!container) {
-        console.warn('Toast container não encontrado! Usando alert padrão.');
-        alert(mensagem);
-        return;
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
     }
+    return container;
+}
+
+export function showToast(mensagem, tipo = 'success') {
+    const container = obterContainer();
 
     let iconClass = 'bi-check-circle-fill';
     let typeClass = 'toast-success';
