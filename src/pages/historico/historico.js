@@ -1,5 +1,6 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
+import { mostrarCarregando, mostrarVazio, mostrarErro } from '../../shared/utils/estados.js';
 import { listarTransferenciasPorLaboratorio } from '../../shared/services/transferenciasService.js';
 import { listarResiduosDescartadosPorLaboratorio } from '../../shared/services/residuosService.js';
 import { listarEntradasPorLaboratorio } from '../../shared/services/movimentacoesService.js';
@@ -7,7 +8,6 @@ import { listarEntradasPorLaboratorio } from '../../shared/services/movimentacoe
 // --- Seletores de Elementos ---
 const listaHistorico = document.getElementById('lista-historico');
 const inputBusca = document.getElementById('busca-historico');
-const spinner = document.getElementById('spinner-hist');
 
 // --- Variaveis de Estado ---
 let MEU_LAB_ID = null;
@@ -22,17 +22,23 @@ async function init() {
         if (MEU_LAB_ID) {
             fetchHistorico();
         } else {
-            listaHistorico.innerHTML = '<div class="text-center text-warning p-5">Laboratorio nao identificado.</div>';
+            mostrarVazio(listaHistorico, {
+                icone: 'bi-exclamation-triangle',
+                titulo: 'Laboratorio nao identificado',
+                mensagem: 'Verifique sua sessao e tente novamente.'
+            });
         }
     } catch (error) {
         console.error('Erro no init:', error);
-        showToast("Erro ao carregar dados do laboratorio.", "error");
+        mostrarErro(listaHistorico, {
+            mensagem: 'Erro ao carregar dados do laboratorio.',
+            onTentarNovamente: init
+        });
     }
 }
 
 async function fetchHistorico() {
-    spinner.classList.remove('d-none');
-    listaHistorico.innerHTML = '';
+    mostrarCarregando(listaHistorico, 'Reconstruindo a linha do tempo...');
 
     try {
         // Realizamos as 3 buscas simultaneas (via services) para compor a linha do tempo
@@ -73,20 +79,21 @@ async function fetchHistorico() {
         HISTORICO_CACHE = listaCompleta;
 
         if (listaCompleta.length === 0) {
-            listaHistorico.innerHTML = `
-                <div class="text-center py-5 text-muted-light">
-                    <i class="bi bi-clock-history fs-1 opacity-25"></i>
-                    <p class="mt-3">Nenhuma movimentacao registrada ate o momento.</p>
-                </div>`;
+            mostrarVazio(listaHistorico, {
+                icone: 'bi-clock-history',
+                titulo: 'Linha do tempo vazia',
+                mensagem: 'Nenhuma movimentacao registrada ate o momento.'
+            });
         } else {
             renderHistorico(listaCompleta);
         }
 
     } catch (error) {
         console.error('Erro ao buscar historico:', error);
-        showToast("Falha ao reconstruir a linha do tempo.", "error");
-    } finally {
-        spinner.classList.add('d-none');
+        mostrarErro(listaHistorico, {
+            mensagem: 'Falha ao reconstruir a linha do tempo.',
+            onTentarNovamente: fetchHistorico
+        });
     }
 }
 
@@ -94,6 +101,15 @@ async function fetchHistorico() {
  * Renderiza os itens na interface seguindo o padrao Dark Glass
  */
 function renderHistorico(itens) {
+    if (itens.length === 0) {
+        mostrarVazio(listaHistorico, {
+            icone: 'bi-search',
+            titulo: 'Nada encontrado',
+            mensagem: 'Nenhum registro corresponde a sua busca.'
+        });
+        return;
+    }
+
     listaHistorico.innerHTML = '';
 
     itens.forEach(item => {

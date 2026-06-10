@@ -1,11 +1,11 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
+import { mostrarCarregando, mostrarVazio, mostrarErro } from '../../shared/utils/estados.js';
 import { listarResiduosPorLaboratorio, salvarResiduo, atualizarStatusResiduo } from '../../shared/services/residuosService.js';
 
 // --- Seletores de Elementos ---
 const listaresiduos = document.getElementById('lista-residuos');
 const formresiduo = document.getElementById('form-residuo');
-const spinner = document.getElementById('spinner-res');
 const modalEl = document.getElementById('modal-residuo');
 const modalresiduo = new bootstrap.Modal(modalEl);
 
@@ -32,18 +32,24 @@ async function init() {
         if (MEU_LAB_ID) {
             fetchresiduos();
         } else {
-            listaresiduos.innerHTML = '<div class="col-12 text-center text-warning p-5">Laboratorio nao identificado. Verifique sua sessao.</div>';
+            mostrarVazio(listaresiduos, {
+                icone: 'bi-exclamation-triangle',
+                titulo: 'Laboratorio nao identificado',
+                mensagem: 'Verifique sua sessao e tente novamente.'
+            });
         }
 
     } catch (error) {
         console.error('Erro no init:', error);
-        showToast("Erro ao carregar dados de sessao.", "error");
+        mostrarErro(listaresiduos, {
+            mensagem: 'Erro ao carregar dados de sessao.',
+            onTentarNovamente: init
+        });
     }
 }
 
 async function fetchresiduos() {
-    spinner.classList.remove('d-none');
-    listaresiduos.innerHTML = '';
+    mostrarCarregando(listaresiduos, 'Sincronizando inventario...');
 
     try {
         const { data, error } = await listarResiduosPorLaboratorio(MEU_LAB_ID);
@@ -54,9 +60,10 @@ async function fetchresiduos() {
 
     } catch (error) {
         console.error('Erro ao buscar residuos:', error.message);
-        showToast("Erro ao carregar o inventario de residuos.", "error");
-    } finally {
-        spinner.classList.add('d-none');
+        mostrarErro(listaresiduos, {
+            mensagem: 'Nao foi possivel carregar o inventario de residuos.',
+            onTentarNovamente: fetchresiduos
+        });
     }
 }
 
@@ -65,9 +72,17 @@ async function fetchresiduos() {
  */
 function renderresiduos(residuos) {
     if (residuos.length === 0) {
-        listaresiduos.innerHTML = '<div class="col-12 text-center text-muted-light py-5">Nenhum residuo registrado para este laboratorio.</div>';
+        mostrarVazio(listaresiduos, {
+            icone: 'bi-recycle',
+            titulo: 'Nenhum residuo registrado',
+            mensagem: 'Os residuos cadastrados para este laboratorio aparecerao aqui.'
+        });
         return;
     }
+
+    // Limpa qualquer estado anterior (ex.: spinner de carregamento) antes de
+    // renderizar os cards, evitando que o estado conviva com a lista.
+    listaresiduos.innerHTML = '';
 
     residuos.forEach(res => {
         const isAberto = res.status === 'Em Aberto';
