@@ -1,6 +1,7 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
 import { mostrarCarregando, mostrarVazio, mostrarErro } from '../../shared/utils/estados.js';
+import { escapeHtml } from '../../shared/utils/dom.js';
 import { listarTransferenciasPorLaboratorio } from '../../shared/services/transferenciasService.js';
 import { listarResiduosDescartadosPorLaboratorio } from '../../shared/services/residuosService.js';
 import { listarEntradasPorLaboratorio } from '../../shared/services/movimentacoesService.js';
@@ -11,12 +12,21 @@ const inputBusca = document.getElementById('busca-historico');
 
 // --- Variaveis de Estado ---
 let MEU_LAB_ID = null;
-let HISTORICO_CACHE = []; 
+let HISTORICO_CACHE = [];
 
+// Normaliza o status da transferencia (banco usa minusculo) para label + cor.
+const STATUS_TRANSFER = {
+    aprovado: { label: 'Aprovado', badge: 'bg-success' },
+    recusado: { label: 'Recusado', badge: 'bg-danger' },
+    pendente: { label: 'Pendente', badge: 'bg-warning text-dark' },
+};
+function resolverStatusTransfer(status) {
+    const chave = String(status || '').toLowerCase();
+    return STATUS_TRANSFER[chave] || { label: status || 'Pendente', badge: 'bg-secondary' };
+}
 
 async function init() {
     try {
-        // Busca o ID do laboratorio atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
 
         if (MEU_LAB_ID) {
@@ -41,7 +51,6 @@ async function fetchHistorico() {
     mostrarCarregando(listaHistorico, 'Reconstruindo a linha do tempo...');
 
     try {
-        // Realizamos as 3 buscas simultaneas (via services) para compor a linha do tempo
         const [resTransf, resresiduos, resMov] = await Promise.all([
             listarTransferenciasPorLaboratorio(MEU_LAB_ID),
             listarResiduosDescartadosPorLaboratorio(MEU_LAB_ID),
@@ -52,16 +61,14 @@ async function fetchHistorico() {
         if (resresiduos.error) throw resresiduos.error;
         if (resMov.error) throw resMov.error;
 
-        // --- Unificacao e Marcacao de Metadados ---
-
         const listaTransf = resTransf.data.map(item => ({
-            ...item, 
+            ...item,
             tipo_registro: 'TRANSFERENCIA',
             data_ordenacao: item.data_solicitacao
         }));
 
         const listaresiduos = resresiduos.data.map(item => ({
-            ...item, 
+            ...item,
             tipo_registro: 'RESIDUO',
             data_ordenacao: item.data_criacao
         }));
@@ -72,7 +79,6 @@ async function fetchHistorico() {
             data_ordenacao: item.data_movimentacao
         }));
 
-        // Junta tudo em uma unica array e ordena por data decrescente
         const listaCompleta = [...listaTransf, ...listaresiduos, ...listaMov];
         listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
@@ -113,7 +119,6 @@ function renderHistorico(itens) {
     listaHistorico.innerHTML = '';
 
     itens.forEach(item => {
-        // Formatacao de data e hora para exibicao amigavel
         const dataObj = new Date(item.data_ordenacao);
         const dataFormatada = dataObj.toLocaleDateString('pt-BR');
         const horaFormatada = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -166,16 +171,16 @@ function renderHistorico(itens) {
                         </div>
                     </div>
                 </div>`;
-        } 
+        }
         // TIPO 3: TRANSFERENCIA (TROCA)
         else {
-            const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID); 
+            const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID);
             let cor, icone, textoAcao;
-    
+
             if (euFizOPedido) { // RECEBIDO (Entrada por troca)
                 cor = 'success';
                 icone = 'bi-arrow-down-left-circle-fill';
-                const labParceiro = item.LabDestino?.nome_laboratorio || 'Lab Externo'; 
+                const labParceiro = item.LabDestino?.nome_laboratorio || 'Lab Externo';
                 textoAcao = `Recebido de <strong>${labParceiro}</strong>`;
             } else { // ENVIADO (Saida por troca)
                 cor = 'danger';
@@ -183,12 +188,16 @@ function renderHistorico(itens) {
                 const labParceiro = item.LabOrigem?.nome_laboratorio || 'Lab Externo';
                 textoAcao = `Enviado para <strong>${labParceiro}</strong>`;
             }
-            
+
             const nomereagente = item.estoquelab?.reagente?.nome || 'Item desconhecido';
             const unidade = item.estoquelab?.unidade_medida || '';
-    
-            let statusBadgeClass = item.status === 'Aprovado' ? 'bg-success' : 'bg-warning text-dark';
-    
+
+            // Status normalizado (label + cor) e motivo de recusa, quando houver.
+            const { label: statusLabel, badge: statusBadgeClass } = resolverStatusTransfer(item.status);
+            const motivoHtml = (String(item.status).toLowerCase() === 'recusado' && item.motivo_recusa)
+                ? `<p class="mb-1 small text-danger"><i class="bi bi-info-circle me-1"></i>Motivo: ${escapeHtml(item.motivo_recusa)}</p>`
+                : '';
+
             html = `
                 <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
@@ -198,9 +207,10 @@ function renderHistorico(itens) {
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
                                 <h6 class="mb-0 fw-bold text-white">${nomereagente}</h6>
-                                <span class="badge ${statusBadgeClass} text-uppercase" style="font-size: 0.65rem;">${item.status}</span>
+                                <span class="badge ${statusBadgeClass} text-uppercase" style="font-size: 0.65rem;">${statusLabel}</span>
                             </div>
                             <p class="mb-1 small text-muted-light">${textoAcao}</p>
+                            ${motivoHtml}
                             <div class="d-flex justify-content-between">
                                 <small class="text-white-50">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
                                 <small class="text-white-50 opacity-75">${dataCompleta}</small>
