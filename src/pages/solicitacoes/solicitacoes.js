@@ -1,5 +1,6 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
+import { confirmar, confirmarRecusa } from '../../shared/utils/confirmacao.js';
 import { listarSolicitacoesPendentes, aprovarTransferencia, recusarTransferencia } from '../../shared/services/transferenciasService.js';
 
 // --- Seletores ---
@@ -9,7 +10,6 @@ let MEU_LAB_ID = null;
 
 async function init() {
     try {
-        // Busca o ID do laboratorio atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
 
         if (MEU_LAB_ID) {
@@ -30,9 +30,7 @@ async function fetchPedidosRecebidos() {
     listaPedidos.innerHTML = '';
 
     try {
-        // Busca transferencias pendentes onde EU sou a ORIGEM (dono do material solicitado).
         const { data, error } = await listarSolicitacoesPendentes(MEU_LAB_ID);
-
         if (error) throw error;
 
         if (data.length === 0) {
@@ -55,7 +53,6 @@ async function fetchPedidosRecebidos() {
 
 function renderPedidos(pedidos) {
     pedidos.forEach(pedido => {
-        // 'laboratorio' aqui é o laboratório SOLICITANTE (destino).
         const nomeLabSolicitante = pedido.laboratorio?.nome_laboratorio || "Lab Externo";
         const nomereagente = pedido.estoquelab?.reagente?.nome || "Item desconhecido";
         const quantidade = pedido.quantidade_transferida;
@@ -91,10 +88,16 @@ function renderPedidos(pedidos) {
 }
 
 async function handleAprovar(id) {
-    if (!confirm("Confirmar a transferencia? Esta acao debitara o item do seu estoque imediatamente.")) return;
+    const ok = await confirmar({
+        titulo: 'Aprovar transferência',
+        mensagem: 'O item será debitado do seu estoque imediatamente e o histórico será registrado.',
+        textoConfirmar: 'Aprovar',
+        tipo: 'success',
+        icone: 'bi-check-circle-fill',
+    });
+    if (!ok) return;
 
     try {
-        // Chama a funcao RPC complexa do banco (via service) que cuida de toda a transacao
         const { error } = await aprovarTransferencia(id);
         if (error) throw error;
 
@@ -108,14 +111,18 @@ async function handleAprovar(id) {
 }
 
 async function handleRecusar(id) {
-    if (!confirm("Deseja realmente recusar esta solicitacao?")) return;
+    const { confirmado, motivo } = await confirmarRecusa({
+        titulo: 'Recusar solicitação',
+        mensagem: 'Descreva o motivo da recusa. Ele ficará visível no histórico do solicitante.',
+        textoConfirmar: 'Recusar pedido',
+    });
+    if (!confirmado) return;
 
     try {
-        const { error } = await recusarTransferencia(id);
-
+        const { error } = await recusarTransferencia(id, motivo);
         if (error) throw error;
 
-        showToast("Solicitacao recusada e notificada.", "warning");
+        showToast("Solicitacao recusada.", "warning");
         fetchPedidosRecebidos();
 
     } catch (error) {

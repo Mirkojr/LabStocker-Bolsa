@@ -9,7 +9,7 @@ import {
     salvarItemestoque,
 } from '../../shared/services/estoqueService.js';
 import { listarreagentesParaestoque } from '../../shared/services/reagentesService.js';
-
+import { confirmar } from '../../shared/utils/confirmacao.js';
 // --- Seletores ---
 const listaestoqueEl = document.getElementById('lista-estoque');
 const formestoque = document.getElementById('form-estoque');
@@ -282,18 +282,24 @@ function handleEditClickestoque(button) {
     modalSubmitBtn.textContent = 'Salvar Alterações';
     modalestoque.show();
 }
-
 async function handleDeleteClickestoque(button) {
     const id = button.dataset.id;
-    if (confirm('Tem certeza que deseja excluir este item?')) {
-        try {
-            const { error } = await excluirItemestoque(id);
-            if (error) throw error;
-            showToast('Item removido do estoque.', 'warning');
-            fetchestoque(ID_LAB_DO_USUARIO); // recarrega o cache
-        } catch (error) {
-            showToast('Erro ao excluir: ' + error.message, 'error');
-        }
+    const ok = await confirmar({
+        titulo: 'Excluir item',
+        mensagem: 'Tem certeza que deseja excluir este item do estoque? Esta ação não pode ser desfeita.',
+        textoConfirmar: 'Excluir',
+        tipo: 'danger',
+        icone: 'bi-trash-fill',
+    });
+    if (!ok) return;
+
+    try {
+        const { error } = await excluirItemestoque(id);
+        if (error) throw error;
+        showToast('Item removido do estoque.', 'warning');
+        fetchestoque(ID_LAB_DO_USUARIO); // recarrega o cache
+    } catch (error) {
+        showToast('Erro ao excluir: ' + error.message, 'error');
     }
 }
 
