@@ -35,10 +35,11 @@ export async function aprovarTransferencia(transferId) {
     return supabaseClient.rpc('aprovar_transferencia', { p_transfer_id: transferId });
 }
 
-export async function recusarTransferencia(transferId) {
+// Recusa a solicitacao e registra o motivo (exibido no historico do solicitante).
+export async function recusarTransferencia(transferId, motivo = null) {
     return supabaseClient
         .from('transferencia')
-        .update({ status: 'recusado' })
+        .update({ status: 'recusado', motivo_recusa: motivo })
         .eq('id', transferId);
 }
 
@@ -46,7 +47,7 @@ export async function listarTransferenciasPorLaboratorio(labId) {
     return supabaseClient
         .from('transferencia')
         .select(`
-            id, quantidade_transferida, status, data_solicitacao, id_lab_origem, id_lab_destino,
+            id, quantidade_transferida, status, motivo_recusa, data_solicitacao, id_lab_origem, id_lab_destino,
             LabOrigem:id_lab_origem ( nome_laboratorio ),
             LabDestino:id_lab_destino ( nome_laboratorio ),
             estoquelab:id_item_estoque ( unidade_medida, reagente ( nome ) )
