@@ -46,8 +46,8 @@ CREATE TABLE public.estoquelab (
   CONSTRAINT estoquelab_id_laboratorio_fkey FOREIGN KEY (id_laboratorio) REFERENCES public.laboratorio(id),
   CONSTRAINT estoquelab_id_reagente_fkey FOREIGN KEY (id_reagente) REFERENCES public.reagente(id),
   -- [validacao] quantidade nao-negativa
-  CONSTRAINT estoquelab_quantidade_check CHECK (quantidade >= 0)
-  CONSTRAINT estoquelab_unidade_check CHECK (unidade_medida IN ('un','mL','L','g','kg','mg'))
+  CONSTRAINT estoquelab_quantidade_check CHECK (quantidade >= 0),
+  CONSTRAINT estoquelab_unidade_check CHECK (unidade_medida IN ('un','mL','L','g','kg','mg')),
   CONSTRAINT estoquelab_observacoes_check CHECK (observacoes_operacionais IS NULL OR char_length(observacoes_operacionais) <= 500)
 );
 
@@ -74,6 +74,7 @@ CREATE TABLE public.transferencia (
   id_lab_destino uuid NOT NULL,
   quantidade_transferida numeric NOT NULL,
   status text DEFAULT 'pendente'::text, -- [validacao] grafia padronizada em minusculo
+  motivo_recusa text, -- [novo] motivo informado quando a solicitacao e recusada
   data_solicitacao timestamp with time zone DEFAULT now(),
   CONSTRAINT transferencia_pkey PRIMARY KEY (id),
   CONSTRAINT transferencia_id_item_estoque_fkey FOREIGN KEY (id_item_estoque) REFERENCES public.estoquelab(id),
@@ -81,7 +82,9 @@ CREATE TABLE public.transferencia (
   CONSTRAINT transferencia_id_lab_destino_fkey FOREIGN KEY (id_lab_destino) REFERENCES public.laboratorio(id),
   -- [validacao] quantidade positiva e status restrito
   CONSTRAINT transferencia_quantidade_check CHECK (quantidade_transferida > 0),
-  CONSTRAINT transferencia_status_check CHECK (status IN ('pendente','aprovado','recusado'))
+  CONSTRAINT transferencia_status_check CHECK (status IN ('pendente','aprovado','recusado')),
+  -- [validacao] tamanho do motivo de recusa
+  CONSTRAINT transferencia_motivo_recusa_check CHECK (motivo_recusa IS NULL OR char_length(motivo_recusa) <= 300)
 );
 
 CREATE TABLE public.feedback (
