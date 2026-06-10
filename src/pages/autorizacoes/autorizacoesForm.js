@@ -1,6 +1,7 @@
 import { $ } from '../../shared/utils/dom.js';
 import { showToast } from '../../shared/utils/toast.js';
-import { validarCPF, validarTelefone } from '../../shared/utils/validators.js';
+// Topo do arquivo: adicione validarEmail ao import existente
+import { validarCPF, validarTelefone, validarEmail } from '../../shared/utils/validators.js';
 import { buscarPerfilPorId } from '../../shared/services/perfisService.js';
 import { getUsuarioLogado } from '../../shared/services/authService.js';
 import { buscarLaboratorioPorId, buscarNomePorSipac } from '../../shared/services/laboratoriosService.js';
@@ -88,18 +89,27 @@ function coletarDadosFormulario(produtos) {
 
 // Retorna a mensagem de erro ou null se estiver tudo válido.
 async function validarSolicitacao(dados) {
-    if (!dados.titulo_projeto) return 'Informe o título do projeto.';
+    const TITULO_MAX = 100;
+    const QTD_MAX = 1000000;
+
+    if (!dados.responsavel_nome) return 'Informe o nome do responsável.';
+    if (!validarEmail(dados.responsavel_email)) return 'E-mail institucional inválido.';
     if (!validarCPF(dados.responsavel_cpf)) return 'CPF inválido. Confira o número digitado.';
     if (!validarTelefone(dados.responsavel_telefone)) return 'Telefone inválido. Use DDD + número.';
 
+    if (!dados.titulo_projeto) return 'Informe o título do projeto.';
+    if (dados.titulo_projeto.length > TITULO_MAX) return `O título deve ter no máximo ${TITULO_MAX} caracteres.`;
+
+    if (!dados.lab_nome) return 'Informe o nome do laboratório.';
+    if (!dados.lab_sipac) return 'Informe o código SIPAC do laboratório.';
     if (dados.lab_sipac) {
         const { data: nomeOficial } = await buscarNomePorSipac(dados.lab_sipac);
         if (!nomeOficial) return 'Código SIPAC não encontrado no sistema.';
     }
 
     if (dados.produtos.length === 0) return 'Adicione ao menos um reagente/material.';
-    if (dados.produtos.some((p) => !(p.quantidade > 0))) {
-        return 'A quantidade de cada item deve ser maior que zero.';
+    if (dados.produtos.some((p) => !(p.quantidade > 0) || p.quantidade > QTD_MAX)) {
+        return `A quantidade de cada item deve ser maior que zero e até ${QTD_MAX.toLocaleString('pt-BR')}.`;
     }
     return null;
 }

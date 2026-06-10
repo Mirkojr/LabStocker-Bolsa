@@ -1,6 +1,7 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
 import { mostrarCarregando, mostrarVazio, mostrarErro } from '../../shared/utils/estados.js';
+import { confirmar } from '../../shared/utils/confirmacao.js';
 import { listarResiduosPorLaboratorio, salvarResiduo, atualizarStatusResiduo } from '../../shared/services/residuosService.js';
 
 // --- Seletores de Elementos ---
@@ -26,7 +27,6 @@ let MEU_LAB_ID = null;
 
 async function init() {
     try {
-        // Busca o ID do laboratorio atual (suporta modo Admin)
         MEU_LAB_ID = await getCurrentLabId();
 
         if (MEU_LAB_ID) {
@@ -53,11 +53,8 @@ async function fetchresiduos() {
 
     try {
         const { data, error } = await listarResiduosPorLaboratorio(MEU_LAB_ID);
-
         if (error) throw error;
-
         renderresiduos(data);
-
     } catch (error) {
         console.error('Erro ao buscar residuos:', error.message);
         mostrarErro(listaresiduos, {
@@ -80,8 +77,7 @@ function renderresiduos(residuos) {
         return;
     }
 
-    // Limpa qualquer estado anterior (ex.: spinner de carregamento) antes de
-    // renderizar os cards, evitando que o estado conviva com a lista.
+    // Limpa qualquer estado anterior (ex.: spinner) antes de renderizar os cards.
     listaresiduos.innerHTML = '';
 
     residuos.forEach(res => {
@@ -147,13 +143,43 @@ function handleEditClick(btn) {
 async function handleFormSubmit(e) {
     e.preventDefault();
 
+    const DESC_MAX = 200;
+    const QTD_MAX = 1000000;
+
+    const descricao = descInput.value.trim();
+    const tipo = tipoInput.value;
+    const quantidade = parseFloat(qtdInput.value);
+    const unidade = unidadeInput.value.trim();
+
+    // Validacoes no cliente (mesmo padrao do estoque: toast + bloqueia o envio).
+    if (!descricao) {
+        showToast('Informe a descricao do material.', 'error');
+        return;
+    }
+    if (descricao.length > DESC_MAX) {
+        showToast(`A descricao deve ter no maximo ${DESC_MAX} caracteres.`, 'error');
+        return;
+    }
+    if (!tipo) {
+        showToast('Selecione o tipo de perigo.', 'error');
+        return;
+    }
+    if (!(quantidade > 0) || quantidade > QTD_MAX) {
+        showToast(`A quantidade deve ser maior que zero e ate ${QTD_MAX.toLocaleString('pt-BR')}.`, 'error');
+        return;
+    }
+    if (!unidade) {
+        showToast('Informe a unidade de medida.', 'error');
+        return;
+    }
+
     const id = editIdInput.value;
     const payload = {
         id_laboratorio: MEU_LAB_ID,
-        descricao: descInput.value,
-        tipo_perigo: tipoInput.value,
-        quantidade: parseFloat(qtdInput.value),
-        unidade_medida: unidadeInput.value
+        descricao,
+        tipo_perigo: tipo,
+        quantidade,
+        unidade_medida: unidade
     };
 
     try {
@@ -176,16 +202,29 @@ async function handleFormSubmit(e) {
 }
 
 async function atualizarStatus(id, novoStatus) {
-    let msg = `Deseja alterar o status para: ${novoStatus}?`;
-    if (novoStatus === 'Em Aberto') msg = "Deseja reabrir este frasco? Ele voltara a figurar como um descarte pendente.";
-    if (novoStatus === 'Descartado') msg = "Confirmar o descarte final deste residuo? Esta acao finalizara o controle deste item.";
+    let titulo = 'Confirmar alteracao';
+    let mensagem = `Deseja alterar o status para: ${novoStatus}?`;
+    let tipo = 'primary';
+    let icone = 'bi-question-circle-fill';
 
-    // Mantemos o confirm nativo para acoes criticas, mas o resultado e via Toast
-    if (!confirm(msg)) return;
+    if (novoStatus === 'Em Aberto') {
+        titulo = 'Reabrir frasco';
+        mensagem = 'Ele voltara a figurar como um descarte pendente.';
+        tipo = 'secondary';
+        icone = 'bi-arrow-counterclockwise';
+    }
+    if (novoStatus === 'Descartado') {
+        titulo = 'Confirmar descarte';
+        mensagem = 'Esta acao finalizara o controle deste residuo.';
+        tipo = 'success';
+        icone = 'bi-check-circle-fill';
+    }
+
+    const ok = await confirmar({ titulo, mensagem, textoConfirmar: 'Confirmar', tipo, icone });
+    if (!ok) return;
 
     try {
         const { error } = await atualizarStatusResiduo(id, novoStatus);
-
         if (error) throw error;
 
         showToast(`Residuo atualizado para ${novoStatus}.`, "success");
@@ -204,7 +243,6 @@ async function atualizarStatus(id, novoStatus) {
 document.addEventListener('DOMContentLoaded', init);
 formresiduo.addEventListener('submit', handleFormSubmit);
 
-// Reset do modal ao abrir para novo registro
 if (btnNovoresiduo) {
     btnNovoresiduo.addEventListener('click', () => {
         formresiduo.reset();
@@ -214,7 +252,6 @@ if (btnNovoresiduo) {
     });
 }
 
-// Delegacao de Eventos para botoes dinamicos
 listaresiduos.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-editar');
     if (btnEdit) handleEditClick(btnEdit);
