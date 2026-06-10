@@ -34,14 +34,34 @@
 
         <div class="glass-panel">
             
-            <div class="row mb-4">
-                <div class="col-md-12">
+            <div class="row g-2 mb-4">
+                <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3">
                             <i class="bi bi-search text-muted"></i>
                         </span>
                         <input type="text" id="input-busca-estoque" class="form-control border-start-0 search-input rounded-end-5" placeholder="Pesquisar reagente...">
                     </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <select id="filtro-validade-estoque" class="form-select">
+                        <option value="">Toda validade</option>
+                        <option value="vencido">Vencidos</option>
+                        <option value="vence_breve">Vence em ≤30 dias</option>
+                        <option value="no_prazo">No prazo</option>
+                        <option value="sem_data">Sem validade</option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <select id="filtro-unidade-estoque" class="form-select">
+                        <option value="">Todas as unidades</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2">
+                    <select id="ordenar-estoque" class="form-select">
+                        <option value="nome_asc">Nome (A–Z)</option>
+                        <option value="nome_desc">Nome (Z–A)</option>
+                    </select>
                 </div>
             </div>
 
