@@ -29,7 +29,7 @@ export function mostrarCarregando(alvo, mensagem = 'Carregando...') {
 /**
  * Mostra um estado vazio (nenhum registro / nenhum resultado).
  * @param {HTMLElement|string} alvo Elemento ou id do container.
- * @param icone?: string, titulo?: string, mensagem?: string opcoes
+ * @param {object} [opcoes] icone, titulo e mensagem (todos opcionais).
  */
 export function mostrarVazio(alvo, opcoes = {}) {
     const el = resolverElemento(alvo);
@@ -50,7 +50,7 @@ export function mostrarVazio(alvo, opcoes = {}) {
 /**
  * Mostra um estado de erro, com botao opcional de "tentar novamente".
  * @param {HTMLElement|string} alvo Elemento ou id do container.
- * @param mensagem?: string, textoBotao?: string, onTentarNovamente?: Function opcoes
+ * @param {object} [opcoes] mensagem, textoBotao e onTentarNovamente (todos opcionais).
  */
 export function mostrarErro(alvo, opcoes = {}) {
     const el = resolverElemento(alvo);
