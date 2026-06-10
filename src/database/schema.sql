@@ -47,6 +47,8 @@ CREATE TABLE public.estoquelab (
   CONSTRAINT estoquelab_id_reagente_fkey FOREIGN KEY (id_reagente) REFERENCES public.reagente(id),
   -- [validacao] quantidade nao-negativa
   CONSTRAINT estoquelab_quantidade_check CHECK (quantidade >= 0)
+  CONSTRAINT estoquelab_unidade_check CHECK (unidade_medida IN ('un','mL','L','g','kg','mg'))
+  CONSTRAINT estoquelab_observacoes_check CHECK (observacoes_operacionais IS NULL OR char_length(observacoes_operacionais) <= 500)
 );
 
 CREATE TABLE public.residuo (

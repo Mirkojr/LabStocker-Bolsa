@@ -1,6 +1,7 @@
 import { escapeHtml, $ } from '../../shared/utils/dom.js';
 import { formatarTelefone } from '../../shared/utils/formatters.js';
 import { gerarSignedUrl } from '../../shared/services/projetosService.js';
+import { UNIDADES } from '../../shared/constants.js';
 
 // Configuração visual de cada status de solicitação.
 const STATUS = {
@@ -8,9 +9,6 @@ const STATUS = {
     recusado: { label: 'Recusado', badge: 'bg-danger' },
     pendente: { label: 'Pendente', badge: 'bg-warning text-dark' },
 };
-
-// Unidades de medida disponíveis para os itens.
-export const UNIDADES = ['un', 'mL', 'L', 'g', 'kg', 'mg'];
 
 const resolverStatus = (status) => STATUS[status] || STATUS.pendente;
 
