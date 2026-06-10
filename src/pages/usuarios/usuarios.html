@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipe - LabStocker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <script type="module" src="../../shared/authGuard.js"></script>
+
+    <div id="toast-container"></div>
+
+    <div class="container my-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+            <div class="d-flex align-items-center">
+                <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-arrow-left fw-bold"></i>
+                </a>
+                <div>
+                    <h2 class="mb-0 fw-bold">Equipe do Laboratório</h2>
+                    <p class="mb-0 opacity-75 small">Gerencie técnicos, alunos e pesquisadores</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel-dark">
+            
+            <div class="alert alert-light bg-opacity-10 border-0 text-white mb-4 d-flex align-items-center shadow-sm" style="background: rgba(255,255,255,0.1); border-radius: 15px;">
+                <i class="bi bi-info-circle me-3 fs-4"></i>
+                <div class="small">
+                    Estes são os usuários vinculados ao seu laboratório. Apenas administradores podem alterar permissões.
+                </div>
+            </div>
+
+            <div id="lista-usuarios">
+                </div>
+            
+            <div id="spinner-users" class="text-center py-5 d-none">
+                <div class="spinner-border text-warning" role="status"></div>
+                <p class="mt-2 text-muted-light">Carregando membros...</p>
+            </div>
+
+        </div> 
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="usuarios.js"></script>
+</body>
+</html>

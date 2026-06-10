@@ -6,7 +6,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.perfis (id, nome, sobrenome, tipo_identificador, identificador, id_laboratorio, is_admin)
+  INSERT INTO public.perfis (id, nome, sobrenome, tipo_identificador, identificador, id_laboratorio, is_admin, email)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'nome', 'Novo'),
@@ -14,7 +14,8 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'tipo_identificador', 'email'),
     COALESCE(NEW.raw_user_meta_data->>'identificador', NEW.email),
     NULLIF(NEW.raw_user_meta_data->>'id_laboratorio', '')::uuid,
-    false
+    false,
+    NEW.email
   );
   RETURN NEW;
 END;

@@ -168,13 +168,13 @@ body {
     overflow: hidden;
 }
 
-.form-control-dark {
-    background-color: #f0f2f5; 
-    border: none;
-    border-radius: 0 50px 50px 0; 
-    padding: 12px 20px;
-    color: #132E4B;
-    font-weight: 600;
+.form-control-dark:disabled, 
+.form-control-dark[readonly] {
+    background-color: #1b3d61 !important; /* Um azul levemente mais claro que o fundo da página */
+    color: #00e5ff !important;            /* Texto em ciano/neon para dar um contraste absurdo e estético */
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    opacity: 1 !important;                 /* Remove a opacidade padrão do Bootstrap que esconde o texto */
+    cursor: not-allowed;
 }
 
 .form-control-dark:focus {
