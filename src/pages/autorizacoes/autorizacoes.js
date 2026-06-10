@@ -9,6 +9,61 @@ import { listarProjetosPorEmail, criarProjeto, gerarSignedUrl } from '../../shar
 
 let emailUsuarioLogado = null;
 
+document.addEventListener('DOMContentLoaded', () => {
+    const cpfInput = document.getElementById('responsavel-cpf');
+    const telefoneInput = document.getElementById('responsavel-telefone');
+    const siapeInput = document.getElementById('responsavel-siape');
+    const periodoInput = document.getElementById('projeto-periodo');
+
+    if (cpfInput) {
+        cpfInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, "");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            e.target.value = v;
+        });
+    }
+
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, ""); 
+            
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); 
+            
+            // Se tiver até 10 dígitos, formata como fixo: (XX) XXXX-XXXX
+            // Se passar para 11 dígitos, formata como celular: (XX) XXXXX-XXXX
+            if (v.length > 14) { 
+                v = v.replace(/(\d{5})(\d{4})$/, "$1-$2");
+            } else {
+                v = v.replace(/(\d{4})(\d{4})$/, "$1-$2");
+            }
+            
+            e.target.value = v;
+        });
+    };
+
+    if (siapeInput) {
+        siapeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, "").substring(0, 7);
+        });
+    }
+
+    if (periodoInput) {
+        periodoInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, ""); 
+            
+            if (v.length > 4) {
+                v = v.replace(/^(\d{4})(\d)/, "$1-$2");
+            }
+            
+            e.target.value = v.substring(0, 9); // Trava em 9 caracteres
+        });
+    }
+});
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const loadingDiv = document.getElementById('auth-loading');
     const contentDiv = document.getElementById('main-content');
