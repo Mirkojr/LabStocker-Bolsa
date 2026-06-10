@@ -33,7 +33,7 @@ export function confirmar({
                 <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
                     <div class="modal-body p-4 text-center">
                         <div class="mb-3"><i class="bi ${icone} text-${tipo}" style="font-size:2.5rem;"></i></div>
-                        <h5 class="fw-bold mb-2">${titulo}</h5>
+                        <h5 class="fw-bold mb-2 text-dark-emphasis">${titulo}</h5>
                         <p class="text-muted mb-4">${mensagem}</p>
                         <div class="d-flex gap-2 justify-content-center">
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-acao="cancelar">${textoCancelar}</button>
