@@ -1,4 +1,3 @@
-import { supabaseClient } from '../../shared/supabaseClient.js';
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
 import { buscarPerfisPorlaboratorio } from '../../shared/services/perfisService.js';

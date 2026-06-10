@@ -89,7 +89,7 @@ CREATE TABLE public.feedback (
   user_id uuid,
   tipo text NOT NULL,
   mensagem text NOT NULL,
-  status text DEFAULT 'Pendente'::text,
+  status text DEFAULT 'pendente'::text,
   data_envio timestamp with time zone DEFAULT now(),
   CONSTRAINT feedback_pkey PRIMARY KEY (id),
   CONSTRAINT feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
