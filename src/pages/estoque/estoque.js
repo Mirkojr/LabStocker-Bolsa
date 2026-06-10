@@ -14,6 +14,9 @@ import { listarreagentesParaestoque } from '../../shared/services/reagentesServi
 const listaestoqueEl = document.getElementById('lista-estoque');
 const formestoque = document.getElementById('form-estoque');
 const inputBusca = document.getElementById('input-busca-estoque');
+const filtroValidade = document.getElementById('filtro-validade-estoque');
+const filtroUnidade = document.getElementById('filtro-unidade-estoque');
+const ordenarSelect = document.getElementById('ordenar-estoque');
 const spinner = document.getElementById('loading-spinner-estoque');
 const modalEl = document.getElementById('modal-estoque');
 const modalestoque = new bootstrap.Modal(modalEl);
@@ -29,63 +32,50 @@ const validadeInput = document.getElementById('estoque-validade');
 const observacoesInput = document.getElementById('estoque-observacoes');
 
 let ID_LAB_DO_USUARIO = null;
+let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
 
-// Preenche o <select> de unidades a partir da fonte única (constants.js)
-function popularUnidades() {
+// Preenche o <select> de unidades do FORM a partir da fonte única (constants.js)
+function popularUnidadesForm() {
     if (!unidadeInput) return;
     unidadeInput.innerHTML =
         '<option value="" disabled selected>Selecione...</option>' +
         UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join('');
 }
 
+// Preenche o <select> de unidades do FILTRO
+function popularUnidadesFiltro() {
+    if (!filtroUnidade) return;
+    filtroUnidade.innerHTML =
+        '<option value="">Todas as unidades</option>' +
+        UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join('');
+}
+
 // ===============================================
-// LÓGICA DO ESTOQUE
+// CLASSIFICAÇÃO DE VALIDADE (usada no filtro e no badge)
 // ===============================================
-
-async function fetchestoque(labId, filtroNome = '') {
-    spinner.classList.remove('d-none');
-    listaestoqueEl.innerHTML = '';
-
-    try {
-        const { data, error } = await listarestoquePorlaboratorio(labId);
-        if (error) throw error;
-
-        const itensFiltrados = data.filter(item =>
-            !filtroNome || (item.reagente && item.reagente.nome.toLowerCase().includes(filtroNome.toLowerCase()))
-        );
-
-        if (itensFiltrados.length === 0) {
-            listaestoqueEl.innerHTML = `
-                <div class="text-center py-5">
-                    <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-3">Nenhum item encontrado.</p>
-                </div>`;
-        } else {
-            renderestoque(itensFiltrados);
-        }
-    } catch (error) {
-        console.error('Erro:', error.message);
-        showToast('Erro ao carregar estoque.', 'error');
-    } finally {
-        spinner.classList.add('d-none');
-    }
+function classificarValidade(item) {
+    if (!item.data_validade) return 'sem_data';
+    const diffDias = Math.ceil((new Date(item.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
+    if (diffDias < 0) return 'vencido';
+    if (diffDias < 30) return 'vence_breve';
+    return 'no_prazo';
 }
 
 function montarValidade(item) {
-    if (!item.data_validade) {
+    const status = classificarValidade(item);
+    if (status === 'sem_data') {
         return { html: '<span class="badge bg-secondary badge-validade">Indefinida</span>', borderClass: '' };
     }
 
-    const diffDias = Math.ceil((new Date(item.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
     const dataFormatada = new Date(item.data_validade).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
-    if (diffDias < 0) {
+    if (status === 'vencido') {
         return {
             html: `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`,
             borderClass: 'border-start border-danger border-4',
         };
     }
-    if (diffDias < 30) {
+    if (status === 'vence_breve') {
         return {
             html: `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`,
             borderClass: 'border-start border-warning border-4',
@@ -94,10 +84,62 @@ function montarValidade(item) {
     return { html: `<span class="badge bg-success badge-validade">Val: ${dataFormatada}</span>`, borderClass: '' };
 }
 
+// ===============================================
+// CARGA + FILTROS + RENDER
+// ===============================================
+async function fetchestoque(labId) {
+    spinner.classList.remove('d-none');
+    listaestoqueEl.innerHTML = '';
+    try {
+        const { data, error } = await listarestoquePorlaboratorio(labId);
+        if (error) throw error;
+        itensCache = data || [];
+        aplicarFiltrosERenderizar();
+    } catch (error) {
+        console.error('Erro:', error.message);
+        showToast('Erro ao carregar estoque.', 'error');
+    } finally {
+        spinner.classList.add('d-none');
+    }
+}
+
+function aplicarFiltrosERenderizar() {
+    const termo = inputBusca.value.trim().toLowerCase();
+    const fValidade = filtroValidade.value; // '' = todas
+    const fUnidade = filtroUnidade.value;   // '' = todas
+    const ordenar = ordenarSelect.value;    // 'nome_asc' | 'nome_desc'
+
+    const itens = itensCache
+        .filter((item) => {
+            const nome = item.reagente?.nome?.toLowerCase() || '';
+            if (termo && !nome.includes(termo)) return false;
+            if (fValidade && classificarValidade(item) !== fValidade) return false;
+            if (fUnidade && item.unidade_medida !== fUnidade) return false;
+            return true;
+        })
+        .sort((a, b) => {
+            const na = a.reagente?.nome || '';
+            const nb = b.reagente?.nome || '';
+            return ordenar === 'nome_desc'
+                ? nb.localeCompare(na, 'pt-BR')
+                : na.localeCompare(nb, 'pt-BR');
+        });
+
+    if (itens.length === 0) {
+        listaestoqueEl.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Nenhum item encontrado.</p>
+            </div>`;
+        return;
+    }
+    renderestoque(itens);
+}
+
 function renderestoque(itens) {
     listaestoqueEl.innerHTML = '';
 
-    itens.forEach(item => {
+    itens.forEach((item) => {
         const { html: validadeHTML, borderClass } = montarValidade(item);
         const nome = escapeHtml(item.reagente?.nome);
         const obs = escapeHtml(item.observacoes_operacionais || '');
@@ -151,7 +193,7 @@ async function fetchreagentesParaModal() {
         if (error) throw error;
 
         selectreagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
-        data.forEach(reagente => {
+        data.forEach((reagente) => {
             const opt = document.createElement('option');
             opt.value = reagente.id;
             opt.textContent = reagente.nome;
@@ -161,7 +203,9 @@ async function fetchreagentesParaModal() {
         console.error('Erro:', error.message);
         showToast('Erro ao carregar lista de reagentes.', 'error');
     }
-}async function handleFormSubmitestoque(evento) {
+}
+
+async function handleFormSubmitestoque(evento) {
     evento.preventDefault();
     if (!ID_LAB_DO_USUARIO) {
         showToast('Sessão inválida. Recarregue a página.', 'error');
@@ -201,7 +245,6 @@ async function fetchreagentesParaModal() {
             : await salvarItemestoque(null, dadosForm);
         if (error) throw error;
 
-        // Registra a entrada no histórico apenas em novos itens
         if (!id) {
             const nomereagente = selectreagente.options[selectreagente.selectedIndex].text;
             const { error: erroMov } = await registrarMovimentacaoEntradaestoque({
@@ -212,7 +255,6 @@ async function fetchreagentesParaModal() {
                 unidade: dadosForm.unidade_medida,
                 observacao: 'Cadastro inicial no estoque',
             });
-            // Antes esse erro era engolido: item salvava mas o histórico não registrava.
             if (erroMov) {
                 console.error('Falha ao registrar movimentação de entrada:', erroMov.message);
                 showToast('Item salvo, mas a entrada não foi registrada no histórico.', 'warning');
@@ -221,7 +263,7 @@ async function fetchreagentesParaModal() {
 
         showToast(id ? 'Item atualizado com sucesso!' : 'Item adicionado ao estoque!', 'success');
         modalestoque.hide();
-        fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
+        fetchestoque(ID_LAB_DO_USUARIO); // recarrega o cache
     } catch (error) {
         console.error('Erro:', error.message);
         showToast('Falha ao salvar: ' + error.message, 'error');
@@ -233,7 +275,7 @@ function handleEditClickestoque(button) {
     editIdInput.value = id;
     selectreagente.value = reagenteId;
     quantidadeInput.value = quantidade;
-    unidadeInput.value = unidade; // funciona com <select>: seleciona a opção correspondente
+    unidadeInput.value = unidade;
     validadeInput.value = validade;
     observacoesInput.value = observacoes;
     modalTitle.textContent = 'Editar Item';
@@ -248,7 +290,7 @@ async function handleDeleteClickestoque(button) {
             const { error } = await excluirItemestoque(id);
             if (error) throw error;
             showToast('Item removido do estoque.', 'warning');
-            fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
+            fetchestoque(ID_LAB_DO_USUARIO); // recarrega o cache
         } catch (error) {
             showToast('Erro ao excluir: ' + error.message, 'error');
         }
@@ -266,7 +308,8 @@ function resetModalestoque() {
 
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', async () => {
-    popularUnidades();
+    popularUnidadesForm();
+    popularUnidadesFiltro();
 
     ID_LAB_DO_USUARIO = await getCurrentLabId();
     if (ID_LAB_DO_USUARIO) {
@@ -279,13 +322,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 formestoque.addEventListener('submit', handleFormSubmitestoque);
 
-let debounceTimer;
-inputBusca.addEventListener('keyup', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        if (ID_LAB_DO_USUARIO) fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
-    }, 300);
-});
+// Busca, filtros e ordenação operam sobre o cache (sem novas consultas ao banco)
+inputBusca.addEventListener('input', aplicarFiltrosERenderizar);
+filtroValidade.addEventListener('change', aplicarFiltrosERenderizar);
+filtroUnidade.addEventListener('change', aplicarFiltrosERenderizar);
+ordenarSelect.addEventListener('change', aplicarFiltrosERenderizar);
 
 listaestoqueEl.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-edit-estoque');
