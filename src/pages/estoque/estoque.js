@@ -1,5 +1,7 @@
 import { getCurrentLabId } from '../../shared/sessionManager.js';
 import { showToast } from '../../shared/utils/toast.js';
+import { escapeHtml } from '../../shared/utils/dom.js';
+import { UNIDADES } from '../../shared/constants.js';
 import {
     excluirItemestoque,
     listarestoquePorlaboratorio,
@@ -28,8 +30,16 @@ const observacoesInput = document.getElementById('estoque-observacoes');
 
 let ID_LAB_DO_USUARIO = null;
 
+// Preenche o <select> de unidades a partir da fonte única (constants.js)
+function popularUnidades() {
+    if (!unidadeInput) return;
+    unidadeInput.innerHTML =
+        '<option value="" disabled selected>Selecione...</option>' +
+        UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join('');
+}
+
 // ===============================================
-// 2. LÓGICA DO ESTOQUE
+// LÓGICA DO ESTOQUE
 // ===============================================
 
 async function fetchestoque(labId, filtroNome = '') {
@@ -40,7 +50,7 @@ async function fetchestoque(labId, filtroNome = '') {
         const { data, error } = await listarestoquePorlaboratorio(labId);
         if (error) throw error;
 
-        const itensFiltrados = data.filter(item => 
+        const itensFiltrados = data.filter(item =>
             !filtroNome || (item.reagente && item.reagente.nome.toLowerCase().includes(filtroNome.toLowerCase()))
         );
 
@@ -61,41 +71,39 @@ async function fetchestoque(labId, filtroNome = '') {
     }
 }
 
+function montarValidade(item) {
+    if (!item.data_validade) {
+        return { html: '<span class="badge bg-secondary badge-validade">Indefinida</span>', borderClass: '' };
+    }
+
+    const diffDias = Math.ceil((new Date(item.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
+    const dataFormatada = new Date(item.data_validade).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+    if (diffDias < 0) {
+        return {
+            html: `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`,
+            borderClass: 'border-start border-danger border-4',
+        };
+    }
+    if (diffDias < 30) {
+        return {
+            html: `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`,
+            borderClass: 'border-start border-warning border-4',
+        };
+    }
+    return { html: `<span class="badge bg-success badge-validade">Val: ${dataFormatada}</span>`, borderClass: '' };
+}
+
 function renderestoque(itens) {
     listaestoqueEl.innerHTML = '';
 
     itens.forEach(item => {
-        // Lógica visual para Validade
-        let validadeHTML = '<span class="badge bg-secondary badge-validade">Indefinida</span>';
-        let borderClass = '';
-        
-        if (item.data_validade) {
-            const hoje = new Date();
-            const validade = new Date(item.data_validade);
-            const diffDias = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
-            const dataFormatada = new Date(item.data_validade).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
-
-            if (diffDias < 0) {
-                // VENCIDO
-                validadeHTML = `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`;
-                borderClass = 'border-start border-danger border-4';
-            } else if (diffDias < 30) {
-                // VENCE EM BREVE
-                validadeHTML = `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`;
-                borderClass = 'border-start border-warning border-4';
-            } else {
-                // NO PRAZO
-                validadeHTML = `<span class="badge bg-success badge-validade">Val: ${dataFormatada}</span>`;
-            }
-        }
+        const { html: validadeHTML, borderClass } = montarValidade(item);
+        const nome = escapeHtml(item.reagente?.nome);
+        const obs = escapeHtml(item.observacoes_operacionais || '');
 
         const div = document.createElement('div');
         div.className = `list-group-item p-3 mb-3 shadow-sm rounded border-0 ${borderClass}`;
-        // Efeito de hover
-        div.style.transition = 'transform 0.2s';
-        div.onmouseover = () => div.style.transform = 'translateX(5px)';
-        div.onmouseout = () => div.style.transform = 'translateX(0)';
-
         div.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
@@ -103,30 +111,30 @@ function renderestoque(itens) {
                         <i class="bi bi-flask fs-4"></i>
                     </div>
                     <div>
-                        <h5 class="mb-1 fw-bold text-dark">${item.reagente.nome}</h5>
+                        <h5 class="mb-1 fw-bold text-dark">${nome}</h5>
                         <div class="mb-1">
-                            <span class="text-primary fw-bold fs-5">${item.quantidade}</span> 
-                            <small class="text-muted text-uppercase fw-bold">${item.unidade_medida}</small>
+                            <span class="text-primary fw-bold fs-5">${escapeHtml(item.quantidade)}</span>
+                            <small class="text-muted text-uppercase fw-bold">${escapeHtml(item.unidade_medida)}</small>
                         </div>
                         <small class="text-muted d-block text-truncate" style="max-width: 300px;">
-                            ${item.observacoes_operacionais || 'Sem observações operacionais.'}
+                            ${obs || 'Sem observações operacionais.'}
                         </small>
                     </div>
                 </div>
-                
+
                 <div class="text-end">
                     <div class="mb-2">${validadeHTML}</div>
                     <div>
-                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3" 
-                            data-id="${item.id}"
-                            data-reagente-id="${item.id_reagente}"
-                            data-quantidade="${item.quantidade}"
-                            data-unidade="${item.unidade_medida}"
-                            data-validade="${item.data_validade || ''}"
-                            data-observacoes="${item.observacoes_operacionais || ''}">
+                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3"
+                            data-id="${escapeHtml(item.id)}"
+                            data-reagente-id="${escapeHtml(item.id_reagente)}"
+                            data-quantidade="${escapeHtml(item.quantidade)}"
+                            data-unidade="${escapeHtml(item.unidade_medida)}"
+                            data-validade="${escapeHtml(item.data_validade || '')}"
+                            data-observacoes="${obs}">
                             <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-id="${item.id}">
+                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-id="${escapeHtml(item.id)}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -141,23 +149,27 @@ async function fetchreagentesParaModal() {
     try {
         const { data, error } = await listarreagentesParaestoque();
         if (error) throw error;
-        
+
         selectreagente.innerHTML = '<option value="" disabled selected>Selecione um reagente...</option>';
         data.forEach(reagente => {
-            selectreagente.innerHTML += `<option value="${reagente.id}">${reagente.nome}</option>`;
+            const opt = document.createElement('option');
+            opt.value = reagente.id;
+            opt.textContent = reagente.nome;
+            selectreagente.appendChild(opt);
         });
     } catch (error) {
         console.error('Erro:', error.message);
         showToast('Erro ao carregar lista de reagentes.', 'error');
     }
-}
-
-async function handleFormSubmitestoque(evento) {
+}async function handleFormSubmitestoque(evento) {
     evento.preventDefault();
     if (!ID_LAB_DO_USUARIO) {
         showToast('Sessão inválida. Recarregue a página.', 'error');
         return;
     }
+
+    const QTD_MAX = 1000000;
+    const OBS_MAX = 500;
 
     const id = editIdInput.value;
     const dadosForm = {
@@ -166,36 +178,50 @@ async function handleFormSubmitestoque(evento) {
         quantidade: parseFloat(quantidadeInput.value),
         unidade_medida: unidadeInput.value,
         data_validade: validadeInput.value || null,
-        observacoes_operacionais: observacoesInput.value || null
+        observacoes_operacionais: observacoesInput.value || null,
     };
 
-    try {
-        let query;
-        if (id) {
-            query = await salvarItemestoque(id, dadosForm);
-        } else {
-            query = await salvarItemestoque(null, dadosForm);
+    // Validações (defesa no cliente; o banco também garante via CHECK)
+    if (!(dadosForm.quantidade > 0) || dadosForm.quantidade > QTD_MAX) {
+        showToast(`Quantidade deve ser maior que zero e até ${QTD_MAX.toLocaleString('pt-BR')}.`, 'error');
+        return;
+    }
+    if (!UNIDADES.includes(dadosForm.unidade_medida)) {
+        showToast('Selecione uma unidade válida.', 'error');
+        return;
+    }
+    if (dadosForm.observacoes_operacionais && dadosForm.observacoes_operacionais.length > OBS_MAX) {
+        showToast(`As observações devem ter no máximo ${OBS_MAX} caracteres.`, 'error');
+        return;
+    }
 
-            // Mantendo sua lógica de histórico
+    try {
+        const { error } = id
+            ? await salvarItemestoque(id, dadosForm)
+            : await salvarItemestoque(null, dadosForm);
+        if (error) throw error;
+
+        // Registra a entrada no histórico apenas em novos itens
+        if (!id) {
             const nomereagente = selectreagente.options[selectreagente.selectedIndex].text;
-            await registrarMovimentacaoEntradaestoque({
+            const { error: erroMov } = await registrarMovimentacaoEntradaestoque({
                 id_laboratorio: ID_LAB_DO_USUARIO,
                 tipo: 'ENTRADA',
                 item_nome: nomereagente,
                 quantidade: dadosForm.quantidade,
                 unidade: dadosForm.unidade_medida,
-                observacao: 'Cadastro inicial no estoque'
+                observacao: 'Cadastro inicial no estoque',
             });
+            // Antes esse erro era engolido: item salvava mas o histórico não registrava.
+            if (erroMov) {
+                console.error('Falha ao registrar movimentação de entrada:', erroMov.message);
+                showToast('Item salvo, mas a entrada não foi registrada no histórico.', 'warning');
+            }
         }
 
-        const { error } = query;
-        if (error) throw error;
-
         showToast(id ? 'Item atualizado com sucesso!' : 'Item adicionado ao estoque!', 'success');
-        
         modalestoque.hide();
         fetchestoque(ID_LAB_DO_USUARIO, inputBusca.value);
-
     } catch (error) {
         console.error('Erro:', error.message);
         showToast('Falha ao salvar: ' + error.message, 'error');
@@ -207,7 +233,7 @@ function handleEditClickestoque(button) {
     editIdInput.value = id;
     selectreagente.value = reagenteId;
     quantidadeInput.value = quantidade;
-    unidadeInput.value = unidade;
+    unidadeInput.value = unidade; // funciona com <select>: seleciona a opção correspondente
     validadeInput.value = validade;
     observacoesInput.value = observacoes;
     modalTitle.textContent = 'Editar Item';
@@ -217,7 +243,6 @@ function handleEditClickestoque(button) {
 
 async function handleDeleteClickestoque(button) {
     const id = button.dataset.id;
-    // Ainda usamos confirm nativo aqui por ser mais rápido, mas pode ser melhorado depois
     if (confirm('Tem certeza que deseja excluir este item?')) {
         try {
             const { error } = await excluirItemestoque(id);
@@ -235,11 +260,14 @@ function resetModalestoque() {
     editIdInput.value = '';
     modalTitle.textContent = 'Adicionar Item ao estoque';
     modalSubmitBtn.textContent = 'Salvar no estoque';
-    selectreagente.value = "";
+    selectreagente.value = '';
+    unidadeInput.value = '';
 }
 
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', async () => {
+    popularUnidades();
+
     ID_LAB_DO_USUARIO = await getCurrentLabId();
     if (ID_LAB_DO_USUARIO) {
         fetchestoque(ID_LAB_DO_USUARIO);
@@ -262,7 +290,6 @@ inputBusca.addEventListener('keyup', () => {
 listaestoqueEl.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-edit-estoque');
     const btnDelete = e.target.closest('.btn-delete-estoque');
-
     if (btnEdit) handleEditClickestoque(btnEdit);
     if (btnDelete) handleDeleteClickestoque(btnDelete);
 });

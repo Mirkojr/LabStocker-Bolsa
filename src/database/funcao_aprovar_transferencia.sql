@@ -99,7 +99,7 @@ BEGIN
 
     -- 8. Marca a transferência como aprovada
     UPDATE public.transferencia
-    SET status = 'Aprovado'
+    SET status = 'aprovado'
     WHERE id = p_transfer_id;
 END;
 $$;

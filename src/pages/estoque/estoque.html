@@ -77,11 +77,13 @@
                         <div class="row g-3">
                             <div class="col-6 mb-3">
                                 <label for="estoque-quantidade" class="form-label fw-bold small text-secondary">Quantidade</label>
-                                <input type="number" step="0.01" class="form-control" id="estoque-quantidade" required>
+                                <input type="number" step="0.01" min="0.01" max="1000000" class="form-control" id="estoque-quantidade" required>
                             </div>
                             <div class="col-6 mb-3">
                                 <label for="estoque-unidade" class="form-label fw-bold small text-secondary">Unidade</label>
-                                <input type="text" class="form-control" id="estoque-unidade" placeholder="Ex: mL, g" required>
+                                <select class="form-select" id="estoque-unidade" required>
+                                    <option value="" disabled selected>Selecione...</option>
+                                </select>
                             </div>
                         </div>
 
@@ -92,7 +94,8 @@
 
                         <div class="mb-3">
                             <label for="estoque-observacoes" class="form-label fw-bold small text-secondary">Observações</label>
-                            <textarea class="form-control" id="estoque-observacoes" rows="2" placeholder="Localização na prateleira, estado do frasco..."></textarea>
+                            <textarea class="form-control" id="estoque-observacoes" rows="2" maxlength="500"
+                            placeholder="Localização na prateleira, estado do frasco..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer bg-light">

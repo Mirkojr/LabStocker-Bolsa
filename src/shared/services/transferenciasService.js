@@ -38,7 +38,7 @@ export async function aprovarTransferencia(transferId) {
 export async function recusarTransferencia(transferId) {
     return supabaseClient
         .from('transferencia')
-        .update({ status: 'Recusado' })
+        .update({ status: 'recusado' })
         .eq('id', transferId);
 }
 
