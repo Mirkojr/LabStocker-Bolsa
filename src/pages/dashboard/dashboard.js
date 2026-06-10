@@ -1,6 +1,7 @@
 import { showToast } from '../../shared/utils/toast.js';
 import { getUsuarioLogado, logout } from '../../shared/services/authService.js';
 import { buscarNomePorId } from '../../shared/services/perfisService.js';
+import { clearAdminContext } from '../../shared/sessionManager.js';
 
 // Seletores
 const logoutButton = document.getElementById('btn-logout');
@@ -70,9 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
-            sessionStorage.removeItem('ADMIN_SELECTED_LAB_ID');
-            sessionStorage.removeItem('ADMIN_SELECTED_LAB_NAME');
-            
+            clearAdminContext();
+            sessionStorage.removeItem('MY_LAB_ID')
             const { error } = await logout();
             if (error) {
                 showToast('Erro ao sair.', 'error');

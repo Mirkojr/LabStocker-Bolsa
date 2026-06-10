@@ -2,23 +2,19 @@ import { supabaseClient } from './supabaseClient.js';
 
 /**
  * Função central para pegar o ID do laboratório atual.
- * 1. Verifica se tem um ID forçado na sessão (Admin navegando).
- * 2. Se não, pega o ID real do usuário no banco.
+ * Primeiro tenta pegar do sessionStorage (cache), depois faz uma RPC no banco.
  */
 export async function getCurrentLabId() {
-    // 1. Verifica se o Admin escolheu um lab (armazenado no navegador)
     const adminSelectedLab = sessionStorage.getItem('ADMIN_SELECTED_LAB_ID');
-    if (adminSelectedLab) {
-        return adminSelectedLab;
-    }
+    if (adminSelectedLab) return adminSelectedLab;
 
-    // 2. Se não, usa a função segura do banco
+    const cache = sessionStorage.getItem('MY_LAB_ID');
+    if (cache) return cache;                     // evita RPC repetido
+
     const { data: labId, error } = await supabaseClient.rpc('get_my_lab_id');
-    
-    if (error) {
-        console.error("Erro ao buscar Lab ID:", error);
-        return null;
-    }
+    if (error) { console.error("Erro ao buscar Lab ID:", error); return null; }
+
+    if (labId) sessionStorage.setItem('MY_LAB_ID', labId);  // cacheia
     return labId;
 }
 
