@@ -34,6 +34,13 @@ const observacoesInput = document.getElementById('estoque-observacoes');
 let ID_LAB_DO_USUARIO = null;
 let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
 
+// Formata número no padrão pt-BR (vírgula decimal, sem zeros sobrando)
+function formatarQuantidade(valor) {
+    const num = Number(valor);
+    if (Number.isNaN(num)) return escapeHtml(String(valor ?? ''));
+    return num.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+}
+
 // Preenche o <select> de unidades do FORM a partir da fonte única (constants.js)
 function popularUnidadesForm() {
     if (!unidadeInput) return;
@@ -64,7 +71,7 @@ function classificarValidade(item) {
 function montarValidade(item) {
     const status = classificarValidade(item);
     if (status === 'sem_data') {
-        return { html: '<span class="badge bg-secondary badge-validade">Indefinida</span>', borderClass: '' };
+        return { html: '<span class="badge bg-secondary badge-validade">Sem validade</span>', borderClass: '' };
     }
 
     const dataFormatada = new Date(item.data_validade).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
@@ -143,23 +150,24 @@ function renderestoque(itens) {
         const { html: validadeHTML, borderClass } = montarValidade(item);
         const nome = escapeHtml(item.reagente?.nome);
         const obs = escapeHtml(item.observacoes_operacionais || '');
+        const obsTexto = obs || 'Sem observações operacionais.';
 
         const div = document.createElement('div');
         div.className = `list-group-item p-3 mb-3 shadow-sm rounded border-0 ${borderClass}`;
         div.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <div class="bg-light rounded-circle p-3 me-3 text-primary d-none d-md-block">
-                        <i class="bi bi-flask fs-4"></i>
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex" style="width:48px;height:48px;">
+                        <i class="bi bi-droplet-half fs-4"></i>
                     </div>
                     <div>
                         <h5 class="mb-1 fw-bold text-dark">${nome}</h5>
                         <div class="mb-1">
-                            <span class="text-primary fw-bold fs-5">${escapeHtml(item.quantidade)}</span>
-                            <small class="text-muted text-uppercase fw-bold">${escapeHtml(item.unidade_medida)}</small>
+                            <span class="text-primary fw-bold fs-5">${formatarQuantidade(item.quantidade)}</span>
+                            <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
                         </div>
-                        <small class="text-muted d-block text-truncate" style="max-width: 300px;">
-                            ${obs || 'Sem observações operacionais.'}
+                        <small class="text-muted d-block text-truncate" style="max-width: 300px;" title="${obsTexto}">
+                            ${obsTexto}
                         </small>
                     </div>
                 </div>
@@ -176,7 +184,7 @@ function renderestoque(itens) {
                             data-observacoes="${obs}">
                             <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-id="${escapeHtml(item.id)}">
+                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-id="${escapeHtml(item.id)}" title="Excluir item">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
