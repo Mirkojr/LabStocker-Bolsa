@@ -4,6 +4,7 @@ import {
     listarreagentes,
     salvarreagente,
 } from '../../shared/services/reagentesService.js';
+import { formatarFormulaQuimica } from '../../shared/utils/formatters.js';
 
 // --- Seletores de Elementos ---
 const listareagentesEl = document.getElementById('lista-reagentes');
@@ -85,7 +86,7 @@ function renderreagentes(reagentes) {
                             ${reagente.nome}
                         </h5>
                         <p class="mb-1 text-muted small font-monospace">
-                            ${reagente.composicao_quimica || '<span class="text-muted opacity-50">Sem fórmula</span>'}
+                            ${formatarFormulaQuimica(reagente.composicao_quimica) || '<span class="text-muted opacity-50">Sem fórmula</span>'}
                         </p>
                         <div class="mt-1">
                              ${badgeControlado || '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Não Controlado</span>'}

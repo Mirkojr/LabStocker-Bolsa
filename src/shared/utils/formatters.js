@@ -16,3 +16,8 @@ export function formatarTelefone(telefone) {
     if (limpo.length === 10) return limpo.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
     return telefone;
 }
+
+export function formatarFormulaQuimica(formula) {
+  // Essa linha procura por qualquer número (\d+) e substitui por <sub>número</sub>
+  return formula.replace(/(\d+)/g, '<sub>$1</sub>');
+}
