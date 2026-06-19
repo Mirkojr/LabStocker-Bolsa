@@ -153,7 +153,7 @@ function renderestoque(itens) {
         const obsTexto = obs || 'Sem observações operacionais.';
 
         const div = document.createElement('div');
-        div.className = `list-group-item p-3 mb-3 shadow-sm rounded border-0 ${borderClass}`;
+        div.className = `list-group-item mb-3 shadow-sm rounded border-0 ${borderClass}`;
         div.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">

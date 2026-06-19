@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_LabStocker" targetNamespace="http://labstocker/transferencia" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_Lab" name="Transferência de Reagentes" processRef="Process_Transferencia" />
+    <bpmn:group id="Group_05l0dyu" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Transferencia" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Solicitante" name="Laboratório Solicitante (destino)">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Criar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Receber</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Fim</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Dono" name="Laboratório Dono (origem) - aprova">
+        <bpmn:flowNodeRef>Task_Analisar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Aprovar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Confirmar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Recusar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema (Supabase / RPC)">
+        <bpmn:flowNodeRef>ServiceTask_RPC</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Necessidade de reagente">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_Criar" name="Criar solicitação (item + quantidade)">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Analisar" name="Analisar pedido pendente">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Aprovar" name="Aprovar?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Confirmar" name="Confirmar aprovação">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Recusar" name="Recusar + informar motivo">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="ServiceTask_RPC" name="aprovar_transferencia: debita origem, credita destino, grava histórico">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Task_Receber" name="Receber resultado (aprovado / recusado)">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="EndEvent_Fim" name="Processo concluído">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Criar" />
+    <bpmn:sequenceFlow id="Flow_2" name="status = pendente" sourceRef="Task_Criar" targetRef="Task_Analisar" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_Analisar" targetRef="Gateway_Aprovar" />
+    <bpmn:sequenceFlow id="Flow_4" name="Sim" sourceRef="Gateway_Aprovar" targetRef="Task_Confirmar" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Confirmar" targetRef="ServiceTask_RPC" />
+    <bpmn:sequenceFlow id="Flow_6" name="Não" sourceRef="Gateway_Aprovar" targetRef="Task_Recusar" />
+    <bpmn:sequenceFlow id="Flow_7" name="status = aprovado" sourceRef="ServiceTask_RPC" targetRef="Task_Receber" />
+    <bpmn:sequenceFlow id="Flow_8" name="status = recusado + motivo" sourceRef="Task_Recusar" targetRef="Task_Receber" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_Receber" targetRef="EndEvent_Fim" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_Lab_di" bpmnElement="Participant_Lab" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1180" height="540" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sistema_di" bpmnElement="Lane_Sistema" isHorizontal="true">
+        <dc:Bounds x="190" y="440" width="1150" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Dono_di" bpmnElement="Lane_Dono" isHorizontal="true">
+        <dc:Bounds x="190" y="260" width="1150" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Solicitante_di" bpmnElement="Lane_Solicitante" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1150" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="232" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="210" y="195" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Criar_di" bpmnElement="Task_Criar">
+        <dc:Bounds x="320" y="130" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Analisar_di" bpmnElement="Task_Analisar">
+        <dc:Bounds x="460" y="310" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Aprovar_di" bpmnElement="Gateway_Aprovar" isMarkerVisible="true">
+        <dc:Bounds x="640" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="383" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Confirmar_di" bpmnElement="Task_Confirmar">
+        <dc:Bounds x="760" y="310" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Recusar_di" bpmnElement="Task_Recusar">
+        <dc:Bounds x="950" y="310" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_RPC_di" bpmnElement="ServiceTask_RPC">
+        <dc:Bounds x="760" y="490" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Receber_di" bpmnElement="Task_Receber">
+        <dc:Bounds x="1050" y="130" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Fim_di" bpmnElement="EndEvent_Fim">
+        <dc:Bounds x="1220" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1200" y="195" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="268" y="170" />
+        <di:waypoint x="320" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="375" y="210" />
+        <di:waypoint x="375" y="350" />
+        <di:waypoint x="460" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="570" y="350" />
+        <di:waypoint x="640" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="690" y="350" />
+        <di:waypoint x="760" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="815" y="390" />
+        <di:waypoint x="815" y="440" />
+        <di:waypoint x="840" y="440" />
+        <di:waypoint x="840" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="665" y="325" />
+        <di:waypoint x="665" y="280" />
+        <di:waypoint x="1005" y="280" />
+        <di:waypoint x="1005" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="639" y="293" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="920" y="530" />
+        <di:waypoint x="1105" y="530" />
+        <di:waypoint x="1105" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1005" y="310" />
+        <di:waypoint x="1105" y="310" />
+        <di:waypoint x="1105" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1016" y="276" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1160" y="170" />
+        <di:waypoint x="1220" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Group_05l0dyu_di" bpmnElement="Group_05l0dyu">
+        <dc:Bounds x="135" y="55" width="1230" height="590" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
