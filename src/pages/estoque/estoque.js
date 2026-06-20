@@ -10,6 +10,12 @@ import {
 } from '../../shared/services/estoqueService.js';
 import { listarreagentesParaestoque } from '../../shared/services/reagentesService.js';
 import { confirmar } from '../../shared/utils/confirmacao.js';
+import {
+    garantirContainerPaginador,
+    paginarLista,
+    renderPaginador,
+    TAMANHO_PAGINA_PADRAO,
+} from '../../shared/utils/paginacao.js';
 // --- Seletores ---
 const listaestoqueEl = document.getElementById('lista-estoque');
 const formestoque = document.getElementById('form-estoque');
@@ -33,6 +39,11 @@ const observacoesInput = document.getElementById('estoque-observacoes');
 
 let ID_LAB_DO_USUARIO = null;
 let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
+let itensFiltrados = []; // resultado dos filtros/ordenacao; paginado no cliente
+let paginaAtualEstoque = 1;
+
+// Container de paginacao (inserido logo abaixo da lista)
+const paginadorEstoqueEl = garantirContainerPaginador(listaestoqueEl, 'paginador-estoque');
 
 // Formata número no padrão pt-BR (vírgula decimal, sem zeros sobrando)
 function formatarQuantidade(valor) {
@@ -97,6 +108,7 @@ function montarValidade(item) {
 async function fetchestoque(labId) {
     spinner.classList.remove('d-none');
     listaestoqueEl.innerHTML = '';
+    if (paginadorEstoqueEl) paginadorEstoqueEl.innerHTML = '';
     try {
         const { data, error } = await listarestoquePorlaboratorio(labId);
         if (error) throw error;
@@ -116,7 +128,7 @@ function aplicarFiltrosERenderizar() {
     const fUnidade = filtroUnidade.value;   // '' = todas
     const ordenar = ordenarSelect.value;    // 'nome_asc' | 'nome_desc'
 
-    const itens = itensCache
+    itensFiltrados = itensCache
         .filter((item) => {
             const nome = item.reagente?.nome?.toLowerCase() || '';
             if (termo && !nome.includes(termo)) return false;
@@ -132,15 +144,35 @@ function aplicarFiltrosERenderizar() {
                 : na.localeCompare(nb, 'pt-BR');
         });
 
-    if (itens.length === 0) {
+    // Qualquer mudanca de filtro/busca/ordenacao volta para a primeira pagina.
+    paginaAtualEstoque = 1;
+
+    if (itensFiltrados.length === 0) {
         listaestoqueEl.innerHTML = `
             <div class="text-center py-5">
                 <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-3">Nenhum item encontrado.</p>
             </div>`;
+        if (paginadorEstoqueEl) paginadorEstoqueEl.innerHTML = '';
         return;
     }
-    renderestoque(itens);
+    renderPaginaEstoque();
+}
+
+// Renderiza a pagina atual do resultado filtrado e atualiza o paginador.
+function renderPaginaEstoque() {
+    const itensPagina = paginarLista(itensFiltrados, paginaAtualEstoque, TAMANHO_PAGINA_PADRAO);
+    renderestoque(itensPagina);
+    renderPaginador(paginadorEstoqueEl, {
+        paginaAtual: paginaAtualEstoque,
+        totalItens: itensFiltrados.length,
+        tamanhoPagina: TAMANHO_PAGINA_PADRAO,
+        aoMudarPagina: (p) => {
+            paginaAtualEstoque = p;
+            renderPaginaEstoque();
+            if (listaestoqueEl) listaestoqueEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        },
+    });
 }
 
 function renderestoque(itens) {
