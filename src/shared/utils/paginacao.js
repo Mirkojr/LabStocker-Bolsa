@@ -12,7 +12,7 @@ export const TAMANHO_PAGINA_PADRAO = 12;
  * Calcula o intervalo [from, to] (0-based, inclusivo) para o .range() do Supabase.
  * @param {number} pagina Pagina atual (comeca em 1).
  * @param {number} tamanho Itens por pagina.
- * @returns  from: number, to: number 
+ * @returns {object} Intervalo com as chaves 'from' e 'to' (0-based, inclusivo).
  */
 export function calcularRange(pagina = 1, tamanho = TAMANHO_PAGINA_PADRAO) {
     const paginaSegura = Math.max(1, Number(pagina) || 1);
