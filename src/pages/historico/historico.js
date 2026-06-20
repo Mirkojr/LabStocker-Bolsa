@@ -5,6 +5,7 @@ import { escapeHtml } from '../../shared/utils/dom.js';
 import { listarTransferenciasPorLaboratorio } from '../../shared/services/transferenciasService.js';
 import { listarResiduosDescartadosPorLaboratorio } from '../../shared/services/residuosService.js';
 import { listarEntradasPorLaboratorio } from '../../shared/services/movimentacoesService.js';
+import { garantirContainerPaginador, paginarLista, renderPaginador, TAMANHO_PAGINA_PADRAO } from '../../shared/utils/paginacao.js';
 
 // --- Seletores de Elementos ---
 const listaHistorico = document.getElementById('lista-historico');
@@ -13,6 +14,11 @@ const inputBusca = document.getElementById('busca-historico');
 // --- Variaveis de Estado ---
 let MEU_LAB_ID = null;
 let HISTORICO_CACHE = [];
+
+// Estado da paginação (lista atualmente exibida = cache completo ou resultado da busca)
+let listaExibida = [];
+let paginaAtualHist = 1;
+const paginadorHistEl = garantirContainerPaginador(listaHistorico, 'paginador-historico');
 
 // Normaliza o status da transferencia (banco usa minusculo) para label + cor.
 const STATUS_TRANSFER = {
@@ -49,6 +55,7 @@ async function init() {
 
 async function fetchHistorico() {
     mostrarCarregando(listaHistorico, 'Reconstruindo a linha do tempo...');
+    if (paginadorHistEl) paginadorHistEl.innerHTML = '';
 
     try {
         const [resTransf, resresiduos, resMov] = await Promise.all([
@@ -90,8 +97,9 @@ async function fetchHistorico() {
                 titulo: 'Linha do tempo vazia',
                 mensagem: 'Nenhuma movimentacao registrada ate o momento.'
             });
+            if (paginadorHistEl) paginadorHistEl.innerHTML = '';
         } else {
-            renderHistorico(listaCompleta);
+            exibirHistorico(listaCompleta);
         }
 
     } catch (error) {
@@ -101,6 +109,41 @@ async function fetchHistorico() {
             onTentarNovamente: fetchHistorico
         });
     }
+}
+
+// Define a lista a exibir (cache completo ou resultado da busca), reinicia a
+// pagina e desenha a primeira pagina.
+function exibirHistorico(lista) {
+    listaExibida = lista || [];
+    paginaAtualHist = 1;
+
+    if (listaExibida.length === 0) {
+        mostrarVazio(listaHistorico, {
+            icone: 'bi-search',
+            titulo: 'Nada encontrado',
+            mensagem: 'Nenhum registro corresponde a sua busca.'
+        });
+        if (paginadorHistEl) paginadorHistEl.innerHTML = '';
+        return;
+    }
+
+    desenharPaginaHist();
+}
+
+// Renderiza a pagina atual de listaExibida e atualiza o paginador.
+function desenharPaginaHist() {
+    const itensPagina = paginarLista(listaExibida, paginaAtualHist, TAMANHO_PAGINA_PADRAO);
+    renderHistorico(itensPagina);
+    renderPaginador(paginadorHistEl, {
+        paginaAtual: paginaAtualHist,
+        totalItens: listaExibida.length,
+        tamanhoPagina: TAMANHO_PAGINA_PADRAO,
+        aoMudarPagina: (p) => {
+            paginaAtualHist = p;
+            desenharPaginaHist();
+            if (listaHistorico) listaHistorico.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        },
+    });
 }
 
 /**
@@ -245,5 +288,5 @@ inputBusca.addEventListener('keyup', () => {
         return textoPesquisavel.includes(termo);
     });
 
-    renderHistorico(filtrados);
+    exibirHistorico(filtrados);
 });

@@ -5,6 +5,11 @@ import {
     salvarreagente,
 } from '../../shared/services/reagentesService.js';
 import { formatarFormulaQuimica } from '../../shared/utils/formatters.js';
+import {
+    garantirContainerPaginador,
+    renderPaginador,
+    TAMANHO_PAGINA_PADRAO,
+} from '../../shared/utils/paginacao.js';
 
 // --- Seletores de Elementos ---
 const listareagentesEl = document.getElementById('lista-reagentes');
@@ -12,6 +17,9 @@ const formreagente = document.getElementById('form-reagente');
 const inputBusca = document.getElementById('input-busca');
 const spinner = document.getElementById('loading-spinner');
 const btnCadastrar = document.querySelector('[data-bs-target="#modal-reagente"]');
+
+// Container do paginador (inserido logo abaixo da lista)
+const paginadorEl = garantirContainerPaginador(listareagentesEl, 'paginador-reagentes');
 
 // Modais
 const modalEl = document.getElementById('modal-reagente');
@@ -32,23 +40,41 @@ const controladoraInput = document.getElementById('reagente-controladora');
 // Variável para armazenar o ID temporariamente antes de excluir
 let ID_PARA_EXCLUIR = null;
 
-async function fetchreagentes(filtroNome = '') {
+// Estado de paginação e busca
+let paginaAtual = 1;
+let filtroAtual = '';
+
+async function fetchreagentes(filtroNome = '', pagina = 1) {
+    filtroAtual = filtroNome;
+    paginaAtual = pagina;
+
     spinner.classList.remove('d-none');
     listareagentesEl.innerHTML = '';
+    if (paginadorEl) paginadorEl.innerHTML = '';
 
     try {
-        const { data, error } = await listarreagentes(filtroNome);
+        const { data, error, count } = await listarreagentes(filtroNome, {
+            pagina,
+            tamanho: TAMANHO_PAGINA_PADRAO,
+        });
         if (error) throw error;
 
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             listareagentesEl.innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-eyedropper text-muted" style="font-size: 3rem;"></i>
                     <p class="text-muted mt-3">Nenhum reagente encontrado no catálogo.</p>
                 </div>`;
-        } else {
-            renderreagentes(data);
+            return;
         }
+
+        renderreagentes(data);
+        renderPaginador(paginadorEl, {
+            paginaAtual: pagina,
+            totalItens: count || 0,
+            tamanhoPagina: TAMANHO_PAGINA_PADRAO,
+            aoMudarPagina: (p) => fetchreagentes(filtroAtual, p),
+        });
     } catch (error) {
         console.error('Erro:', error.message);
         showToast('Erro ao carregar reagentes.', 'error');
@@ -59,7 +85,7 @@ async function fetchreagentes(filtroNome = '') {
 
 function renderreagentes(reagentes) {
     listareagentesEl.innerHTML = '';
-    
+
     reagentes.forEach(reagente => {
         let badgeControlado = '';
         if (reagente.instituicao_controladora) {
@@ -115,7 +141,7 @@ function renderreagentes(reagentes) {
 // --- CADASTRO E EDIÇÃO ---
 async function handleFormSubmit(evento) {
     evento.preventDefault();
-    
+
     const id = editIdInput.value;
     const dadosForm = {
         nome: nomeInput.value,
@@ -129,7 +155,7 @@ async function handleFormSubmit(evento) {
 
         showToast(id ? 'reagente atualizado!' : 'reagente cadastrado!', 'success');
         modalreagente.hide();
-        fetchreagentes(inputBusca.value);
+        fetchreagentes(inputBusca.value, 1);
 
     } catch (error) {
         console.error('Erro:', error.message);
@@ -167,7 +193,7 @@ btnConfirmarExclusao.addEventListener('click', async () => {
 
     try {
         const { error } = await excluirreagente(ID_PARA_EXCLUIR);
-        
+
         if (error) {
             // Tratamento de erro de chave estrangeira (FK)
             if (error.code === '23503') {
@@ -176,9 +202,9 @@ btnConfirmarExclusao.addEventListener('click', async () => {
             }
             throw error;
         }
-        
+
         showToast('reagente excluído com sucesso.', 'success');
-        fetchreagentes(inputBusca.value);
+        fetchreagentes(inputBusca.value, 1);
 
     } catch (error) {
         showToast('Erro ao excluir: ' + error.message, 'error');
@@ -205,7 +231,7 @@ let debounceTimer;
 inputBusca.addEventListener('keyup', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        fetchreagentes(inputBusca.value);
+        fetchreagentes(inputBusca.value, 1);
     }, 300);
 });
 

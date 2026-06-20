@@ -3,6 +3,7 @@ import { showToast } from '../../shared/utils/toast.js';
 import { mostrarCarregando, mostrarVazio, mostrarErro } from '../../shared/utils/estados.js';
 import { confirmar } from '../../shared/utils/confirmacao.js';
 import { listarResiduosPorLaboratorio, salvarResiduo, atualizarStatusResiduo } from '../../shared/services/residuosService.js';
+import { garantirContainerPaginador, renderPaginador, TAMANHO_PAGINA_PADRAO } from '../../shared/utils/paginacao.js';
 
 // --- Seletores de Elementos ---
 const listaresiduos = document.getElementById('lista-residuos');
@@ -20,6 +21,10 @@ const modalSubmitBtn = formresiduo.querySelector('button[type="submit"]');
 const btnNovoresiduo = document.querySelector('[data-bs-target="#modal-residuo"]');
 
 let MEU_LAB_ID = null;
+
+// Estado e container de paginação
+let paginaAtualResiduos = 1;
+const paginadorResiduosEl = garantirContainerPaginador(listaresiduos, 'paginador-residuos');
 
 // ===============================================
 // LOGICA DE INICIALIZACAO
@@ -48,18 +53,29 @@ async function init() {
     }
 }
 
-async function fetchresiduos() {
+async function fetchresiduos(pagina = 1) {
+    paginaAtualResiduos = pagina;
     mostrarCarregando(listaresiduos, 'Sincronizando inventario...');
+    if (paginadorResiduosEl) paginadorResiduosEl.innerHTML = '';
 
     try {
-        const { data, error } = await listarResiduosPorLaboratorio(MEU_LAB_ID);
+        const { data, error, count } = await listarResiduosPorLaboratorio(MEU_LAB_ID, {
+            pagina,
+            tamanho: TAMANHO_PAGINA_PADRAO,
+        });
         if (error) throw error;
         renderresiduos(data);
+        renderPaginador(paginadorResiduosEl, {
+            paginaAtual: pagina,
+            totalItens: count || 0,
+            tamanhoPagina: TAMANHO_PAGINA_PADRAO,
+            aoMudarPagina: (p) => fetchresiduos(p),
+        });
     } catch (error) {
         console.error('Erro ao buscar residuos:', error.message);
         mostrarErro(listaresiduos, {
             mensagem: 'Nao foi possivel carregar o inventario de residuos.',
-            onTentarNovamente: fetchresiduos
+            onTentarNovamente: () => fetchresiduos(paginaAtualResiduos)
         });
     }
 }
