@@ -4,10 +4,12 @@ import { listarLaboratoriosResumo } from '../../shared/services/laboratoriosServ
 import { listarMovimentacoesPorPeriodo } from '../../shared/services/movimentacoesService.js';
 import { listarTransferenciasPorPeriodo } from '../../shared/services/transferenciasService.js';
 import { listarResiduosDescartadosPorPeriodo } from '../../shared/services/residuosService.js';
+import { garantirContainerPaginador, paginarLista, renderPaginador, TAMANHO_PAGINA_PADRAO } from '../../shared/utils/paginacao.js';
 
 // --- Seletores ---
 const formRelatorio = document.getElementById('form-relatorio');
 const tbodyPreview = document.getElementById('tbody-preview');
+const tabelaPreview = document.getElementById('tabela-preview');
 const dataInicioInput = document.getElementById('data-inicio');
 const dataFimInput = document.getElementById('data-fim');
 const tituloPagina = document.querySelector('h2'); 
@@ -16,6 +18,11 @@ let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
 let MODO_GLOBAL = false;
 let MAPA_LABORATORIOS = {}; 
+
+// Estado da paginação da pré-visualização (apenas exibição; o CSV usa a lista completa)
+let listaPreview = [];
+let paginaAtualRel = 1;
+const paginadorRelEl = garantirContainerPaginador(tabelaPreview, 'paginador-relatorios');
 
 
 async function init() {
@@ -85,6 +92,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
 
     if (!isDownload) {
         tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando dados...</td></tr>';
+        if (paginadorRelEl) paginadorRelEl.innerHTML = '';
     } else {
         // feedback visual no botao de baixar
         const originalText = btnSubmit.innerHTML;
@@ -198,18 +206,32 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         console.error(error);
         showToast("Erro ao processar dados do relatorio.", "error");
         if (resetBtn) resetBtn();
-        if (!isDownload) tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
+        if (!isDownload) {
+            tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
+            if (paginadorRelEl) paginadorRelEl.innerHTML = '';
+        }
     }
 }
 
 function renderPreview(lista) {
+    listaPreview = lista || [];
+    paginaAtualRel = 1;
+    desenharPaginaPreview();
+}
+
+// Desenha a pagina atual da pre-visualizacao e atualiza o paginador.
+function desenharPaginaPreview() {
     tbodyPreview.innerHTML = '';
-    if (lista.length === 0) {
+
+    if (!listaPreview || listaPreview.length === 0) {
         tbodyPreview.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste periodo.</td></tr>';
+        if (paginadorRelEl) paginadorRelEl.innerHTML = '';
         return;
     }
 
-    lista.forEach(item => {
+    const itensPagina = paginarLista(listaPreview, paginaAtualRel, TAMANHO_PAGINA_PADRAO);
+
+    itensPagina.forEach(item => {
         const dataF = new Date(item.data).toLocaleDateString('pt-BR');
         let colLab = MODO_GLOBAL ? `<td><span class="badge bg-light text-dark border">${item.laboratorio}</span></td>` : '';
 
@@ -229,6 +251,16 @@ function renderPreview(lista) {
             </tr>
         `;
         tbodyPreview.innerHTML += tr;
+    });
+
+    renderPaginador(paginadorRelEl, {
+        paginaAtual: paginaAtualRel,
+        totalItens: listaPreview.length,
+        tamanhoPagina: TAMANHO_PAGINA_PADRAO,
+        aoMudarPagina: (p) => {
+            paginaAtualRel = p;
+            desenharPaginaPreview();
+        },
     });
 }
 
