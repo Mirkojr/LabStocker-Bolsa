@@ -1,2 +1,8 @@
-export const SUPABASE_URL = 'https://fucerkwfydblamwtsmjm.supabase.co';
-export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1Y2Vya3dmeWRibGFtd3RzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMzMwOTAsImV4cCI6MjA5NTgwOTA5MH0.78MxwdgNP4eg2fkVOmOjmClu5o6ICsFHtJSp6zakLGY';
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error(
+    "Variáveis do Supabase ausentes. Copie src/.env.example para src/.env e preencha."
+  );
+}

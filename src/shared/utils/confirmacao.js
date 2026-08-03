@@ -5,12 +5,12 @@
 // Depende do bundle do Bootstrap (window.bootstrap), ja carregado nas paginas.
 
 function criarModalBase() {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'modal fade';
-    wrapper.tabIndex = -1;
-    wrapper.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(wrapper);
-    return wrapper;
+  const wrapper = document.createElement("div");
+  wrapper.className = "modal fade";
+  wrapper.tabIndex = -1;
+  wrapper.setAttribute("aria-hidden", "true");
+  document.body.appendChild(wrapper);
+  return wrapper;
 }
 
 /**
@@ -19,16 +19,16 @@ function criarModalBase() {
  * @returns {Promise<boolean>} true se confirmado, false caso contrario.
  */
 export function confirmar({
-    titulo = 'Confirmar acao',
-    mensagem = 'Tem certeza?',
-    textoConfirmar = 'Confirmar',
-    textoCancelar = 'Cancelar',
-    tipo = 'danger',
-    icone = 'bi-exclamation-triangle-fill',
+  titulo = "Confirmar acao",
+  mensagem = "Tem certeza?",
+  textoConfirmar = "Confirmar",
+  textoCancelar = "Cancelar",
+  tipo = "danger",
+  icone = "bi-exclamation-triangle-fill",
 } = {}) {
-    return new Promise((resolve) => {
-        const wrapper = criarModalBase();
-        wrapper.innerHTML = `
+  return new Promise((resolve) => {
+    const wrapper = criarModalBase();
+    wrapper.innerHTML = `
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
                     <div class="modal-body p-4 text-center">
@@ -43,22 +43,22 @@ export function confirmar({
                 </div>
             </div>`;
 
-        const modal = new bootstrap.Modal(wrapper);
-        let resultado = false;
+    const modal = new bootstrap.Modal(wrapper);
+    let resultado = false;
 
-        wrapper.querySelector('[data-acao="confirmar"]').addEventListener('click', () => {
-            resultado = true;
-            modal.hide();
-        });
-        wrapper.querySelector('[data-acao="cancelar"]').addEventListener('click', () => modal.hide());
-
-        wrapper.addEventListener('hidden.bs.modal', () => {
-            wrapper.remove();
-            resolve(resultado);
-        });
-
-        modal.show();
+    wrapper.querySelector('[data-acao="confirmar"]').addEventListener("click", () => {
+      resultado = true;
+      modal.hide();
     });
+    wrapper.querySelector('[data-acao="cancelar"]').addEventListener("click", () => modal.hide());
+
+    wrapper.addEventListener("hidden.bs.modal", () => {
+      wrapper.remove();
+      resolve(resultado);
+    });
+
+    modal.show();
+  });
 }
 
 /**
@@ -67,15 +67,15 @@ export function confirmar({
  * @returns {Promise<{confirmado: boolean, motivo: string}>}
  */
 export function confirmarRecusa({
-    titulo = 'Recusar solicitacao',
-    mensagem = 'Descreva o motivo da recusa. Ele ficara visivel para o solicitante.',
-    textoConfirmar = 'Recusar',
-    obrigatorio = true,
-    maxLength = 300,
+  titulo = "Recusar solicitacao",
+  mensagem = "Descreva o motivo da recusa. Ele ficara visivel para o solicitante.",
+  textoConfirmar = "Recusar",
+  obrigatorio = true,
+  maxLength = 300,
 } = {}) {
-    return new Promise((resolve) => {
-        const wrapper = criarModalBase();
-        wrapper.innerHTML = `
+  return new Promise((resolve) => {
+    const wrapper = criarModalBase();
+    wrapper.innerHTML = `
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
                     <div class="modal-header bg-danger text-white border-0">
@@ -95,33 +95,33 @@ export function confirmarRecusa({
                 </div>
             </div>`;
 
-        const modal = new bootstrap.Modal(wrapper);
-        const textarea = wrapper.querySelector('[data-campo="motivo"]');
-        const erroEl = wrapper.querySelector('[data-erro="motivo"]');
-        let payload = { confirmado: false, motivo: '' };
+    const modal = new bootstrap.Modal(wrapper);
+    const textarea = wrapper.querySelector('[data-campo="motivo"]');
+    const erroEl = wrapper.querySelector('[data-erro="motivo"]');
+    let payload = { confirmado: false, motivo: "" };
 
-        wrapper.querySelector('[data-acao="confirmar"]').addEventListener('click', () => {
-            const motivo = textarea.value.trim();
-            if (obrigatorio && !motivo) {
-                erroEl.textContent = 'Informe o motivo da recusa.';
-                erroEl.classList.remove('d-none');
-                textarea.classList.add('is-invalid');
-                return;
-            }
-            payload = { confirmado: true, motivo };
-            modal.hide();
-        });
-
-        wrapper.querySelectorAll('[data-acao="cancelar"]').forEach((b) =>
-            b.addEventListener('click', () => modal.hide())
-        );
-
-        wrapper.addEventListener('hidden.bs.modal', () => {
-            wrapper.remove();
-            resolve(payload);
-        });
-
-        modal.show();
-        setTimeout(() => textarea.focus(), 300);
+    wrapper.querySelector('[data-acao="confirmar"]').addEventListener("click", () => {
+      const motivo = textarea.value.trim();
+      if (obrigatorio && !motivo) {
+        erroEl.textContent = "Informe o motivo da recusa.";
+        erroEl.classList.remove("d-none");
+        textarea.classList.add("is-invalid");
+        return;
+      }
+      payload = { confirmado: true, motivo };
+      modal.hide();
     });
+
+    wrapper
+      .querySelectorAll('[data-acao="cancelar"]')
+      .forEach((b) => b.addEventListener("click", () => modal.hide()));
+
+    wrapper.addEventListener("hidden.bs.modal", () => {
+      wrapper.remove();
+      resolve(payload);
+    });
+
+    modal.show();
+    setTimeout(() => textarea.focus(), 300);
+  });
 }
