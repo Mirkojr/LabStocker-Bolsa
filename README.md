@@ -1,11 +1,10 @@
-# LabStocker — README
+# LabStocker
 
-<aside>
-🧪
-
-**LabStocker** — sistema web para gestão de reagentes químicos, estoque, resíduos e transferências entre laboratórios. Projeto acadêmico (bolsa) construído com HTML, CSS e JavaScript vanilla no front-end e **Supabase** (PostgreSQL + Auth) no back-end.
-
-</aside>
+> **LabStocker** — sistema web para gestão de reagentes químicos, estoque, resíduos e
+> transferências entre laboratórios. Projeto da Bolsa de Inovação Tecnológica da UFC.
+>
+> Front-end em HTML, CSS e JavaScript vanilla (ES modules), empacotado com **Vite**.
+> Back-end em **Supabase** (PostgreSQL + Auth + RLS + Storage).
 
 ## ✨ Funcionalidades
 
@@ -13,121 +12,172 @@
 - **Gestão de estoque** de reagentes por laboratório
 - **Catálogo global de reagentes** (com composição química)
 - **Controle de resíduos** com classificação de perigo
-- **Transferências** de itens entre laboratórios (solicitar/responder)
-- **Relatórios e histórico** de movimentações
+- **Transferências** de itens entre laboratórios (solicitar / aprovar / recusar)
+- **Relatórios e histórico** de movimentações, com exportação em CSV
 - **Painel de administração**: usuários, permissões, laboratórios e catálogo
-- **feedback / suporte** ao usuário
+- **Autorizações de projeto**: geração de minuta de ofício em `.docx` e upload do PDF assinado
+- **Feedback / suporte** ao usuário
 
 ## 🛠️ Tecnologias
 
-| Camada | Tecnologia |
-| --- | --- |
-| Front-end | HTML, CSS, JavaScript (vanilla, ES modules) |
-| Back-end / BaaS | Supabase (PostgreSQL, Auth, RLS) |
-| Cliente do banco | @supabase/supabase-js |
+| Camada              | Tecnologia                                  |
+| ------------------- | ------------------------------------------- |
+| Front-end           | HTML, CSS, JavaScript (vanilla, ES modules) |
+| UI                  | Bootstrap 5 + Bootstrap Icons               |
+| Build / Dev server  | Vite                                        |
+| Qualidade de código | ESLint + Prettier                           |
+| Back-end / BaaS     | Supabase (PostgreSQL, Auth, RLS, Storage)   |
+| Cliente do banco    | `@supabase/supabase-js`                     |
+| Documentos          | docxtemplater + PizZip + FileSaver          |
+| Deploy              | GitHub Pages                                |
 
 ## 📁 Estrutura de pastas
 
-O projeto usa uma arquitetura **co-localizada**: cada página tem seu HTML e seu JS juntos na mesma pasta dentro de `src/pages/`, enquanto o código reutilizado por várias páginas fica centralizado em `src/shared/`.
-
-```
-labstocker/
-├─ docs/                    # Documentação do projeto
-└─ src/
-   ├─ .env                  # Variáveis de ambiente locais
-   ├─ .gitignore            # Arquivos ignorados pelo Git
-   ├─ index.html            # Página inicial / login
-   ├─ auth.js               # Autenticação da página de login
-   ├─ css/                  # Estilos
-   ├─ imagens/              # Assets (inclui favicon/)
-   ├─ modelos/              # Modelos/templates (ex.: ofício .docx)
-   ├─ database/             # Scripts/artefatos do banco
-   ├─ shared/               # Código compartilhado entre as páginas
-   │  ├─ config.js          # URL e chave (anon) do Supabase
-   │  ├─ supabaseClient.js  # Cliente Supabase compartilhado
-   │  ├─ sessionManager.js  # Sessão, contexto de laboratório/admin
-   │  ├─ authGuard.js       # Proteção de rotas (exige login)
-   │  ├─ services/          # Acesso ao banco (estoque, perfis, reagentes...)
-   │  └─ utils/             # Utilitários (toast, formatters)
-   └─ pages/                # Cada página com HTML + JS co-localizados
-      ├─ dashboard/         #   dashboard.html + dashboard.js
-      ├─ estoque/           #   estoque.html + estoque.js
-      ├─ reagentes/         #   reagentes.html + reagentes.js
-      ├─ residuos/          #   residuos.html + residuos.js
-      ├─ laboratorios/      #   laboratorios.html + laboratorios.js
-      ├─ solicitacoes/      #   solicitacoes.html + solicitacoes.js
-      ├─ historico/         #   historico.html + historico.js
-      ├─ relatorios/        #   relatorios.html + relatorios.js
-      ├─ suporte/           #   suporte.html + suporte.js
-      ├─ usuarios/          #   usuarios.html + usuarios.js
-      ├─ autorizacoes/      #   autorizacoes.html + autorizacoes.js
-      ├─ register/          #   register.html + register.js
-      └─ admin/             # Páginas de administração
-         ├─ admin-labs.html + admin-labs.js
-         ├─ admin-autorizacoes.html          (script inline)
-         ├─ admin-detalhes-projeto.html + adminDetalhes.js
-         └─ lab-cadastro.js
-```
+O projeto usa uma arquitetura **co-localizada**: cada página tem seu HTML e seu JS juntos
+na mesma pasta dentro de `src/pages/`, enquanto o código reutilizado por várias páginas
+fica centralizado em `src/shared/`.
 
 ## ✅ Pré-requisitos
 
-- Conta no Supabase (plano gratuito serve)
-- Node.js 18+ (recomendado, para servir o projeto com Vite, porém opcional)
+- **Node.js 20.19+** (obrigatório — o Vite 8 não roda em versões anteriores)
+- Conta no Supabase (o plano gratuito serve)
 - Um navegador moderno
+
+Verifique sua versão com `node -v`.
 
 ## 🚀 Como rodar
 
-### 1. Clonar o repositório
+### 1. Clonar e instalar
 
 ```bash
 git clone <url-do-repositorio>
 cd labstocker
+npm install
 ```
 
 ### 2. Configurar o Supabase
 
 1. Crie um projeto novo no painel do Supabase.
-2. No **SQL Editor**, rode o script de criação das tabelas e políticas de RLS (veja o documento de schema do projeto).
-3. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
+2. No **SQL Editor**, rode os scripts de `src/database/` nesta ordem:
 
+   | Ordem | Arquivo                            | O que faz                                  |
+   | ----- | ---------------------------------- | ------------------------------------------ |
+   | 1     | `schema.sql`                       | Cria as tabelas                            |
+   | 2     | `funcoes_auxiliares.sql`           | Funções `get_my_lab_id()` e `am_i_admin()` |
+   | 3     | `criar_perfil_trigger.sql`         | Cria o perfil automaticamente no cadastro  |
+   | 4     | `policies.sql`                     | Políticas de RLS                           |
+   | 5     | `storage_policies.sql`             | Políticas do bucket de documentos          |
+   | 6     | `funcao_aprovar_transferencia.sql` | RPC transacional de aprovação              |
 
-### 3. Rodar localmente
+3. Crie o bucket **privado** `documentos-projetos` em **Storage**.
+4. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
 
-**Opção A — com Vite (recomendado):**
+### 3. Criar o arquivo de variáveis de ambiente
+
+Copie o modelo e preencha com as credenciais do passo anterior:
 
 ```bash
-npm install
+cp src/.env.example src/.env
+```
+
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-anon-key-aqui
+```
+
+> ⚠️ **O arquivo precisa estar em `src/`, não na raiz** — é onde fica o `root` do Vite.
+>
+> - O `.env` é ignorado pelo Git e **nunca** deve ser commitado.
+> - Se criar o arquivo pelo Bloco de Notas do Windows, confirme que ele não virou
+>   `.env.txt` e que o encoding é UTF-8 ou ASCII (não UTF-16).
+> - Toda variável precisa começar com `VITE_`, senão o Vite não a expõe ao front-end.
+> - Depois de alterar o `.env`, **reinicie o servidor de desenvolvimento**.
+
+### 4. Rodar
+
+```bash
 npm run dev
 ```
 
-Acesse o endereço exibido no terminal (ex.: `http://localhost:5173`).
+Acesse o endereço exibido no terminal.
 
-**Opção B — servidor estático simples:**
+> ℹ️ **Não abra o `index.html` direto no navegador** e não use extensões como o
+> "Live Server" ou servidores estáticos simples (`npx serve`, `python3 -m http.server`).
+> O projeto depende do Vite para resolver as importações de pacotes npm e para
+> substituir as variáveis de ambiente. Sem ele, a aplicação não carrega.
 
-Como é HTML/CSS/JS puro, basta servir os arquivos com qualquer servidor estático (abrir o `index.html` direto pode quebrar os ES modules por causa do CORS):
+## 📜 Scripts disponíveis
 
-```bash
-npx serve .
-# ou
-python3 -m http.server 8000
-```
+| Comando                | O que faz                                                     |
+| ---------------------- | ------------------------------------------------------------- |
+| `npm run dev`          | Servidor de desenvolvimento com hot reload                    |
+| `npm run build`        | Gera o build de produção em `dist/`                           |
+| `npm run preview`      | Serve o `dist/` localmente — **teste aqui antes de abrir PR** |
+| `npm run lint`         | Verifica erros de código com ESLint                           |
+| `npm run lint:fix`     | Corrige automaticamente o que for possível                    |
+| `npm run format`       | Formata o código com Prettier                                 |
+| `npm run format:check` | Só verifica a formatação                                      |
 
-Ou use a extensão "Live Server" do VSCode.
+## 🧹 Qualidade de código
+
+O projeto usa **ESLint** (encontra erros de lógica e código morto) e **Prettier**
+(padroniza a formatação). No dia a dia você não precisa rodar nada na mão: instale as
+extensões recomendadas do VS Code e o editor cuida disso ao salvar.
+
+- `dbaeumer.vscode-eslint`
+- `esbenp.prettier-vscode`
 
 ## 👤 Criando o primeiro usuário admin
 
 1. Cadastre-se normalmente pela tela de registro do app.
-2. No Supabase, na tabela `perfil`, marque `is_admin = true` no seu usuário.
+2. No Supabase, na tabela **`perfis`**, marque `is_admin = true` no seu usuário.
 3. Vincule um `id_laboratorio` ao perfil, se necessário.
+
+## 🚢 Deploy
+
+O deploy é automático: todo push na branch `main` dispara o workflow
+`.github/workflows/static.yml`, que instala as dependências, roda `npm run build` e
+publica a pasta `dist/` no GitHub Pages.
+
+Para que o build do CI funcione, os secrets abaixo precisam estar cadastrados em
+**Settings → Secrets and variables → Actions**:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+> A `anon key` é pública por design — ela vai embutida no JavaScript do navegador.
+> A segurança dos dados depende inteiramente das políticas de **RLS** no Supabase.
 
 ## 🧩 Arquitetura (resumo)
 
-- As **páginas** ficam em `src/pages/<nome>/`, cada uma com seu próprio `HTML` + `JS` co-localizados (ex.: `pages/relatorios/relatorios.html` e `pages/relatorios/relatorios.js`).
-- O **código compartilhado** vive em `src/shared/`: `config.js`, `supabaseClient.js`, `sessionManager.js`, `authGuard.js`, além das pastas `services/` e `utils/`.
-- Toda comunicação com o banco passa pela camada de **services** (`src/shared/services`), que usa o `supabaseClient`.
-- `authGuard.js` e `sessionManager.js` (em `src/shared`) controlam acesso e sessão.
+- As **páginas** ficam em `src/pages/<nome>/`, cada uma com seu próprio HTML + JS
+  co-localizados (ex.: `pages/relatorios/relatorios.html` e `relatorios.js`).
+- O **código compartilhado** vive em `src/shared/`: `config.js`, `supabaseClient.js`,
+  `sessionManager.js`, `authGuard.js`, além das pastas `services/` e `utils/`.
+- Toda comunicação com o banco passa pela camada de **services**
+  (`src/shared/services/`), que usa o `supabaseClient`. Nenhuma página chama o Supabase
+  diretamente.
+- `authGuard.js` e `sessionManager.js` controlam acesso e sessão, incluindo o contexto de
+  laboratório assumido por um administrador.
 - A tela de **login** (`src/index.html` + `src/auth.js`) fica na raiz de `src/`.
-- A segurança dos dados é garantida por **RLS** no Supabase (cada usuário só acessa o que pode).
+- A **paginação** é centralizada em `src/shared/utils/paginacao.js`, com suporte a
+  paginação no servidor (`calcularRange` + `.range()` do Supabase) e no cliente
+  (`paginarLista`).
+- A segurança dos dados é garantida por **RLS** no Supabase: cada usuário só acessa o que
+  a política permite.
+
+## 🤝 Contribuindo
+
+Veja o [CONTRIBUTING.md](CONTRIBUTING.md) para o padrão de branches, commits e Pull
+Requests.
+
+Resumo rápido:
+
+1. Crie uma branch a partir da `main`: `feat/nome-da-feature` ou `fix/nome-do-bug`.
+2. Faça commits no padrão [Conventional Commits](https://www.conventionalcommits.org/)
+   (`feat:`, `fix:`, `chore:`, `docs:`, `style:`, `refactor:`).
+3. Rode `npm run lint` e `npm run build` antes de abrir o PR.
+4. Abra o Pull Request descrevendo **o que muda**, **por quê** e **como testar**.
 
 ## 📄 Licença
 
