@@ -22,7 +22,7 @@ const tituloPagina = document.querySelector("h2");
 let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
 let MODO_GLOBAL = false;
-let MAPA_LABORATORIOS = {};
+const MAPA_LABORATORIOS = {};
 
 // Estado da paginação da pré-visualização (apenas exibição; o CSV usa a lista completa)
 let listaPreview = [];
@@ -129,7 +129,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
     ]);
 
     // Processamento dos dados
-    let lista = [];
+    const lista = [];
 
     // 1. Compras/Entradas
     if (resMov.data) {
@@ -242,7 +242,7 @@ function desenharPaginaPreview() {
 
   itensPagina.forEach((item) => {
     const dataF = new Date(item.data).toLocaleDateString("pt-BR");
-    let colLab = MODO_GLOBAL
+    const colLab = MODO_GLOBAL
       ? `<td><span class="badge bg-light text-dark border">${item.laboratorio}</span></td>`
       : "";
 

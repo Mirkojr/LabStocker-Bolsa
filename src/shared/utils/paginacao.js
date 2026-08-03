@@ -127,7 +127,7 @@ export function renderPaginador(
   // Janela de no maximo 5 botoes numericos, centrada na pagina atual
   const MAX_BOTOES = 5;
   let inicio = Math.max(1, paginaSegura - Math.floor(MAX_BOTOES / 2));
-  let fim = Math.min(paginas, inicio + MAX_BOTOES - 1);
+  const fim = Math.min(paginas, inicio + MAX_BOTOES - 1);
   inicio = Math.max(1, fim - MAX_BOTOES + 1);
 
   if (inicio > 1) {

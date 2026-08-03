@@ -11,7 +11,5 @@ import { getSessao } from "./services/authService.js";
     // Se NAO houver sessao (usuario nao logado)
     alert("Voce precisa estar logado para acessar esta pagina.");
     window.location.href = "../../index.html";
-  } else {
-    console.log("Usuario autenticado:", session.user.email);
   }
 })();

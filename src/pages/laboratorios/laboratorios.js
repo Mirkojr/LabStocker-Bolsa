@@ -30,7 +30,6 @@ let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
 let LABS_CACHE = [];
 let ESTOQUE_ATUAL_CACHE = [];
-let LAB_ATUAL_NOME = "";
 
 async function init() {
   spinner.classList.remove("d-none");
@@ -39,6 +38,7 @@ async function init() {
     SOU_ADMIN = await checkIsAdmin();
     await fetchlaboratorios();
   } catch (e) {
+    console.error("Erro ao inicializar a pagina de laboratorios:", e);
     showToast("Falha na conexao com o banco.", "error");
   } finally {
     spinner.classList.add("d-none");
@@ -109,7 +109,6 @@ buscaLabInput.addEventListener("keyup", () => {
 });
 
 async function fetchestoqueExterno(labId, labNome) {
-  LAB_ATUAL_NOME = labNome;
   tituloLabSelecionado.innerHTML = `<i class="bi bi-building me-2"></i>estoque: ${labNome}`;
   listaestoqueExt.innerHTML =
     '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
@@ -123,6 +122,7 @@ async function fetchestoqueExterno(labId, labNome) {
     ESTOQUE_ATUAL_CACHE = data;
     renderestoqueExterno(ESTOQUE_ATUAL_CACHE);
   } catch (e) {
+    console.error("Erro ao carregar estoque externo:", e);
     showToast("Erro ao carregar estoque externo.", "error");
   }
 }
@@ -209,6 +209,7 @@ formSolicitacao.addEventListener("submit", async (e) => {
     modalSolicitar.hide();
     modalestoqueExt.hide();
   } catch (e) {
+    console.error("Erro ao criar solicitacao:", e);
     showToast("Erro ao processar pedido.", "error");
   }
 });

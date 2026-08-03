@@ -41,12 +41,10 @@ const controladoraInput = document.getElementById("reagente-controladora");
 let ID_PARA_EXCLUIR = null;
 
 // Estado de paginação e busca
-let paginaAtual = 1;
 let filtroAtual = "";
 
 async function fetchreagentes(filtroNome = "", pagina = 1) {
   filtroAtual = filtroNome;
-  paginaAtual = pagina;
 
   spinner.classList.remove("d-none");
   listareagentesEl.innerHTML = "";

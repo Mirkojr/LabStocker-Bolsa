@@ -64,6 +64,7 @@ async function loadUserName() {
       if (data) greetingElement.textContent = `Ola, ${data.nome}!`;
     }
   } catch (error) {
+    console.error("Erro ao carregar nome do usuario", error);
     greetingElement.textContent = "Bem-vindo(a)!";
   }
 }

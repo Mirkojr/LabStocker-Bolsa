@@ -1,8 +1,6 @@
 import { buscarIdPorSipac } from "../../shared/services/laboratoriosService.js";
 import { criarPerfilUsuario } from "../../shared/services/perfisService.js";
 
-console.log("register.js carregado");
-
 // --- LOGICA DE CADASTRO ---
 
 document.addEventListener("DOMContentLoaded", () => {

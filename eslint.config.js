@@ -23,5 +23,19 @@ export default [
       "no-var": "error",
     },
   },
-  prettier, 
+  {
+    files: ["src/pages/admin/**/*.js"],
+    languageOptions: {
+      globals: {
+        PizZip: "readonly",
+        PizZipUtils: "readonly",
+        saveAs: "readonly",
+        docxtemplater: "readonly",
+        bootstrap: "readonly",
+        Chart: "readonly",
+      },
+    },
+  },
+
+  prettier,
 ];

@@ -1,5 +1,4 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
-import { showToast } from "../../shared/utils/toast.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
 import { listarTransferenciasPorLaboratorio } from "../../shared/services/transferenciasService.js";
@@ -174,7 +173,7 @@ function renderHistorico(itens) {
     });
     const dataCompleta = `${dataFormatada} as ${horaFormatada}`;
 
-    let html = "";
+    let html;
 
     // TIPO 1: ENTRADA DE ESTOQUE (COMPRA)
     if (item.tipo_registro === "ENTRADA_ESTOQUE") {
@@ -283,7 +282,7 @@ inputBusca.addEventListener("keyup", () => {
   const termo = inputBusca.value.toLowerCase();
 
   const filtrados = HISTORICO_CACHE.filter((item) => {
-    let textoPesquisavel = "";
+    let textoPesquisavel;
 
     if (item.tipo_registro === "ENTRADA_ESTOQUE") {
       textoPesquisavel = item.item_nome.toLowerCase();
