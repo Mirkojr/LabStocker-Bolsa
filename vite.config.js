@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve, dirname, relative } from "node:path";
+import { env } from "node:process";
 import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 
@@ -20,14 +21,16 @@ function acharHtml(dir) {
 
 const entradas = Object.fromEntries(
   acharHtml(raiz).map((arquivo) => [
-    relative(raiz, arquivo).replace(/\.html$/, "").replace(/[\\/]/g, "-"),
+    relative(raiz, arquivo)
+      .replace(/\.html$/, "")
+      .replace(/[\\/]/g, "-"),
     arquivo,
   ])
 );
 
 export default defineConfig({
   root: "src",
-  base: "/LabStocker-Bolsa/",
+  base: env.GITHUB_ACTIONS ? "/LabStocker-Bolsa/" : "/",
   build: {
     outDir: "../dist",
     emptyOutDir: true,
