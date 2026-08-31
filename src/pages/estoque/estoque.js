@@ -9,7 +9,9 @@ import {
   salvarItemestoque,
 } from "../../shared/services/estoqueService.js";
 import { listarreagentesParaestoque } from "../../shared/services/reagentesService.js";
+import { registrarConsumo } from "../../shared/services/consumoService.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
+import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
 import {
   garantirContainerPaginador,
   paginarLista,
@@ -28,7 +30,7 @@ const modalEl = document.getElementById("modal-estoque");
 const modalestoque = new bootstrap.Modal(modalEl);
 
 // Elementos do Form
-const modalTitle = modalEl.querySelector(".modal-title");
+const modalTitle = modalEl.querySelector(".modal-title-lab");
 const modalSubmitBtn = formestoque.querySelector('button[type="submit"]');
 const editIdInput = document.getElementById("estoque-edit-id");
 const selectreagente = document.getElementById("estoque-reagente");
@@ -37,10 +39,32 @@ const unidadeInput = document.getElementById("estoque-unidade");
 const validadeInput = document.getElementById("estoque-validade");
 const observacoesInput = document.getElementById("estoque-observacoes");
 
+// Elementos do modal de consumo
+const modalConsumoEl = document.getElementById("modal-consumo");
+const modalConsumo = new bootstrap.Modal(modalConsumoEl);
+const formConsumo = document.getElementById("form-consumo");
+const consumoItemIdInput = document.getElementById("consumo-item-id");
+const consumoItemLabel = document.getElementById("consumo-item-label");
+const consumoQuantidadeInput = document.getElementById("consumo-quantidade");
+const consumoDisponivelEl = document.getElementById("consumo-disponivel");
+const consumoFinalidadeInput = document.getElementById("consumo-finalidade");
+
+// Steppers de quantidade (substituem as setinhas nativas do input number)
+const stepperEstoque = criarStepperQuantidade(quantidadeInput.closest(".qty-stepper"), {
+  passo: 1,
+  min: 0.01,
+  max: 1000000,
+});
+const stepperConsumo = criarStepperQuantidade(
+  consumoQuantidadeInput.closest(".qty-stepper"),
+  { passo: 1, min: 0.01, max: null } // max é definido dinamicamente ao abrir o modal
+);
+
 let ID_LAB_DO_USUARIO = null;
 let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
 let itensFiltrados = []; // resultado dos filtros/ordenacao; paginado no cliente
 let paginaAtualEstoque = 1;
+let consumoQuantidadeDisponivel = 0; // saldo do item atualmente aberto no modal de consumo
 
 // Container de paginacao (inserido logo abaixo da lista)
 const paginadorEstoqueEl = garantirContainerPaginador(listaestoqueEl, "paginador-estoque");
@@ -192,8 +216,16 @@ function renderestoque(itens) {
     const obs = escapeHtml(item.observacoes_operacionais || "");
     const obsTexto = obs || "Sem observações operacionais.";
 
+    // Item zerado: mostra badge "Esgotado" e desabilita o botão de consumir,
+    // sem esconder o item (mantém o histórico/rastreabilidade do frasco).
+    const esgotado = Number(item.quantidade) <= 0;
+    const badgeEsgotado = esgotado
+      ? '<span class="badge bg-dark badge-esgotado ms-2"><i class="bi bi-slash-circle"></i> Esgotado</span>'
+      : "";
+    const borderFinal = esgotado ? "border-start border-secondary border-4" : borderClass;
+
     const div = document.createElement("div");
-    div.className = `list-group-item mb-3 shadow-sm rounded border-0 ${borderClass}`;
+    div.className = `list-group-item mb-3 shadow-sm rounded border-0 ${borderFinal}`;
     div.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
@@ -201,7 +233,7 @@ function renderestoque(itens) {
                         <i class="bi bi-droplet-half fs-4"></i>
                     </div>
                     <div>
-                        <h5 class="mb-1 fw-bold text-dark">${nome}</h5>
+                        <h5 class="mb-1 fw-bold text-dark">${nome}${badgeEsgotado}</h5>
                         <div class="mb-1">
                             <span class="text-primary fw-bold fs-5">${formatarQuantidade(item.quantidade)}</span>
                             <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
@@ -215,6 +247,14 @@ function renderestoque(itens) {
                 <div class="text-end">
                     <div class="mb-2">${validadeHTML}</div>
                     <div>
+                        <button class="btn btn-sm btn-primary btn-consumir-estoque me-1 rounded-pill px-3"
+                            data-id="${escapeHtml(item.id)}"
+                            data-reagente="${nome}"
+                            data-quantidade="${escapeHtml(item.quantidade)}"
+                            data-unidade="${escapeHtml(item.unidade_medida)}"
+                            ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
+                            <i class="bi bi-flask"></i> <span class="d-none d-md-inline">Consumir</span>
+                        </button>
                         <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente-id="${escapeHtml(item.id_reagente)}"
@@ -330,8 +370,9 @@ function handleEditClickestoque(button) {
   unidadeInput.value = unidade;
   validadeInput.value = validade;
   observacoesInput.value = observacoes;
+  stepperEstoque?.atualizarEstadoBotoes();
   modalTitle.textContent = "Editar Item";
-  modalSubmitBtn.textContent = "Salvar Alterações";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar Alterações';
   modalestoque.show();
 }
 async function handleDeleteClickestoque(button) {
@@ -360,9 +401,88 @@ function resetModalestoque() {
   formestoque.reset();
   editIdInput.value = "";
   modalTitle.textContent = "Adicionar Item ao estoque";
-  modalSubmitBtn.textContent = "Salvar no estoque";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
   selectreagente.value = "";
   unidadeInput.value = "";
+  stepperEstoque?.atualizarEstadoBotoes();
+}
+
+// ===============================================
+// CONSUMO DE REAGENTES
+// ===============================================
+
+// Abre o modal de consumo pré-preenchido com os dados do item clicado.
+function handleConsumirClick(button) {
+  const { id, reagente, quantidade, unidade } = button.dataset;
+  formConsumo.reset();
+  consumoItemIdInput.value = id;
+  consumoItemLabel.textContent = reagente;
+  consumoDisponivelEl.textContent = `Disponível: ${formatarQuantidade(quantidade)} ${unidade}`;
+  consumoQuantidadeDisponivel = parseFloat(quantidade) || 0;
+  stepperConsumo?.setLimites(0.01, consumoQuantidadeDisponivel);
+  modalConsumo.show();
+}
+
+// Envia o consumo (RPC atômica: debita estoque + grava quem/quanto/quando)
+// e, em seguida, pergunta se o usuário quer cadastrar o resíduo gerado.
+async function handleFormSubmitConsumo(evento) {
+  evento.preventDefault();
+
+  const idItem = consumoItemIdInput.value;
+  const quantidade = parseFloat(consumoQuantidadeInput.value);
+  const finalidade = consumoFinalidadeInput.value.trim() || null;
+
+  if (!(quantidade > 0)) {
+    showToast("Informe uma quantidade válida.", "error");
+    return;
+  }
+  if (quantidade > consumoQuantidadeDisponivel) {
+    showToast(
+      `Quantidade maior que o disponível (${formatarQuantidade(consumoQuantidadeDisponivel)}).`,
+      "error"
+    );
+    return;
+  }
+
+  try {
+    const { data: consumo, error } = await registrarConsumo(idItem, quantidade, finalidade);
+    if (error) throw error;
+
+    modalConsumo.hide();
+    showToast("Consumo registrado com sucesso!", "success");
+    fetchestoque(ID_LAB_DO_USUARIO); // recarrega o estoque com o saldo atualizado
+
+    const desejaResiduo = await confirmar({
+      titulo: "Registrar resíduo?",
+      mensagem: "Deseja cadastrar o resíduo gerado por esse consumo agora?",
+      textoConfirmar: "Sim, cadastrar",
+      textoCancelar: "Agora não",
+      tipo: "success",
+      icone: "bi-recycle",
+    });
+
+    if (desejaResiduo) {
+      const params = new URLSearchParams({
+        consumo_id: consumo.id,
+        reagente: consumo.reagente?.nome || consumoItemLabel.textContent,
+        quantidade: consumo.quantidade,
+        unidade: consumo.unidade_medida,
+      });
+      window.location.href = `../residuos/residuos.html?${params.toString()}`;
+    }
+  } catch (error) {
+    console.error("Erro ao registrar consumo:", error.message);
+    showToast("Falha ao registrar consumo: " + error.message, "error");
+  }
+}
+
+function resetModalConsumo() {
+  formConsumo.reset();
+  consumoItemIdInput.value = "";
+  consumoItemLabel.textContent = "—";
+  consumoDisponivelEl.textContent = "";
+  consumoQuantidadeDisponivel = 0;
+  stepperConsumo?.setLimites(0.01, null);
 }
 
 // --- Inicialização ---
@@ -380,6 +500,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 formestoque.addEventListener("submit", handleFormSubmitestoque);
+formConsumo.addEventListener("submit", handleFormSubmitConsumo);
 
 // Busca, filtros e ordenação operam sobre o cache (sem novas consultas ao banco)
 inputBusca.addEventListener("input", aplicarFiltrosERenderizar);
@@ -390,8 +511,11 @@ ordenarSelect.addEventListener("change", aplicarFiltrosERenderizar);
 listaestoqueEl.addEventListener("click", (e) => {
   const btnEdit = e.target.closest(".btn-edit-estoque");
   const btnDelete = e.target.closest(".btn-delete-estoque");
+  const btnConsumir = e.target.closest(".btn-consumir-estoque");
   if (btnEdit) handleEditClickestoque(btnEdit);
   if (btnDelete) handleDeleteClickestoque(btnDelete);
+  if (btnConsumir && !btnConsumir.disabled) handleConsumirClick(btnConsumir);
 });
 
 modalEl.addEventListener("hidden.bs.modal", resetModalestoque);
+modalConsumoEl.addEventListener("hidden.bs.modal", resetModalConsumo);

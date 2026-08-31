@@ -72,52 +72,99 @@
         </div>
     </div>
 
+    <!-- MODAL: Adicionar/editar item de estoque -->
     <div class="modal fade" id="modal-estoque" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-primary">Adicionar Item ao estoque</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-lab">
+                <div class="modal-header modal-header-lab bg-primary text-white">
+                    <div class="modal-header-icon"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <h5 class="modal-title-lab mb-0">Adicionar Item ao estoque</h5>
+                        <p class="modal-subtitle-lab">Cadastre um novo frasco no laboratório</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
                 <form id="form-estoque">
                     <input type="hidden" id="estoque-edit-id">
                     
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-lab">
                         <div class="mb-3">
-                            <label for="estoque-reagente" class="form-label fw-bold small text-secondary">reagente</label>
-                            <select class="form-select" id="estoque-reagente" required>
+                            <label for="estoque-reagente" class="form-label-lab"><i class="bi bi-droplet-half"></i> Reagente</label>
+                            <select class="form-select rounded-pill border-0 shadow-sm px-3" id="estoque-reagente" required>
                                 <option value="" disabled selected>Carregando catálogo...</option>
                             </select>
                         </div>
 
                         <div class="row g-3">
-                            <div class="col-6 mb-3">
-                                <label for="estoque-quantidade" class="form-label fw-bold small text-secondary">Quantidade</label>
-                                <input type="number" step="0.01" min="0.01" max="1000000" class="form-control" id="estoque-quantidade" required>
+                            <div class="col-6">
+                                <label for="estoque-quantidade" class="form-label-lab"><i class="bi bi-123"></i> Quantidade</label>
+                                <div class="qty-stepper">
+                                    <button type="button" class="qty-btn qty-btn-minus" aria-label="Diminuir quantidade"><i class="bi bi-dash-lg"></i></button>
+                                    <input type="number" step="0.01" min="0.01" max="1000000" class="qty-input" id="estoque-quantidade" required>
+                                    <button type="button" class="qty-btn qty-btn-plus" aria-label="Aumentar quantidade"><i class="bi bi-plus-lg"></i></button>
+                                </div>
                             </div>
-                            <div class="col-6 mb-3">
-                                <label for="estoque-unidade" class="form-label fw-bold small text-secondary">Unidade</label>
-                                <select class="form-select" id="estoque-unidade" required>
+                            <div class="col-6">
+                                <label for="estoque-unidade" class="form-label-lab"><i class="bi bi-rulers"></i> Unidade</label>
+                                <select class="form-select rounded-pill border-0 shadow-sm px-3" id="estoque-unidade" required>
                                     <option value="" disabled selected>Selecione...</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="estoque-validade" class="form-label fw-bold small text-secondary">Data de Validade</label>
-                            <input type="date" class="form-control" id="estoque-validade">
+                        <div class="mb-3 mt-3">
+                            <label for="estoque-validade" class="form-label-lab"><i class="bi bi-calendar-event"></i> Data de Validade</label>
+                            <input type="date" class="form-control rounded-pill border-0 shadow-sm px-3" id="estoque-validade">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="estoque-observacoes" class="form-label fw-bold small text-secondary">Observações</label>
-                            <textarea class="form-control" id="estoque-observacoes" rows="2" maxlength="500"
+                        <div class="mb-1">
+                            <label for="estoque-observacoes" class="form-label-lab"><i class="bi bi-chat-left-text"></i> Observações</label>
+                            <textarea class="form-control rounded-4 border-0 shadow-sm px-3 py-2" id="estoque-observacoes" rows="2" maxlength="500"
                             placeholder="Localização na prateleira, estado do frasco..."></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">Salvar</button>
+                    <div class="modal-footer modal-footer-lab">
+                        <button type="button" class="btn btn-cancel-lab" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-confirm-lab"><i class="bi bi-check-lg"></i> Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Registrar consumo -->
+    <div class="modal fade" id="modal-consumo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-lab">
+                <div class="modal-header modal-header-lab bg-primary text-white">
+                    <div class="modal-header-icon"><i class="bi bi-flask"></i></div>
+                    <div>
+                        <h5 class="modal-title-lab mb-0">Registrar consumo</h5>
+                        <p class="modal-subtitle-lab" id="consumo-item-label">—</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="form-consumo">
+                    <input type="hidden" id="consumo-item-id">
+                    <div class="modal-body modal-body-lab">
+                        <div class="mb-3">
+                            <label for="consumo-quantidade" class="form-label-lab"><i class="bi bi-123"></i> Quantidade consumida</label>
+                            <div class="qty-stepper">
+                                <button type="button" class="qty-btn qty-btn-minus" aria-label="Diminuir quantidade"><i class="bi bi-dash-lg"></i></button>
+                                <input type="number" step="0.01" min="0.01" class="qty-input" id="consumo-quantidade" required>
+                                <button type="button" class="qty-btn qty-btn-plus" aria-label="Aumentar quantidade"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                            <small class="qty-hint" id="consumo-disponivel"></small>
+                        </div>
+                        <div class="mb-1">
+                            <label for="consumo-finalidade" class="form-label-lab"><i class="bi bi-clipboard-check"></i> Finalidade (opcional)</label>
+                            <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="consumo-finalidade" maxlength="300" placeholder="Ex: Aula prática, Projeto X">
+                        </div>
+                    </div>
+                    <div class="modal-footer modal-footer-lab">
+                        <button type="button" class="btn btn-cancel-lab" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-confirm-lab"><i class="bi bi-flask"></i> Confirmar consumo</button>
                     </div>
                 </form>
             </div>

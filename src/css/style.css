@@ -268,3 +268,196 @@ body {
 .text-muted-light {
   color: rgba(255, 255, 255, 0.6) !important;
 }
+
+/* ===============================================
+   MODAIS PADRONIZADOS (estoque, consumo, resíduo)
+   =============================================== */
+.modal-content-lab {
+  border: none;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.modal-header-lab {
+  border: none;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modal-header-lab .modal-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.modal-header-lab .modal-title-lab {
+  font-weight: 700;
+  margin-bottom: 2px;
+  font-size: 1.1rem;
+}
+
+.modal-header-lab .modal-subtitle-lab {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.modal-body-lab {
+  padding: 1.75rem;
+  background: #f7f8fa;
+}
+
+.form-label-lab {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.form-label-lab i {
+  color: #adb5bd;
+  font-size: 0.9rem;
+}
+
+.modal-footer-lab {
+  border: none;
+  background: #f7f8fa;
+  padding: 0 1.75rem 1.75rem;
+  gap: 10px;
+}
+
+.btn-cancel-lab {
+  border-radius: 50px;
+  padding: 10px 22px;
+  font-weight: 600;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+.btn-cancel-lab:hover {
+  background: #f1f3f5;
+  color: #495057;
+}
+
+.btn-confirm-lab {
+  border-radius: 50px;
+  padding: 10px 26px;
+  font-weight: 700;
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-confirm-lab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* ===============================================
+   STEPPER DE QUANTIDADE
+   Substitui as setinhas nativas (minúsculas) do input number
+   por botões grandes de +/-, mais fáceis de usar no celular.
+   =============================================== */
+.qty-stepper {
+  display: flex;
+  align-items: stretch;
+  border-radius: 50px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+.qty-stepper:focus-within {
+  border-color: #ffd700;
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.25);
+}
+
+.qty-stepper .qty-btn {
+  flex-shrink: 0;
+  width: 46px;
+  border: none;
+  background: #f0f2f5;
+  color: #132e4b;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.qty-stepper .qty-btn:first-child {
+  border-radius: 50px 0 0 50px;
+}
+.qty-stepper .qty-btn:last-child {
+  border-radius: 0 50px 50px 0;
+}
+
+.qty-stepper .qty-btn:hover:not(:disabled) {
+  background: #ffd700;
+}
+.qty-stepper .qty-btn:active:not(:disabled) {
+  background: #ffc107;
+}
+.qty-stepper .qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qty-stepper .qty-input {
+  border: none;
+  outline: none;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #132e4b;
+  width: 100%;
+  min-width: 0;
+  -moz-appearance: textfield;
+  background: transparent;
+  padding: 8px 4px;
+}
+
+.qty-stepper .qty-input::-webkit-outer-spin-button,
+.qty-stepper .qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-hint {
+  font-size: 0.78rem;
+  color: #868e96;
+  margin-top: 6px;
+  display: block;
+}
+
+/* Badge "Esgotado" no estoque */
+.badge-esgotado {
+  font-size: 0.75em;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}

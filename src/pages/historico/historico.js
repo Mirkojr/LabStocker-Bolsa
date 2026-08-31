@@ -4,6 +4,7 @@ import { escapeHtml } from "../../shared/utils/dom.js";
 import { listarTransferenciasPorLaboratorio } from "../../shared/services/transferenciasService.js";
 import { listarResiduosDescartadosPorLaboratorio } from "../../shared/services/residuosService.js";
 import { listarEntradasPorLaboratorio } from "../../shared/services/movimentacoesService.js";
+import { listarConsumosPorLaboratorio } from "../../shared/services/consumoService.js"; // Import novo adicionado
 import {
   garantirContainerPaginador,
   paginarLista,
@@ -30,6 +31,7 @@ const STATUS_TRANSFER = {
   recusado: { label: "Recusado", badge: "bg-danger" },
   pendente: { label: "Pendente", badge: "bg-warning text-dark" },
 };
+
 function resolverStatusTransfer(status) {
   const chave = String(status || "").toLowerCase();
   return STATUS_TRANSFER[chave] || { label: status || "Pendente", badge: "bg-secondary" };
@@ -62,15 +64,17 @@ async function fetchHistorico() {
   if (paginadorHistEl) paginadorHistEl.innerHTML = "";
 
   try {
-    const [resTransf, resresiduos, resMov] = await Promise.all([
+    const [resTransf, resresiduos, resMov, resConsumos] = await Promise.all([
       listarTransferenciasPorLaboratorio(MEU_LAB_ID),
       listarResiduosDescartadosPorLaboratorio(MEU_LAB_ID),
       listarEntradasPorLaboratorio(MEU_LAB_ID),
+      listarConsumosPorLaboratorio(MEU_LAB_ID), // Nova promessa para consumos
     ]);
 
     if (resTransf.error) throw resTransf.error;
     if (resresiduos.error) throw resresiduos.error;
     if (resMov.error) throw resMov.error;
+    if (resConsumos.error) throw resConsumos.error; // Tratamento de erro pro novo dado
 
     const listaTransf = resTransf.data.map((item) => ({
       ...item,
@@ -90,7 +94,17 @@ async function fetchHistorico() {
       data_ordenacao: item.data_movimentacao,
     }));
 
-    const listaCompleta = [...listaTransf, ...listaresiduos, ...listaMov];
+    const listaConsumos = resConsumos.data.map((item) => ({
+      ...item,
+      tipo_registro: "CONSUMO",
+      data_ordenacao: item.data_consumo,
+      nome_usuario: item.perfis
+        ? `${item.perfis.nome} ${item.perfis.sobrenome}`
+        : "Usuário removido",
+    }));
+
+    // Mesclando as 4 listas
+    const listaCompleta = [...listaTransf, ...listaresiduos, ...listaMov, ...listaConsumos];
     listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
     HISTORICO_CACHE = listaCompleta;
@@ -221,7 +235,34 @@ function renderHistorico(itens) {
                     </div>
                 </div>`;
     }
-    // TIPO 3: TRANSFERENCIA (TROCA)
+    // TIPO 3: CONSUMO (USO INTERNO)
+    else if (item.tipo_registro === "CONSUMO") {
+      const nomeReagente = item.reagente?.nome || "Reagente desconhecido";
+
+      html = `
+                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-25 rounded-circle p-3 me-3">
+                            <i class="bi bi-flask-fill text-info fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="mb-0 fw-bold text-white">${nomeReagente}</h6>
+                                <span class="badge bg-info text-dark text-uppercase" style="font-size: 0.65rem;">Consumo</span>
+                            </div>
+                            <p class="mb-1 small text-muted-light">
+                                Consumido por: <strong>${item.nome_usuario}</strong><br>
+                                <span class="fst-italic">Motivo: ${item.finalidade || "Não informado"}</span>
+                            </p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-white-50">Qtd: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
+                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+    }
+    // TIPO 4: TRANSFERENCIA (TROCA)
     else {
       const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID);
       let cor, icone, textoAcao;
@@ -288,12 +329,18 @@ inputBusca.addEventListener("keyup", () => {
       textoPesquisavel = item.item_nome.toLowerCase();
     } else if (item.tipo_registro === "RESIDUO") {
       textoPesquisavel = (item.descricao + (item.tipo_perigo || "")).toLowerCase();
+    } else if (item.tipo_registro === "CONSUMO") {
+      const nomereagente = item.reagente?.nome || "";
+      const nomeUsuario = item.nome_usuario || "";
+      const finalidade = item.finalidade || "";
+      textoPesquisavel = (nomereagente + nomeUsuario + finalidade).toLowerCase();
     } else {
       const nomereagente = item.estoquelab?.reagente?.nome || "";
       const nomeOrigem = item.LabOrigem?.nome_laboratorio || "";
       const nomeDestino = item.LabDestino?.nome_laboratorio || "";
       textoPesquisavel = (nomereagente + nomeOrigem + nomeDestino).toLowerCase();
     }
+
     return textoPesquisavel.includes(termo);
   });
 
