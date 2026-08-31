@@ -2,11 +2,13 @@ import { getCurrentLabId } from "../../shared/sessionManager.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
+import { UNIDADES } from "../../shared/constants.js";
 import {
   listarResiduosPorLaboratorio,
   salvarResiduo,
   atualizarStatusResiduo,
 } from "../../shared/services/residuosService.js";
+import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
 import {
   garantirContainerPaginador,
   renderPaginador,
@@ -24,26 +26,50 @@ const descInput = document.getElementById("res-descricao");
 const tipoInput = document.getElementById("res-tipo");
 const qtdInput = document.getElementById("res-qtd");
 const unidadeInput = document.getElementById("res-unidade");
-const modalTitle = modalEl.querySelector(".modal-title");
+const modalTitle = modalEl.querySelector(".modal-title-lab");
 const modalSubmitBtn = formresiduo.querySelector('button[type="submit"]');
 const btnNovoresiduo = document.querySelector('[data-bs-target="#modal-residuo"]');
 
+// Stepper de quantidade (substitui as setinhas nativas do input number)
+const stepperResiduo = criarStepperQuantidade(qtdInput.closest(".qty-stepper"), {
+  passo: 1,
+  min: 0.01,
+  max: null,
+});
+
 let MEU_LAB_ID = null;
+
+// Quando o usuário vem da tela de estoque logo após um consumo, a URL traz
+// ?consumo_id=...&reagente=...&quantidade=...&unidade=... Isso permite
+// vincular o resíduo ao consumo de origem (rastreabilidade).
+const paramsUrl = new URLSearchParams(window.location.search);
+const consumoIdPreenchido = paramsUrl.get("consumo_id");
 
 // Estado e container de paginação
 let paginaAtualResiduos = 1;
 const paginadorResiduosEl = garantirContainerPaginador(listaresiduos, "paginador-residuos");
+
+// Preenche o <select> de unidades a partir da fonte única (constants.js)
+function popularUnidades() {
+  if (!unidadeInput) return;
+  unidadeInput.innerHTML =
+    '<option value="" disabled selected>Selecione...</option>' +
+    UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join("");
+}
 
 // ===============================================
 // LOGICA DE INICIALIZACAO
 // ===============================================
 
 async function init() {
+  popularUnidades();
+
   try {
     MEU_LAB_ID = await getCurrentLabId();
 
     if (MEU_LAB_ID) {
-      fetchresiduos();
+      await fetchresiduos();
+      abrirModalViaConsumoSeNecessario();
     } else {
       mostrarVazio(listaresiduos, {
         icone: "bi-exclamation-triangle",
@@ -58,6 +84,23 @@ async function init() {
       onTentarNovamente: init,
     });
   }
+}
+
+// Se veio de um consumo (via query string), abre o modal já pré-preenchido
+// com reagente/quantidade/unidade daquele consumo.
+function abrirModalViaConsumoSeNecessario() {
+  if (!consumoIdPreenchido) return;
+
+  formresiduo.reset();
+  editIdInput.value = "";
+  descInput.value = `Resíduo de ${paramsUrl.get("reagente") || ""}`.trim();
+  qtdInput.value = paramsUrl.get("quantidade") || "";
+  unidadeInput.value = paramsUrl.get("unidade") || "";
+  stepperResiduo?.atualizarEstadoBotoes();
+
+  modalTitle.textContent = "Registrar Resíduo do Consumo";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Registrar';
+  modalresiduo.show();
 }
 
 async function fetchresiduos(pagina = 1) {
@@ -108,6 +151,11 @@ function renderresiduos(residuos) {
     const statusClass = isAberto ? "bg-warning text-dark" : "bg-success text-white";
     const dataF = new Date(res.data_criacao).toLocaleDateString("pt-BR");
 
+    // Badge extra indicando que o resíduo veio de um consumo rastreado
+    const badgeConsumo = res.id_consumo
+      ? '<span class="badge bg-info text-dark rounded-pill px-2 ms-1"><i class="bi bi-link-45deg"></i> Vinculado a consumo</span>'
+      : "";
+
     const col = document.createElement("div");
     col.className = "col-md-6 col-lg-4";
     col.innerHTML = `
@@ -118,10 +166,11 @@ function renderresiduos(residuos) {
                         <small class="text-muted-light">${dataF}</small>
                     </div>
                     <h5 class="fw-bold text-white mb-2">${res.descricao}</h5>
-                    <p class="small text-muted-light mb-3">
+                    <p class="small text-muted-light mb-2">
                         <i class="bi bi-shield-exclamation me-1"></i> ${res.tipo_perigo} | 
                         <strong>${res.quantidade} ${res.unidade_medida}</strong>
                     </p>
+                    ${badgeConsumo ? `<p class="mb-3">${badgeConsumo}</p>` : '<div class="mb-3"></div>'}
                     
                     <div class="d-flex gap-2 border-top border-white border-opacity-10 pt-3">
                         ${
@@ -161,9 +210,10 @@ function handleEditClick(btn) {
   tipoInput.value = d.tipo;
   qtdInput.value = d.qtd;
   unidadeInput.value = d.unidade;
+  stepperResiduo?.atualizarEstadoBotoes();
 
   modalTitle.textContent = "Editar Registro de Residuo";
-  modalSubmitBtn.textContent = "Atualizar Registro";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Atualizar registro';
   modalresiduo.show();
 }
 
@@ -199,7 +249,7 @@ async function handleFormSubmit(e) {
     return;
   }
   if (!unidade) {
-    showToast("Informe a unidade de medida.", "error");
+    showToast("Selecione a unidade de medida.", "error");
     return;
   }
 
@@ -210,6 +260,9 @@ async function handleFormSubmit(e) {
     tipo_perigo: tipo,
     quantidade,
     unidade_medida: unidade,
+    // Vincula o resíduo ao consumo de origem, quando aplicável.
+    // Em edições (id preenchido) ou registros manuais, fica null.
+    id_consumo: !id && consumoIdPreenchido ? consumoIdPreenchido : null,
   };
 
   try {
@@ -267,6 +320,14 @@ async function atualizarStatus(id, novoStatus) {
   }
 }
 
+function resetModalResiduo() {
+  formresiduo.reset();
+  editIdInput.value = "";
+  modalTitle.textContent = "Registrar Novo Resíduo";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar registro';
+  stepperResiduo?.atualizarEstadoBotoes();
+}
+
 // ===============================================
 // EVENTOS E INICIALIZACAO
 // ===============================================
@@ -278,8 +339,8 @@ if (btnNovoresiduo) {
   btnNovoresiduo.addEventListener("click", () => {
     formresiduo.reset();
     editIdInput.value = "";
-    modalTitle.textContent = "Registrar Novo Residuo";
-    modalSubmitBtn.textContent = "Registrar";
+    modalTitle.textContent = "Registrar Novo Resíduo";
+    modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar registro';
   });
 }
 
@@ -297,3 +358,5 @@ listaresiduos.addEventListener("click", (e) => {
     atualizarStatus(btnDescartar.dataset.id, "Descartado");
   }
 });
+
+modalEl.addEventListener("hidden.bs.modal", resetModalResiduo);

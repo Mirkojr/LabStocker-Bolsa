@@ -65,25 +65,30 @@
         </div>
     </div>
 
+    <!-- MODAL: Registrar/editar resíduo -->
     <div class="modal fade" id="modal-residuo" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
-                <div class="modal-header bg-danger text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold">Registrar Novo Resíduo</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content modal-content-lab">
+                <div class="modal-header modal-header-lab bg-danger text-white">
+                    <div class="modal-header-icon"><i class="bi bi-recycle"></i></div>
+                    <div>
+                        <h5 class="modal-title-lab mb-0">Registrar Novo Resíduo</h5>
+                        <p class="modal-subtitle-lab">Controle de descarte e destinação</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
                 <form id="form-residuo">
                     <input type="hidden" id="edit-residuo-id">
                     
-                    <div class="modal-body p-4 bg-light">
+                    <div class="modal-body modal-body-lab">
                         <div class="mb-3">
-                            <label for="res-descricao" class="form-label fw-bold small text-secondary">Descrição do Material</label>
+                            <label for="res-descricao" class="form-label-lab"><i class="bi bi-card-text"></i> Descrição do Material</label>
                             <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-descricao" placeholder="Ex: Mistura de Solventes Orgânicos" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="res-tipo" class="form-label fw-bold small text-secondary">Tipo de Perigo Principal</label>
+                            <label for="res-tipo" class="form-label-lab"><i class="bi bi-shield-exclamation"></i> Tipo de Perigo Principal</label>
                             <select class="form-select rounded-pill border-0 shadow-sm px-3" id="res-tipo" required>
                                 <option value="" disabled selected>Selecione a categoria...</option>
                                 <option value="Inflamavel">Inflamável</option>
@@ -96,21 +101,25 @@
 
                         <div class="row g-3">
                             <div class="col-6">
-                                <label for="res-qtd" class="form-label fw-bold small text-secondary">Quantidade</label>
-                                <input type="number" step="0.01" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-qtd" required>
+                                <label for="res-qtd" class="form-label-lab"><i class="bi bi-123"></i> Quantidade</label>
+                                <div class="qty-stepper">
+                                    <button type="button" class="qty-btn qty-btn-minus" aria-label="Diminuir quantidade"><i class="bi bi-dash-lg"></i></button>
+                                    <input type="number" step="0.01" min="0.01" class="qty-input" id="res-qtd" required>
+                                    <button type="button" class="qty-btn qty-btn-plus" aria-label="Aumentar quantidade"><i class="bi bi-plus-lg"></i></button>
+                                </div>
                             </div>
                             <div class="col-6">
-                                <label for="res-unidade" class="form-label fw-bold small text-secondary">Unidade</label>
-                                <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-unidade" placeholder="Ex: L, mL, Kg" required>
+                                <label for="res-unidade" class="form-label-lab"><i class="bi bi-rulers"></i> Unidade</label>
+                                <select class="form-select rounded-pill border-0 shadow-sm px-3" id="res-unidade" required>
+                                    <option value="" disabled selected>Selecione...</option>
+                                </select>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="modal-footer border-0 bg-light pt-0 pb-4 px-4">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow">
-                            SALVAR REGISTRO
-                        </button>
+                    <div class="modal-footer modal-footer-lab">
+                        <button type="button" class="btn btn-cancel-lab" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger btn-confirm-lab"><i class="bi bi-check-lg"></i> Salvar registro</button>
                     </div>
                 </form>
             </div>
