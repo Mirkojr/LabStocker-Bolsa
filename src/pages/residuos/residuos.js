@@ -36,6 +36,7 @@ const unidadeInput = document.getElementById("res-unidade");
 const modalTitle = modalEl.querySelector(".modal-title-lab");
 const modalSubmitBtn = formresiduo.querySelector('button[type="submit"]');
 const btnNovoresiduo = document.querySelector('[data-bs-target="#modal-residuo"]');
+const filtrosPerigoEl = document.getElementById("filtros-perigo");
 
 // Stepper de quantidade (substitui as setinhas nativas do input number)
 const stepperResiduo = criarStepperQuantidade(qtdInput.closest(".qty-stepper"), {
@@ -57,6 +58,7 @@ let consumoIdPendente = paramsUrl.get("consumo_id");
 
 // Estado e container de paginação
 let paginaAtualResiduos = 1;
+let filtroTipoPerigo = ""; // "" = todos; senão, valor de tipo_perigo (ex.: "Inflamavel")
 const paginadorResiduosEl = garantirContainerPaginador(listaresiduos, "paginador-residuos");
 
 // Preenche o <select> de unidades a partir da fonte única (constants.js)
@@ -138,6 +140,7 @@ async function fetchresiduos(pagina = 1) {
     const { data, error, count } = await listarResiduosPorLaboratorio(MEU_LAB_ID, {
       pagina,
       tamanho: TAMANHO_PAGINA_PADRAO,
+      tipoPerigo: filtroTipoPerigo || null,
     });
     if (error) throw error;
     renderresiduos(data);
@@ -160,6 +163,14 @@ async function fetchresiduos(pagina = 1) {
  * Renderiza os cards de residuos seguindo o padrao Dark Glass
  */
 function renderresiduos(residuos) {
+  if (residuos.length === 0 && filtroTipoPerigo) {
+    mostrarVazio(listaresiduos, {
+      icone: "bi-funnel",
+      titulo: "Nenhum resíduo deste tipo",
+      mensagem: `Não há resíduos do tipo ${formatarTipoPerigo(filtroTipoPerigo)} neste laboratório.`,
+    });
+    return;
+  }
   if (residuos.length === 0) {
     mostrarVazio(listaresiduos, {
       icone: "bi-recycle",
@@ -224,6 +235,16 @@ function renderresiduos(residuos) {
     aplicarPermissoes(col, ACOES_LAB);
     listaresiduos.appendChild(col);
   });
+}
+
+// Filtro por tipo de perigo: consulta o banco de novo (a lista é paginada no
+// servidor, então filtrar só a página atual esconderia registros).
+function selecionarFiltroPerigo(btn) {
+  filtroTipoPerigo = btn.dataset.tipo;
+  filtrosPerigoEl.querySelectorAll(".filter-badge").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b === btn));
+  });
+  if (MEU_LAB_ID) fetchresiduos(1);
 }
 
 // ===============================================
@@ -386,3 +407,8 @@ listaresiduos.addEventListener("click", (e) => {
 });
 
 modalEl.addEventListener("hidden.bs.modal", resetModalResiduo);
+
+filtrosPerigoEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-badge");
+  if (btn) selecionarFiltroPerigo(btn);
+});

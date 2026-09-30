@@ -15,10 +15,14 @@
             background: rgba(255,255,255,0.05);
             color: rgba(255,255,255,0.7);
         }
-        .filter-badge:hover, .filter-badge.active {
+        .filter-badge:hover, .filter-badge[aria-pressed="true"] {
             background: var(--ufc-ouro);
             color: var(--tinta);
             border-color: var(--ufc-ouro);
+        }
+        .filter-badge:focus-visible {
+            outline: 2px solid var(--ufc-ouro);
+            outline-offset: 2px;
         }
     </style>
 </head>
@@ -48,11 +52,13 @@
 
         <div class="glass-panel-dark">
             
-            <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
-                <span class="badge rounded-pill px-3 py-2 filter-badge active">Todos</span>
-                <span class="badge rounded-pill px-3 py-2 filter-badge">Inflamável</span>
-                <span class="badge rounded-pill px-3 py-2 filter-badge">Corrosivo</span>
-                <span class="badge rounded-pill px-3 py-2 filter-badge">Biológico</span>
+            <div class="d-flex gap-2 mb-4 overflow-auto p-1 pb-2" id="filtros-perigo" role="group" aria-label="Filtrar por tipo de perigo">
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="" aria-pressed="true">Todos</button>
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="Inflamavel" aria-pressed="false">Inflamável</button>
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="Toxico" aria-pressed="false">Tóxico</button>
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="Corrosivo" aria-pressed="false">Corrosivo</button>
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="Biologico" aria-pressed="false">Biológico</button>
+                <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="Outro" aria-pressed="false">Outro</button>
             </div>
             
             <div id="spinner-res" class="text-center py-5 d-none">

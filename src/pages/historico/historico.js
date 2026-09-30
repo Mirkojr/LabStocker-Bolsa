@@ -319,7 +319,10 @@ inputBusca.addEventListener("keyup", () => {
     if (item.tipo_registro === "ENTRADA_ESTOQUE") {
       textoPesquisavel = item.item_nome.toLowerCase();
     } else if (item.tipo_registro === "RESIDUO") {
-      textoPesquisavel = (item.descricao + (item.tipo_perigo || "")).toLowerCase();
+      // Inclui o valor do banco (sem acento) e o rótulo (com acento) para achar pelos dois.
+      textoPesquisavel = [item.descricao, item.tipo_perigo, formatarTipoPerigo(item.tipo_perigo)]
+        .join(" ")
+        .toLowerCase();
     } else if (item.tipo_registro === "CONSUMO") {
       const nomereagente = item.reagente?.nome || "";
       const nomeUsuario = item.nome_usuario || "";

@@ -10,17 +10,22 @@ import { calcularRange, TAMANHO_PAGINA_PADRAO } from "../utils/paginacao.js";
  * @param {object} [opcoes]
  * @param {number|null} [opcoes.pagina] Página (1-based) ou null para todos.
  * @param {number} [opcoes.tamanho] Itens por página.
+ * @param {string|null} [opcoes.tipoPerigo] Filtra por tipo_perigo (valor gravado no banco).
  * @returns Resposta do Supabase com { data, error, count }.
  */
 export async function listarResiduosPorLaboratorio(
   labId,
-  { pagina = null, tamanho = TAMANHO_PAGINA_PADRAO } = {}
+  { pagina = null, tamanho = TAMANHO_PAGINA_PADRAO, tipoPerigo = null } = {}
 ) {
   let query = supabaseClient
     .from("residuo")
     .select("*", { count: "exact" })
     .eq("id_laboratorio", labId)
     .order("data_criacao", { ascending: false });
+
+  if (tipoPerigo) {
+    query = query.eq("tipo_perigo", tipoPerigo);
+  }
 
   if (pagina) {
     const { from, to } = calcularRange(pagina, tamanho);
