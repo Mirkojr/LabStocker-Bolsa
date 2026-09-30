@@ -87,55 +87,49 @@ async function fetchreagentes(filtroNome = "", pagina = 1) {
   }
 }
 
+// Lista em colunas: Nome, Fórmula, Controle e Ações. No celular as colunas
+// viram linhas (ver .linha-reagente no style.css).
 function renderreagentes(reagentes) {
-  listareagentesEl.innerHTML = "";
+  listareagentesEl.innerHTML = `
+        <div class="linha-reagente linha-cabecalho" aria-hidden="true">
+            <div>Reagente</div>
+            <div>Fórmula</div>
+            <div>Controle</div>
+            <div></div>
+        </div>`;
 
   reagentes.forEach((reagente) => {
-    // Controle é regra de compra, não risco químico: marca neutra, e nada
-    // quando o reagente não é controlado.
     const nome = escapeHtml(reagente.nome);
-    const badgeControlado = reagente.instituicao_controladora
-      ? `<span class="badge text-primary-emphasis bg-primary-subtle border border-primary-subtle fw-semibold">
-                    <i class="bi bi-file-earmark-lock me-1"></i>Controlado: ${escapeHtml(reagente.instituicao_controladora)}
-                </span>`
+    const formula = formatarFormulaQuimica(reagente.composicao_quimica);
+    // Controle é regra de compra, não risco químico: marca neutra, e a coluna
+    // fica vazia quando o reagente não é controlado.
+    const controle = reagente.instituicao_controladora
+      ? `<span class="controle-reagente"><i class="bi bi-file-earmark-lock"></i>${escapeHtml(reagente.instituicao_controladora)}</span>`
       : "";
 
     const div = document.createElement("div");
-    div.className = "list-group-item p-3 mb-2 shadow-sm rounded border-0";
-
+    div.className = "linha-reagente";
+    div.setAttribute("role", "listitem");
     div.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="bg-light rounded-circle p-3 me-3 text-success d-none d-md-block">
-                        <i class="bi bi-eyedropper fs-4"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-1 fw-bold text-dark">
-                            ${nome}
-                        </h5>
-                        <p class="mb-1 text-muted small">
-                            ${formatarFormulaQuimica(reagente.composicao_quimica) || '<span class="text-muted opacity-50">Sem fórmula</span>'}
-                        </p>
-                        ${badgeControlado ? `<div class="mt-1">${badgeControlado}</div>` : ""}
-                    </div>
-                </div>
-                
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit rounded-start-pill px-3" 
-                        data-id="${escapeHtml(reagente.id)}"
-                        data-nome="${nome}"
-                        data-composicao="${escapeHtml(reagente.composicao_quimica || "")}"
-                        data-controladora="${escapeHtml(reagente.instituicao_controladora || "")}"
-                        aria-label="Editar ${nome}">
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete rounded-end-pill px-3" data-id="${escapeHtml(reagente.id)}" aria-label="Excluir ${nome}">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
+            <div class="lr-nome le-nome">${nome}</div>
+            <div class="lr-formula">${formula || '<span class="text-muted">Sem fórmula</span>'}</div>
+            <div class="lr-controle">${controle}</div>
+            <div class="lr-acoes le-acoes">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle btn-mais btn-edit"
+                    data-id="${escapeHtml(reagente.id)}"
+                    data-nome="${nome}"
+                    data-composicao="${escapeHtml(reagente.composicao_quimica || "")}"
+                    data-controladora="${escapeHtml(reagente.instituicao_controladora || "")}"
+                    title="Editar" aria-label="Editar ${nome}">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle btn-mais btn-delete"
+                    data-id="${escapeHtml(reagente.id)}" title="Excluir" aria-label="Excluir ${nome}">
+                    <i class="bi bi-trash"></i>
+                </button>
             </div>
         `;
-    if (!POSSO_EDITAR) div.querySelector(".btn-group")?.remove();
+    if (!POSSO_EDITAR) div.querySelector(".lr-acoes").innerHTML = "";
     listareagentesEl.appendChild(div);
   });
 }

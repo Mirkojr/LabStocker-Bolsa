@@ -818,27 +818,216 @@ body.tela-clara {
 }
 
 /* ===============================================
-   ESTOQUE: item da lista
-   No celular, validade e botões ficam numa linha abaixo do nome; a partir
-   de 768px voltam para a coluna da direita.
+   LISTAS EM COLUNAS (estoque e reagentes)
+   Uma linha por item, com colunas alinhadas no desktop. Abaixo de 768px as
+   colunas viram linhas dentro do item.
    =============================================== */
 .min-w-0 {
   min-width: 0;
 }
 
-.item-estoque-acoes {
-  display: flex;
-  flex-wrap: wrap;
+.linha-estoque,
+.linha-reagente {
+  display: grid;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.linha-estoque {
+  grid-template-columns: minmax(0, 1fr) 9rem 15rem auto;
+  border-left: 4px solid transparent;
+}
+
+.linha-reagente {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1.1fr) auto;
+}
+
+.linha-cabecalho {
+  padding-block: 0.4rem 0.6rem;
+  border-bottom-width: 2px;
+  font-family: var(--fonte-titulo);
+  font-stretch: 87.5%;
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+.le-nome {
+  font-family: var(--fonte-titulo);
+  font-stretch: 87.5%;
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.le-quantidade {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.le-qtd {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.le-unidade {
+  color: var(--tinta-suave);
+}
+
+.le-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
-@media (min-width: 768px) {
-  .item-estoque-acoes {
-    display: block;
-    flex-shrink: 0;
-    text-align: end;
+.btn-mais {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+/* Faixa lateral de alerta: só nos itens que pedem ação */
+.linha-estoque.alerta-vencido {
+  border-left-color: var(--alerta);
+}
+
+.linha-estoque.alerta-breve {
+  border-left-color: var(--ufc-ouro);
+}
+
+.linha-estoque.alerta-esgotado {
+  border-left-color: #8a96a0;
+}
+
+.validade-vencida {
+  color: var(--alerta);
+  font-weight: 700;
+}
+
+.validade-breve {
+  color: var(--bs-warning-text-emphasis);
+  font-weight: 700;
+}
+
+.validade-breve small {
+  font-weight: 400;
+}
+
+/* Resumo do estoque: atalhos para os filtros de situação */
+.resumo-estoque {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.resumo-estoque:empty {
+  display: none;
+}
+
+.btn-resumo {
+  border: 1px solid var(--linha);
+  background: var(--superficie);
+  color: var(--tinta);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.btn-resumo:hover {
+  border-color: var(--tinta-suave);
+}
+
+.btn-resumo[aria-pressed="true"] {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #fff;
+}
+
+.resumo-vencido i {
+  color: var(--alerta);
+}
+
+.resumo-breve i {
+  color: var(--ufc-ouro-escuro);
+}
+
+.resumo-esgotado i {
+  color: #8a96a0;
+}
+
+.btn-resumo[aria-pressed="true"] i {
+  color: inherit;
+}
+
+.resumo-ok {
+  color: var(--ufc-verde);
+}
+
+.controle-reagente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--bs-primary-text-emphasis);
+}
+
+@media (max-width: 767.98px) {
+  .linha-cabecalho {
+    display: none;
+  }
+
+  .linha-estoque {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "reagente quantidade"
+      "validade validade"
+      "acoes acoes";
+  }
+
+  .le-reagente {
+    grid-area: reagente;
+  }
+
+  .le-quantidade {
+    grid-area: quantidade;
+  }
+
+  .le-validade {
+    grid-area: validade;
+  }
+
+  .le-acoes {
+    grid-area: acoes;
+    justify-content: flex-start;
+  }
+
+  .linha-reagente {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nome acoes"
+      "formula formula"
+      "controle controle";
+    row-gap: 0.25rem;
+  }
+
+  .lr-nome {
+    grid-area: nome;
+  }
+
+  .lr-formula {
+    grid-area: formula;
+  }
+
+  .lr-controle {
+    grid-area: controle;
+  }
+
+  .lr-acoes {
+    grid-area: acoes;
   }
 }
 

@@ -42,21 +42,22 @@
                     </div>
                 </div>
                 <div class="col-6 col-lg-3">
-                    <select id="filtro-validade-estoque" class="form-select">
-                        <option value="">Toda validade</option>
+                    <select id="filtro-validade-estoque" class="form-select" aria-label="Filtrar por situação">
+                        <option value="">Toda situação</option>
                         <option value="vencido">Vencidos</option>
-                        <option value="vence_breve">Vence em ≤30 dias</option>
+                        <option value="vence_breve">Vencem em até 30 dias</option>
                         <option value="no_prazo">No prazo</option>
                         <option value="sem_data">Sem validade</option>
+                        <option value="esgotado">Esgotados</option>
                     </select>
                 </div>
                 <div class="col-6 col-lg-2">
-                    <select id="filtro-unidade-estoque" class="form-select">
+                    <select id="filtro-unidade-estoque" class="form-select" aria-label="Filtrar por unidade">
                         <option value="">Toda unidade</option>
                     </select>
                 </div>
                 <div class="col-12 col-lg-2">
-                    <select id="ordenar-estoque" class="form-select">
+                    <select id="ordenar-estoque" class="form-select" aria-label="Ordenar">
                         <option value="nome_asc">Nome (A–Z)</option>
                         <option value="nome_desc">Nome (Z–A)</option>
                     </select>
@@ -67,7 +68,8 @@
                 <div class="spinner-border text-primary" role="status"></div>
                 <p class="mt-2 text-muted">Carregando frascos...</p>
             </div>
-            <div class="list-group list-group-flush" id="lista-estoque"></div>
+            <div id="resumo-estoque" class="resumo-estoque" aria-label="Frascos que pedem atenção"></div>
+            <div class="lista-estoque" id="lista-estoque" role="list" aria-label="Itens do estoque"></div>
         </div>
     </div>
 
