@@ -19,9 +19,8 @@ export const getEmailUsuarioLogado = () => emailUsuarioLogado;
 
 function bloquearCampo(input) {
   if (!input) return;
+  // A aparência de campo travado vem do CSS (.form-control[readonly]).
   input.readOnly = true;
-  input.classList.add("bg-dark", "bg-opacity-50");
-  input.style.cursor = "not-allowed";
 }
 
 function preencherCampoBloqueado(id, valor) {

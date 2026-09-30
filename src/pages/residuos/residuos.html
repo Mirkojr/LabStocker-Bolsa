@@ -11,9 +11,9 @@
         .filter-badge {
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.7);
+            border: 1px solid var(--linha);
+            background: var(--superficie);
+            color: var(--tinta-suave);
         }
         .filter-badge:hover, .filter-badge[aria-pressed="true"] {
             background: var(--ufc-ouro);
@@ -26,31 +26,30 @@
         }
     </style>
 </head>
-<body style="background-color: #132E4B;">
+<body class="tela-clara">
 
     <script type="module" src="../../shared/authGuard.js"></script>
 
     <div id="toast-container"></div>
 
-    <div class="container my-5">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
-            <div class="d-flex align-items-center">
-                <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
-                    <i class="bi bi-arrow-left fw-bold"></i>
-                </a>
-                <div>
-                    <h2 class="mb-0 fw-bold">Gestão de Resíduos</h2>
-                    <p class="mb-0 opacity-75 small">Controle de descartes e inventário de efluentes</p>
-                </div>
+    <header class="faixa-ufc faixa-pagina">
+        <div class="container faixa-pagina-conteudo">
+            <a href="../dashboard/dashboard.html" class="btn-voltar" aria-label="Voltar ao painel"><i class="bi bi-arrow-left"></i></a>
+            <div class="faixa-pagina-titulo">
+                <h1>Gestão de Resíduos</h1>
+                <p>Controle de descartes e inventário de efluentes</p>
             </div>
-            
-            <button class="btn btn-warning fw-bold text-dark shadow-lg px-4 py-2 rounded-pill" data-permissao="residuo.registrar" data-bs-toggle="modal" data-bs-target="#modal-residuo">
+            <div class="faixa-pagina-acoes">
+            <button class="btn btn-warning fw-bold text-dark px-3 py-2 rounded-pill" data-permissao="residuo.registrar" data-bs-toggle="modal" data-bs-target="#modal-residuo">
                 <i class="bi bi-plus-lg me-2"></i> Registrar resíduo
             </button>
+            </div>
         </div>
+    </header>
 
-        <div class="glass-panel-dark">
+    <div class="container conteudo-pagina">
+
+        <div class="painel">
             
             <div class="d-flex gap-2 mb-4 overflow-auto p-1 pb-2" id="filtros-perigo" role="group" aria-label="Filtrar por tipo de perigo">
                 <button type="button" class="badge rounded-pill px-3 py-2 filter-badge" data-tipo="" aria-pressed="true">Todos</button>
@@ -63,7 +62,7 @@
             
             <div id="spinner-res" class="text-center py-5 d-none">
                 <div class="spinner-border text-warning" role="status"></div>
-                <p class="mt-2 text-muted-light">Sincronizando inventário...</p>
+                <p class="mt-2 text-muted">Sincronizando inventário...</p>
             </div>
 
             <div class="row g-4" id="lista-residuos">

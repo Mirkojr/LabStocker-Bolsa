@@ -9,64 +9,59 @@
     <link rel="stylesheet" href="../../css/style.css">
     <style>
         .accordion-item {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background-color: var(--superficie) !important;
+            border: 1px solid var(--linha) !important;
             border-radius: 12px !important;
             margin-bottom: 10px;
             overflow: hidden;
         }
         .accordion-button {
             background-color: transparent !important;
-            color: white !important;
+            color: var(--tinta) !important;
             font-weight: 600;
         }
         .accordion-button:not(.collapsed) {
-            color: var(--ufc-ouro) !important;
+            color: var(--ufc-azul) !important;
             box-shadow: none !important;
         }
-        .accordion-button::after {
-            filter: brightness(0) invert(1);
-        }
         .accordion-body {
-            color: rgba(255, 255, 255, 0.7);
-            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--tinta-suave);
+            background-color: var(--papel);
         }
     </style>
 </head>
-<body style="background-color: #132E4B;">
+<body class="tela-clara">
 
     <script type="module" src="../../shared/authGuard.js"></script>
 
     <div id="toast-container"></div>
 
-    <div class="container my-5">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
-            <div class="d-flex align-items-center">
-                <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
-                    <i class="bi bi-arrow-left fw-bold"></i>
-                </a>
-                <div>
-                    <h2 class="mb-0 fw-bold">Ajuda e suporte</h2>
-                    <p class="mb-0 opacity-75 small">Dúvidas, suporte técnico e sugestões</p>
-                </div>
+    <header class="faixa-ufc faixa-pagina">
+        <div class="container faixa-pagina-conteudo">
+            <a href="../dashboard/dashboard.html" class="btn-voltar" aria-label="Voltar ao painel"><i class="bi bi-arrow-left"></i></a>
+            <div class="faixa-pagina-titulo">
+                <h1>Ajuda e suporte</h1>
+                <p>Dúvidas, suporte técnico e sugestões</p>
             </div>
         </div>
+    </header>
+
+    <div class="container conteudo-pagina">
 
         <div class="row g-4">
             
             <div class="col-lg-6">
-                <div class="glass-panel-dark h-100">
-                    <h5 class="text-warning mb-4 fw-bold"><i class="bi bi-headset me-2"></i>Canais de atendimento</h5>
+                <div class="painel h-100">
+                    <h5 class="mb-4 fw-bold"><i class="bi bi-headset me-2 text-primary"></i>Canais de atendimento</h5>
                     
                     <div class="d-flex align-items-start mb-4">
                         <div class="bg-success bg-opacity-25 rounded-3 p-3 me-3">
                             <i class="bi bi-whatsapp text-success fs-4"></i>
                         </div>
                         <div>
-                            <h6 class="text-white mb-0 fw-bold">WhatsApp do suporte</h6>
-                            <p class="text-muted-light small mb-0">(85) 98888-7777</p>
-                            <small class="text-white-50">Seg à Sex: 08h às 17h</small>
+                            <h6 class="mb-0 fw-bold">WhatsApp do suporte</h6>
+                            <p class="text-muted small mb-0">(85) 98888-7777</p>
+                            <small class="text-muted">Seg à Sex: 08h às 17h</small>
                         </div>
                     </div>
 
@@ -75,14 +70,14 @@
                             <i class="bi bi-envelope-at text-primary fs-4"></i>
                         </div>
                         <div>
-                            <h6 class="text-white mb-0 fw-bold">E-mail</h6>
-                            <p class="text-muted-light small mb-0">ti.laboratorios@ufc.br</p>
+                            <h6 class="mb-0 fw-bold">E-mail</h6>
+                            <p class="text-muted small mb-0">ti.laboratorios@ufc.br</p>
                         </div>
                     </div>
 
-                    <hr class="border-white opacity-10 my-4">
+                    <hr class="my-4">
 
-                    <h5 class="text-white mb-3 fw-bold">Perguntas frequentes</h5>
+                    <h5 class="mb-3 fw-bold">Perguntas frequentes</h5>
                     
                     <div class="accordion accordion-flush" id="faqAccordion">
                         <div class="accordion-item">
@@ -128,14 +123,14 @@
             </div>
 
             <div class="col-lg-6">
-                <div class="glass-panel-dark h-100">
-                    <h5 class="text-white mb-2 fw-bold"><i class="bi bi-chat-dots-fill me-2 text-info"></i>Envie seu feedback</h5>
-                    <p class="text-muted-light small mb-4">Relate erros ou sugira novas funcionalidades para o LabStocker.</p>
+                <div class="painel h-100">
+                    <h5 class="mb-2 fw-bold"><i class="bi bi-chat-dots me-2 text-primary"></i>Envie seu feedback</h5>
+                    <p class="text-muted small mb-4">Relate erros ou sugira novas funcionalidades para o LabStocker.</p>
                     
                     <form id="form-feedback">
                         <div class="mb-3">
-                            <label for="tipo-feedback" class="form-label small text-muted-light fw-bold">Tipo de mensagem</label>
-                            <select class="form-select form-control-dark" id="tipo-feedback" required>
+                            <label for="tipo-feedback" class="form-label small text-muted fw-bold">Tipo de mensagem</label>
+                            <select class="form-select" id="tipo-feedback" required>
                                 <option value="" disabled selected>Selecione uma categoria...</option>
                                 <option value="Sugestão">Sugestão de melhoria</option>
                                 <option value="Erro">Relatar um erro</option>
@@ -144,8 +139,8 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="msg-feedback" class="form-label small text-muted-light fw-bold">Sua mensagem</label>
-                            <textarea class="form-control form-control-dark" id="msg-feedback" rows="6" placeholder="Conte o que aconteceu ou o que você sugere" required style="border-radius: 20px;"></textarea>
+                            <label for="msg-feedback" class="form-label small text-muted fw-bold">Sua mensagem</label>
+                            <textarea class="form-control" id="msg-feedback" rows="6" placeholder="Conte o que aconteceu ou o que você sugere" required style="border-radius: 20px;"></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-contrast w-100 shadow-lg fw-bold">

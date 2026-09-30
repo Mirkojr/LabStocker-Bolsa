@@ -8,31 +8,30 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../css/style.css">
 </head>
-<body>
+<body class="tela-clara">
 
     <script type="module" src="../../shared/authGuard.js"></script>
 
     <div id="toast-container"></div>
 
-    <div class="container my-5" >
-        
-        <div class="d-flex justify-content-between align-items-center gap-3 mb-4 text-white">
-            <div class="d-flex align-items-center min-w-0">
-                <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2 flex-shrink-0" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
-                    <i class="bi bi-arrow-left fw-bold"></i>
-                </a>
-                <div>
-                    <h2 class="mb-0 fw-bold">Estoque</h2>
-                    <p class="mb-0 opacity-75 small">Gerencie reagentes e validades</p>
-                </div>
+    <header class="faixa-ufc faixa-pagina">
+        <div class="container faixa-pagina-conteudo">
+            <a href="../dashboard/dashboard.html" class="btn-voltar" aria-label="Voltar ao painel"><i class="bi bi-arrow-left"></i></a>
+            <div class="faixa-pagina-titulo">
+                <h1>Estoque</h1>
+                <p>Gerencie reagentes e validades</p>
             </div>
-            
-            <button class="btn btn-warning fw-bold text-dark shadow-lg px-3 px-md-4 py-2 rounded-pill text-nowrap flex-shrink-0" data-permissao="estoque.editar" data-bs-toggle="modal" data-bs-target="#modal-estoque">
+            <div class="faixa-pagina-acoes">
+            <button class="btn btn-warning fw-bold text-dark px-3 py-2 rounded-pill" data-permissao="estoque.editar" data-bs-toggle="modal" data-bs-target="#modal-estoque">
                 <i class="bi bi-plus-lg me-2"></i> Novo item
             </button>
+            </div>
         </div>
+    </header>
 
-        <div class="glass-panel">
+    <div class="container conteudo-pagina">
+
+        <div class="painel">
             <div class="row g-2 mb-4">
                 <div class="col-12 col-lg-5">
                     <div class="input-group">

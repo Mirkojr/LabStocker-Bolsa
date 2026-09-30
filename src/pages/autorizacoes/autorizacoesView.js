@@ -17,7 +17,7 @@ const resolverStatus = (status) => STATUS[status] || STATUS.pendente;
 export function renderEstadoLista(mensagem, tipo = "info") {
   const container = $("lista-meus-projetos");
   if (!container) return;
-  const cor = tipo === "erro" ? "text-danger" : "text-muted-light";
+  const cor = tipo === "erro" ? "text-danger" : "text-muted";
   container.innerHTML = `<div class="text-center py-3 ${cor} small">${escapeHtml(mensagem)}</div>`;
 }
 
@@ -33,11 +33,11 @@ export function renderListaProjetos(projetos, aoClicar) {
     const item = document.createElement("button");
     item.type = "button";
     item.className =
-      "list-group-item list-group-item-action bg-transparent text-white d-flex justify-content-between align-items-center";
+      "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
     item.innerHTML = `
             <div class="text-start">
                 <div class="fw-semibold">${escapeHtml(proj.titulo_projeto || "Sem título")}</div>
-                <small class="text-muted-light">Enviado em ${dataCriacao}</small>
+                <small class="text-muted">Enviado em ${dataCriacao}</small>
             </div>
             <span class="badge ${badge} rounded-pill">${label}</span>
         `;
@@ -116,9 +116,9 @@ export function adicionarLinhaProduto() {
 
   const tr = document.createElement("tr");
   tr.innerHTML = `
-        <td class="text-muted-light">${index}</td>
-        <td><input type="text" class="form-control form-control-dark form-control-sm product-name" placeholder="Nome do reagente/material"></td>
-        <td><input type="number" min="0" step="any" class="form-control form-control-dark form-control-sm product-qty" placeholder="Quantidade"></td>
+        <td class="text-muted">${index}</td>
+        <td><input type="text" class="form-control form-control-sm product-name" placeholder="Nome do reagente/material"></td>
+        <td><input type="number" min="0" step="any" class="form-control form-control-sm product-qty" placeholder="Quantidade"></td>
         <td>
             <select class="form-select form-select-sm product-unit">${opcoesUnidade}</select>
         </td>
