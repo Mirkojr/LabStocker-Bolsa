@@ -20,7 +20,7 @@ export function mostrarCarregando(alvo, mensagem = "Carregando...") {
   const el = resolverElemento(alvo);
   if (!el) return;
   el.innerHTML = `
-        <div class="w-100 text-center py-5 text-muted-light">
+        <div class="w-100 text-center py-5 text-muted">
             <div class="spinner-border" role="status" aria-hidden="true"></div>
             <p class="mt-3 mb-0">${mensagem}</p>
         </div>`;
@@ -40,9 +40,9 @@ export function mostrarVazio(alvo, opcoes = {}) {
     mensagem = "Nenhum registro encontrado.",
   } = opcoes;
   el.innerHTML = `
-        <div class="w-100 text-center py-5 text-muted-light">
+        <div class="w-100 text-center py-5 text-muted">
             <i class="bi ${icone} fs-1 opacity-25 d-block mb-3"></i>
-            <h6 class="fw-bold mb-1 text-white">${titulo}</h6>
+            <h6 class="fw-bold mb-1 text-body">${titulo}</h6>
             <p class="mb-0 small">${mensagem}</p>
         </div>`;
 }
@@ -62,13 +62,13 @@ export function mostrarErro(alvo, opcoes = {}) {
   } = opcoes;
 
   el.innerHTML = `
-        <div class="w-100 text-center py-5 text-muted-light">
+        <div class="w-100 text-center py-5 text-muted">
             <i class="bi bi-exclamation-octagon-fill fs-1 text-danger opacity-75 d-block mb-3"></i>
-            <h6 class="fw-bold mb-1 text-white">Algo deu errado</h6>
+            <h6 class="fw-bold mb-1 text-body">Algo deu errado</h6>
             <p class="mb-3 small">${mensagem}</p>
             ${
               onTentarNovamente
-                ? `<button type="button" class="btn btn-sm btn-outline-light rounded-pill px-4" data-acao="tentar-novamente">
+                ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-acao="tentar-novamente">
                 <i class="bi bi-arrow-clockwise me-1"></i>${textoBotao}
             </button>`
                 : ""

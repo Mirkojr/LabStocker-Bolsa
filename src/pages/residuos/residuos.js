@@ -196,24 +196,24 @@ function renderresiduos(residuos) {
     const col = document.createElement("div");
     col.className = "col-md-6 col-lg-4";
     col.innerHTML = `
-            <div class="card h-100 border-white border-opacity-10 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255,255,255,0.03);">
+            <div class="card h-100 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <span class="badge ${statusClass} rounded-pill px-3">${escapeHtml(formatarStatusResiduo(res.status))}</span>
-                        <small class="text-muted-light">${dataF}</small>
+                        <small class="text-muted">${dataF}</small>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">${escapeHtml(res.descricao)}</h5>
-                    <p class="small text-muted-light mb-2">
+                    <h5 class="fw-bold mb-2">${escapeHtml(res.descricao)}</h5>
+                    <p class="small text-muted mb-2">
                         <i class="bi bi-shield-exclamation me-1"></i> ${escapeHtml(formatarTipoPerigo(res.tipo_perigo))} | 
                         <strong>${escapeHtml(formatarQuantidade(res.quantidade, res.unidade_medida))}</strong>
                     </p>
                     ${badgeConsumo ? `<p class="mb-3">${badgeConsumo}</p>` : '<div class="mb-3"></div>'}
                     
-                    <div class="d-flex gap-2 border-top border-white border-opacity-10 pt-3" data-permissao="residuo.registrar">
+                    <div class="d-flex gap-2 border-top pt-3" data-permissao="residuo.registrar">
                         ${
                           isAberto
                             ? `
-                            <button class="btn btn-sm btn-outline-info rounded-pill flex-grow-1 btn-editar" 
+                            <button class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1 btn-editar" 
                                 data-id="${escapeHtml(res.id)}" data-desc="${escapeHtml(res.descricao)}" data-tipo="${escapeHtml(res.tipo_perigo)}" 
                                 data-qtd="${escapeHtml(res.quantidade)}" data-unidade="${escapeHtml(res.unidade_medida)}">
                                 <i class="bi bi-pencil"></i> Editar

@@ -25,7 +25,7 @@ async function init() {
       if (!ACOES_LAB.includes("transferencia.aprovar")) {
         listaPedidos.insertAdjacentHTML(
           "beforebegin",
-          '<p class="text-muted-light small mb-3"><i class="bi bi-info-circle me-1"></i>Somente o chefe ou um gestor do laboratório aprova ou recusa pedidos.</p>'
+          '<p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>Somente o chefe ou um gestor do laboratório aprova ou recusa pedidos.</p>'
         );
       }
       fetchPedidosRecebidos();
@@ -51,7 +51,7 @@ async function fetchPedidosRecebidos() {
 
     if (data.length === 0) {
       listaPedidos.innerHTML = `
-                <div class="text-center py-5 text-muted-light">
+                <div class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 opacity-25"></i>
                     <p class="mt-3">Nenhum pedido pendente no momento.</p>
                 </div>`;
@@ -78,19 +78,17 @@ function renderPedidos(pedidos) {
     const data = new Date(pedido.data_solicitacao).toLocaleDateString("pt-BR");
 
     const div = document.createElement("div");
-    div.className =
-      "list-group-item bg-transparent border-white border-opacity-10 mb-3 p-4 rounded-4 shadow-sm";
-    div.style.background = "rgba(255, 255, 255, 0.03)";
+    div.className = "list-group-item bg-transparent mb-3 p-4 rounded-4 shadow-sm";
 
     div.innerHTML = `
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div class="mb-3 mb-md-0">
-                    <h5 class="mb-1 fw-bold text-white">${nomereagente}</h5>
-                    <p class="mb-1 text-muted-light">
-                        <span class="text-white fw-bold">${nomeLabSolicitante}</span> pediu
-                        <span class="badge bg-light bg-opacity-10 text-white border border-white border-opacity-25">${quantidade}</span>
+                    <h5 class="mb-1 fw-bold">${nomereagente}</h5>
+                    <p class="mb-1 text-muted">
+                        <span class="fw-bold">${nomeLabSolicitante}</span> pediu
+                        <span class="badge bg-light text-dark border">${quantidade}</span>
                     </p>
-                    <small class="opacity-50 text-white"><i class="bi bi-calendar3 me-1"></i>Pedido em: ${data}</small>
+                    <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>Pedido em: ${data}</small>
                 </div>
                 <div class="d-flex gap-2" data-permissao="transferencia.aprovar">
                     <button class="btn btn-primary rounded-pill px-4 fw-bold btn-aprovar shadow-sm" data-id="${escapeHtml(pedido.id)}">

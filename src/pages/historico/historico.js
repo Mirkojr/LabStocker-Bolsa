@@ -160,20 +160,20 @@ function desenharPaginaHist() {
 // quantidade e data. Todo texto que vem do banco chega aqui já escapado.
 function montarItem({ cor, icone, titulo, selo, seloClasse, detalhes, quantidade, data }) {
   return `
-                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
+                <div class="list-group-item bg-transparent py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
                         <div class="bg-${cor} bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="bi ${icone} text-${cor} fs-4"></i>
+                            <i class="bi ${icone} text-${["warning", "info"].includes(cor) ? `${cor}-emphasis` : cor} fs-4"></i>
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${titulo}</h6>
+                                <h6 class="mb-0 fw-bold">${titulo}</h6>
                                 <span class="badge ${seloClasse}">${selo}</span>
                             </div>
                             ${detalhes}
                             <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Quantidade: <strong>${quantidade}</strong></small>
-                                <small class="text-white-50 opacity-75">${data}</small>
+                                <small class="text-muted">Quantidade: <strong>${quantidade}</strong></small>
+                                <small class="text-muted opacity-75">${data}</small>
                             </div>
                         </div>
                     </div>
@@ -255,7 +255,7 @@ function renderHistorico(itens) {
         titulo: escapeHtml(item.item_nome),
         selo: "Entrada",
         seloClasse: "bg-success",
-        detalhes: `<p class="mb-1 small text-muted-light">${escapeHtml(item.observacao || "Item adicionado ao estoque.")}</p>`,
+        detalhes: `<p class="mb-1 small text-muted">${escapeHtml(item.observacao || "Item adicionado ao estoque.")}</p>`,
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade)),
         data,
       });
@@ -266,7 +266,7 @@ function renderHistorico(itens) {
         titulo: escapeHtml(item.descricao),
         selo: "Descarte",
         seloClasse: "bg-secondary",
-        detalhes: `<p class="mb-1 small text-muted-light">Enviado para tratamento (${escapeHtml(formatarTipoPerigo(item.tipo_perigo))})</p>`,
+        detalhes: `<p class="mb-1 small text-muted">Enviado para tratamento (${escapeHtml(formatarTipoPerigo(item.tipo_perigo))})</p>`,
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
         data,
       });
@@ -277,7 +277,7 @@ function renderHistorico(itens) {
         titulo: escapeHtml(item.reagente?.nome || "Reagente desconhecido"),
         selo: "Consumo",
         seloClasse: "bg-info text-dark",
-        detalhes: `<p class="mb-1 small text-muted-light">
+        detalhes: `<p class="mb-1 small text-muted">
                                 Consumido por: <strong>${escapeHtml(item.nome_usuario)}</strong><br>
                                 <span class="fst-italic">Finalidade: ${escapeHtml(item.finalidade || "não informada")}</span>
                             </p>`,
@@ -296,7 +296,7 @@ function renderHistorico(itens) {
         titulo: escapeHtml(item.estoquelab?.reagente?.nome || "Item desconhecido"),
         selo: t.selo,
         seloClasse: t.seloClasse,
-        detalhes: `<p class="mb-1 small text-muted-light">${t.texto}</p>${motivo}`,
+        detalhes: `<p class="mb-1 small text-muted">${t.texto}</p>${motivo}`,
         quantidade: escapeHtml(
           formatarQuantidade(item.quantidade_transferida, item.estoquelab?.unidade_medida)
         ),

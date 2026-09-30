@@ -26,7 +26,7 @@ const ORDEM_PAPEL = { chefe: 0, gestor: 1, membro: 2 };
 const CLASSE_PAPEL = {
   chefe: "bg-warning text-dark",
   gestor: "bg-info text-dark",
-  membro: "bg-light bg-opacity-10 text-white border border-white border-opacity-25",
+  membro: "bg-light text-dark border",
 };
 
 let LAB = null; // { id, nome, papel, acoes, modoAdmin }
@@ -47,7 +47,7 @@ async function init() {
     if (!LAB) {
       subtitulo.textContent = "Você ainda não tem vínculo com nenhum laboratório.";
       listaUsuariosEl.innerHTML =
-        '<p class="text-center text-muted-light my-5">Peça ao chefe do laboratório para adicionar você pelo seu e-mail.</p>';
+        '<p class="text-center text-muted my-5">Peça ao chefe do laboratório para adicionar você pelo seu e-mail.</p>';
       return;
     }
 
@@ -138,7 +138,7 @@ function possoEditarCargo(v) {
 function renderAtivos(vinculos) {
   if (vinculos.length === 0) {
     listaUsuariosEl.innerHTML =
-      '<p class="text-center text-muted-light my-5">Nenhuma pessoa vinculada a este laboratório.</p>';
+      '<p class="text-center text-muted my-5">Nenhuma pessoa vinculada a este laboratório.</p>';
     return;
   }
 
@@ -164,12 +164,12 @@ function criarItemVinculo(v) {
          <option value="">Cargo não informado</option>
          ${CARGOS.map((c) => `<option value="${c}" ${perfil.cargo === c ? "selected" : ""}>${c}</option>`).join("")}
        </select>`
-    : `<small class="text-muted-light">Cargo: ${escapeHtml(perfil.cargo || "não informado")}</small>`;
+    : `<small class="text-muted">Cargo: ${escapeHtml(perfil.cargo || "não informado")}</small>`;
 
   const acoes = [];
   if (possoMudarPapel(v)) {
     const novo = v.papel === "gestor" ? "membro" : "gestor";
-    acoes.push(`<button class="btn btn-sm btn-outline-light rounded-pill btn-mudar-papel"
+    acoes.push(`<button class="btn btn-sm btn-outline-secondary rounded-pill btn-mudar-papel"
         data-email="${escapeHtml(perfil.email || "")}" data-papel="${novo}" data-nome="${nome}">
         ${novo === "gestor" ? "Tornar gestor" : "Tornar membro"}</button>`);
   }
@@ -183,17 +183,17 @@ function criarItemVinculo(v) {
   }
 
   return `
-    <div class="d-flex flex-wrap align-items-center gap-3 p-3 mb-2 rounded-4 border border-white border-opacity-10" style="background: rgba(255,255,255,0.03);">
+    <div class="d-flex flex-wrap align-items-center gap-3 p-3 mb-2 rounded-4 border">
       <div class="rounded-circle d-flex align-items-center justify-content-center ${CLASSE_PAPEL[v.papel]} shadow-sm flex-shrink-0" style="width: 48px; height: 48px;">
         <span class="fw-bold fs-5">${inicial}</span>
       </div>
       <div class="flex-grow-1" style="min-width: 200px;">
-        <h6 class="mb-0 fw-bold text-white">${nome}${ehEu ? ' <small class="text-muted-light">(você)</small>' : ""}</h6>
-        <small class="text-muted-light"><i class="bi bi-envelope me-1"></i>${escapeHtml(perfil.email || "Sem e-mail")}</small>
+        <h6 class="mb-0 fw-bold">${nome}${ehEu ? ' <small class="text-muted">(você)</small>' : ""}</h6>
+        <small class="text-muted"><i class="bi bi-envelope me-1"></i>${escapeHtml(perfil.email || "Sem e-mail")}</small>
         <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
           <span class="badge rounded-pill ${CLASSE_PAPEL[v.papel]}">${papel}</span>
           ${validade}
-          <small class="text-muted-light">Concedido ${concedido}</small>
+          <small class="text-muted">Concedido ${concedido}</small>
         </div>
       </div>
       <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -219,8 +219,8 @@ function renderHistorico(vinculos) {
       const concedente = v.concedente ? ` por ${escapeHtml(nomeCompleto(v.concedente))}` : "";
 
       return `
-        <div class="p-2 mb-2 rounded-3 border border-white border-opacity-10 small text-muted-light">
-          <strong class="text-white">${escapeHtml(nomeCompleto(v.usuario))}</strong>
+        <div class="p-2 mb-2 rounded-3 border small text-muted">
+          <strong>${escapeHtml(nomeCompleto(v.usuario))}</strong>
           · ${escapeHtml(NOMES_PAPEL[v.papel] || v.papel)}
           · concedido em ${formatarData(v.concedido_em)}${concedente}
           · ${fim}${motivo}
