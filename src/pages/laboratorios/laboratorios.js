@@ -86,7 +86,7 @@ function renderlaboratorios(labs) {
     const col = document.createElement("div");
     col.className = "col-md-6 col-lg-4";
     col.innerHTML = `
-            <div class="card h-100 border-0 shadow-sm rounded-4 dashboard-card-lab">
+            <div class="card h-100 border rounded-4 dashboard-card-lab">
                 <div class="card-body p-4 text-center">
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
                         <i class="bi bi-building fs-2"></i>
