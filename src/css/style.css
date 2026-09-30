@@ -816,3 +816,39 @@ body.tela-clara {
     display: none;
   }
 }
+
+/* ===============================================
+   ESTOQUE: item da lista
+   No celular, validade e botões ficam numa linha abaixo do nome; a partir
+   de 768px voltam para a coluna da direita.
+   =============================================== */
+.min-w-0 {
+  min-width: 0;
+}
+
+.item-estoque-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .item-estoque-acoes {
+    display: block;
+    flex-shrink: 0;
+    text-align: end;
+  }
+}
+
+/* Painéis com menos margem interna no celular, para sobrar largura ao conteúdo */
+@media (max-width: 575.98px) {
+  .glass-panel {
+    padding: 1rem;
+  }
+
+  .glass-panel-dark {
+    padding: 1.5rem 1rem;
+  }
+}

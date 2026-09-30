@@ -84,7 +84,7 @@ function popularUnidadesForm() {
 function popularUnidadesFiltro() {
   if (!filtroUnidade) return;
   filtroUnidade.innerHTML =
-    '<option value="">Todas as unidades</option>' +
+    '<option value="">Toda unidade</option>' +
     UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join("");
 }
 
@@ -115,13 +115,13 @@ function montarValidade(item) {
   if (status === "vencido") {
     return {
       html: `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`,
-      borderClass: "border-start border-danger border-4",
+      borderClass: "border-danger",
     };
   }
   if (status === "vence_breve") {
     return {
       html: `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`,
-      borderClass: "border-start border-warning border-4",
+      borderClass: "border-warning",
     };
   }
   return {
@@ -210,49 +210,48 @@ function renderestoque(itens) {
     const { html: validadeHTML, borderClass } = montarValidade(item);
     const nome = escapeHtml(item.reagente?.nome);
     const obs = escapeHtml(item.observacoes_operacionais || "");
-    const obsTexto = obs || "Sem observações operacionais.";
 
     // Item zerado: mostra badge "Esgotado" e desabilita o botão de consumir,
     // sem esconder o item (mantém o histórico/rastreabilidade do frasco).
     const esgotado = Number(item.quantidade) <= 0;
     const badgeEsgotado = esgotado
-      ? '<span class="badge bg-dark badge-esgotado ms-2"><i class="bi bi-slash-circle"></i> Esgotado</span>'
+      ? '<span class="badge bg-dark badge-esgotado"><i class="bi bi-slash-circle"></i> Esgotado</span>'
       : "";
-    const borderFinal = esgotado ? "border-start border-secondary border-4" : borderClass;
+    // Todo item tem a borda lateral (transparente quando não há alerta), para o
+    // texto de todos os itens começar na mesma coluna.
+    const borderFinal = esgotado ? "border-secondary" : borderClass || "border-white";
 
     const div = document.createElement("div");
-    div.className = `list-group-item mb-3 shadow-sm rounded border-0 ${borderFinal}`;
+    div.className = `list-group-item item-estoque mb-3 shadow-sm rounded border-0 border-start border-4 ${borderFinal}`;
     div.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex" style="width:48px;height:48px;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 gap-md-3">
+                <div class="d-flex align-items-center min-w-0">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex flex-shrink-0" style="width:48px;height:48px;">
                         <i class="bi bi-droplet-half fs-4"></i>
                     </div>
-                    <div>
-                        <h5 class="mb-1 fw-bold text-dark">${nome}${badgeEsgotado}</h5>
+                    <div class="min-w-0">
+                        <h5 class="mb-1 fw-bold text-dark d-flex flex-wrap align-items-center gap-2">${nome}${badgeEsgotado}</h5>
                         <div class="mb-1">
                             <span class="text-primary fw-bold fs-5">${escapeHtml(formatarNumero(item.quantidade))}</span>
                             <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
                         </div>
-                        <small class="text-muted d-block text-truncate" style="max-width: 300px;" title="${obsTexto}">
-                            ${obsTexto}
-                        </small>
+                        ${obs ? `<small class="text-muted d-block text-truncate" title="${obs}">${obs}</small>` : ""}
                     </div>
                 </div>
 
-                <div class="text-end">
-                    <div class="mb-2">${validadeHTML}</div>
-                    <div>
-                        <button class="btn btn-sm btn-primary btn-consumir-estoque me-1 rounded-pill px-3" data-permissao="consumo.registrar"
+                <div class="item-estoque-acoes">
+                    <div class="mb-md-2">${validadeHTML}</div>
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button class="btn btn-sm btn-primary btn-consumir-estoque rounded-pill px-3" data-permissao="consumo.registrar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente="${nome}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
                             data-unidade="${escapeHtml(item.unidade_medida)}"
                             aria-label="Consumir ${nome}"
                             ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
-                            <i class="bi bi-eyedropper"></i> <span class="d-none d-md-inline">Consumir</span>
+                            <i class="bi bi-eyedropper"></i> Consumir
                         </button>
-                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3" data-permissao="estoque.editar"
+                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque rounded-pill px-3" data-permissao="estoque.editar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente-id="${escapeHtml(item.id_reagente)}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
