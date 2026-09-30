@@ -1,11 +1,7 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
-import {
-  formatarDataHora,
-  formatarQuantidade,
-  formatarTipoPerigo,
-} from "../../shared/utils/formatters.js";
+import { formatarQuantidade, formatarTipoPerigo } from "../../shared/utils/formatters.js";
 import { listarTransferenciasPorLaboratorio } from "../../shared/services/transferenciasService.js";
 import { listarResiduosDescartadosPorLaboratorio } from "../../shared/services/residuosService.js";
 import { listarEntradasPorLaboratorio } from "../../shared/services/movimentacoesService.js";
@@ -158,26 +154,35 @@ function desenharPaginaHist() {
 
 // Um item do histórico: ícone, título, selo do tipo, linhas de detalhe,
 // quantidade e data. Todo texto que vem do banco chega aqui já escapado.
-function montarItem({ cor, icone, titulo, selo, seloClasse, detalhes, quantidade, data }) {
+function montarItem({ cor, icone, titulo, selo, seloClasse, detalhes, quantidade, hora }) {
+  const corIcone = ["warning", "info"].includes(cor) ? `${cor}-emphasis` : cor;
   return `
-                <div class="list-group-item bg-transparent py-3 mb-2 rounded-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-${cor} bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="bi ${icone} text-${["warning", "info"].includes(cor) ? `${cor}-emphasis` : cor} fs-4"></i>
+                <li class="evento-historico">
+                    <div class="eh-hora">${hora}</div>
+                    <div class="eh-marcador bg-${cor}-subtle"><i class="bi ${icone} text-${corIcone}"></i></div>
+                    <div class="eh-conteudo">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <h4 class="eh-titulo">${titulo}</h4>
+                            <span class="badge ${seloClasse}">${selo}</span>
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold">${titulo}</h6>
-                                <span class="badge ${seloClasse}">${selo}</span>
-                            </div>
-                            ${detalhes}
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">Quantidade: <strong>${quantidade}</strong></small>
-                                <small class="text-muted opacity-75">${data}</small>
-                            </div>
-                        </div>
+                        ${detalhes}
+                        <small class="text-muted">Quantidade: <strong class="text-body">${quantidade}</strong></small>
                     </div>
-                </div>`;
+                </li>`;
+}
+
+// Rótulo do dia: "Hoje", "Ontem" ou a data por extenso.
+function rotuloDia(data) {
+  const inicio = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dias = Math.round((inicio(new Date()) - inicio(data)) / 86400000);
+  if (dias === 0) return "Hoje";
+  if (dias === 1) return "Ontem";
+  return data.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 // Transferência vista pelo laboratório atual. No banco, id_lab_origem é o
@@ -242,10 +247,21 @@ function renderHistorico(itens) {
     return;
   }
 
-  listaHistorico.innerHTML = "";
+  // Agrupa por dia (a lista já vem do mais recente para o mais antigo).
+  const partes = [];
+  let diaAtual = null;
 
   itens.forEach((item) => {
-    const data = formatarDataHora(item.data_ordenacao);
+    const quando = new Date(item.data_ordenacao);
+    const dia = quando.toLocaleDateString("pt-BR");
+    if (dia !== diaAtual) {
+      if (diaAtual !== null) partes.push("</ol></section>");
+      partes.push(
+        `<section class="dia-historico"><h3 class="dia-historico-titulo">${rotuloDia(quando)}</h3><ol class="eventos-dia">`
+      );
+      diaAtual = dia;
+    }
+    const hora = quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     let html;
 
     if (item.tipo_registro === "ENTRADA_ESTOQUE") {
@@ -257,7 +273,7 @@ function renderHistorico(itens) {
         seloClasse: "bg-success",
         detalhes: `<p class="mb-1 small text-muted">${escapeHtml(item.observacao || "Item adicionado ao estoque.")}</p>`,
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade)),
-        data,
+        hora,
       });
     } else if (item.tipo_registro === "RESIDUO") {
       html = montarItem({
@@ -268,7 +284,7 @@ function renderHistorico(itens) {
         seloClasse: "bg-secondary",
         detalhes: `<p class="mb-1 small text-muted">Enviado para tratamento (${escapeHtml(formatarTipoPerigo(item.tipo_perigo))})</p>`,
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
-        data,
+        hora,
       });
     } else if (item.tipo_registro === "CONSUMO") {
       html = montarItem({
@@ -282,7 +298,7 @@ function renderHistorico(itens) {
                                 <span class="fst-italic">Finalidade: ${escapeHtml(item.finalidade || "não informada")}</span>
                             </p>`,
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
-        data,
+        hora,
       });
     } else {
       const t = descreverTransferencia(item);
@@ -300,12 +316,15 @@ function renderHistorico(itens) {
         quantidade: escapeHtml(
           formatarQuantidade(item.quantidade_transferida, item.estoquelab?.unidade_medida)
         ),
-        data,
+        hora,
       });
     }
 
-    listaHistorico.innerHTML += html;
+    partes.push(html);
   });
+
+  partes.push("</ol></section>");
+  listaHistorico.innerHTML = partes.join("");
 }
 
 document.addEventListener("DOMContentLoaded", init);
