@@ -5,6 +5,7 @@ import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils
 import { confirmar } from "../../shared/utils/confirmacao.js";
 import { UNIDADES } from "../../shared/constants.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
+import { pictogramaPerigo } from "../../shared/utils/pictogramas.js";
 import {
   formatarQuantidade,
   formatarStatusResiduo,
@@ -185,7 +186,10 @@ function renderresiduos(residuos) {
 
   residuos.forEach((res) => {
     const isAberto = res.status === "Em Aberto";
-    const statusClass = isAberto ? "bg-warning text-dark" : "bg-success text-white";
+    // Status como texto: em aberto pede ação (ouro); descartado está resolvido.
+    const status = isAberto
+      ? `<span class="status-residuo status-aberto"><i class="bi bi-circle-fill"></i>${escapeHtml(formatarStatusResiduo(res.status))}</span>`
+      : `<span class="status-residuo status-descartado"><i class="bi bi-check-circle-fill"></i>${escapeHtml(formatarStatusResiduo(res.status))}</span>`;
     const dataF = new Date(res.data_criacao).toLocaleDateString("pt-BR");
 
     // Badge extra indicando que o resíduo veio de um consumo rastreado
@@ -199,14 +203,19 @@ function renderresiduos(residuos) {
             <div class="card h-100 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <span class="badge ${statusClass} rounded-pill px-3">${escapeHtml(formatarStatusResiduo(res.status))}</span>
+                        ${status}
                         <small class="text-muted">${dataF}</small>
                     </div>
-                    <h5 class="fw-bold mb-2">${escapeHtml(res.descricao)}</h5>
-                    <p class="small text-muted mb-2">
-                        <i class="bi bi-shield-exclamation me-1"></i> ${escapeHtml(formatarTipoPerigo(res.tipo_perigo))} | 
-                        <strong>${escapeHtml(formatarQuantidade(res.quantidade, res.unidade_medida))}</strong>
-                    </p>
+                    <div class="d-flex gap-3 align-items-start mb-2">
+                        ${pictogramaPerigo(res.tipo_perigo, 48)}
+                        <div class="min-w-0">
+                            <h5 class="fw-bold mb-1">${escapeHtml(res.descricao)}</h5>
+                            <p class="small text-muted mb-0">
+                                ${escapeHtml(formatarTipoPerigo(res.tipo_perigo))},
+                                <strong class="text-body">${escapeHtml(formatarQuantidade(res.quantidade, res.unidade_medida))}</strong>
+                            </p>
+                        </div>
+                    </div>
                     ${badgeConsumo ? `<p class="mb-3">${badgeConsumo}</p>` : '<div class="mb-3"></div>'}
                     
                     <div class="d-flex gap-2 border-top pt-3" data-permissao="residuo.registrar">
