@@ -237,7 +237,7 @@ function renderHistorico(itens) {
     }
     // TIPO 3: CONSUMO (USO INTERNO)
     else if (item.tipo_registro === "CONSUMO") {
-      const nomeReagente = item.reagente?.nome || "Reagente desconhecido";
+      const nomeReagente = escapeHtml(item.reagente?.nome || "Reagente desconhecido");
 
       html = `
                 <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
@@ -251,11 +251,11 @@ function renderHistorico(itens) {
                                 <span class="badge bg-info text-dark text-uppercase" style="font-size: 0.65rem;">Consumo</span>
                             </div>
                             <p class="mb-1 small text-muted-light">
-                                Consumido por: <strong>${item.nome_usuario}</strong><br>
-                                <span class="fst-italic">Motivo: ${item.finalidade || "Não informado"}</span>
+                                Consumido por: <strong>${escapeHtml(item.nome_usuario)}</strong><br>
+                                <span class="fst-italic">Motivo: ${escapeHtml(item.finalidade || "Não informado")}</span>
                             </p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Qtd: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
+                                <small class="text-white-50">Qtd: <strong>${escapeHtml(item.quantidade)} ${escapeHtml(item.unidade_medida)}</strong></small>
                                 <small class="text-white-50 opacity-75">${dataCompleta}</small>
                             </div>
                         </div>
