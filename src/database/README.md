@@ -1,6 +1,6 @@
 # Banco de dados — LabStocker
 
-Scripts SQL do LabStocker (PostgreSQL / Supabase). Aqui ficam tanto os **arquivos base** (montam o banco do zero).
+Scripts SQL do LabStocker (PostgreSQL / Supabase). Aqui ficam tanto os **arquivos base** (montam o banco do zero) quanto as **migrations** numeradas (mudanças incrementais sobre um banco já existente).
 
 > **Onde rodar:** Supabase → **SQL Editor**. Todos os scripts são seguros para colar e executar.
 
@@ -8,7 +8,7 @@ Scripts SQL do LabStocker (PostgreSQL / Supabase). Aqui ficam tanto os **arquivo
 
 ## 📦 Arquivos base (setup do zero)
 
-Rode estes, **nesta ordem**, para montar um banco novo já completo. Não é preciso rodar nenhuma migration depois disso.
+Rode estes, **nesta ordem**, para montar um banco novo. Depois, rode **todas** as migrations abaixo, também em ordem.
 
 | #   | Arquivo                            | O que faz                                                                                                                                                                                     |
 | --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -27,3 +27,14 @@ Rode estes, **nesta ordem**, para montar um banco novo já completo. Não é pre
 - Conferir a URL/anon key do projeto em `src/shared/config.js`.
 
 ---
+
+## 🔁 Migrations
+
+Rode em ordem crescente. Num banco que já tem uma migration aplicada, rode só as seguintes.
+
+| #   | Arquivo                     | O que faz                                                                                                                                                                                                                                                                     |
+| --- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001 | `001_consumo_reagentes.sql` | Cria a tabela `consumo` (com RLS), as colunas `id_consumo` e `id_usuario` em `residuo` e a RPC `registrar_consumo`.                                                                                                                                                           |
+| 002 | `002_correcoes_consumo.sql` | Corrige a checagem de permissão da `registrar_consumo` (usuário sem laboratório não consome mais estoque alheio), restringe a função a usuários logados e deixa `consumo.id_item_estoque` / `consumo.id_usuario` nullable, para permitir excluir itens de estoque e usuários. |
+
+> ⚠️ Não edite uma migration que já foi aplicada. Para corrigir algo, crie a próxima (`003_...sql`).
