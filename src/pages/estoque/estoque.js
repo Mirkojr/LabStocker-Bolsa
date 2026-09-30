@@ -25,6 +25,7 @@ const listaestoqueEl = document.getElementById("lista-estoque");
 const formestoque = document.getElementById("form-estoque");
 const inputBusca = document.getElementById("input-busca-estoque");
 const filtroValidade = document.getElementById("filtro-validade-estoque");
+const resumoEl = document.getElementById("resumo-estoque");
 const filtroUnidade = document.getElementById("filtro-unidade-estoque");
 const ordenarSelect = document.getElementById("ordenar-estoque");
 const spinner = document.getElementById("loading-spinner-estoque");
@@ -89,45 +90,110 @@ function popularUnidadesFiltro() {
 }
 
 // ===============================================
-// CLASSIFICAÇÃO DE VALIDADE (usada no filtro e no badge)
+// CLASSIFICAÇÃO DE VALIDADE (usada no filtro, no resumo e na lista)
 // ===============================================
+function diasParaVencer(item) {
+  return Math.ceil((new Date(item.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
+}
+
 function classificarValidade(item) {
   if (!item.data_validade) return "sem_data";
-  const diffDias = Math.ceil((new Date(item.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
-  if (diffDias < 0) return "vencido";
-  if (diffDias < 30) return "vence_breve";
+  const dias = diasParaVencer(item);
+  if (dias < 0) return "vencido";
+  if (dias < 30) return "vence_breve";
   return "no_prazo";
 }
 
+function estaEsgotado(item) {
+  return Number(item.quantidade) <= 0;
+}
+
+// Situação usada no filtro: esgotado tem prioridade sobre a validade.
+function atendeSituacao(item, situacao) {
+  if (!situacao) return true;
+  if (situacao === "esgotado") return estaEsgotado(item);
+  return classificarValidade(item) === situacao;
+}
+
+// A validade só ganha cor quando pede ação: vencida (vermelho) ou vencendo
+// em até 30 dias (ouro). No prazo é texto comum.
 function montarValidade(item) {
   const status = classificarValidade(item);
   if (status === "sem_data") {
-    return {
-      html: '<span class="badge bg-secondary badge-validade">Sem validade</span>',
-      borderClass: "",
-    };
+    return { html: '<span class="text-muted">Sem validade</span>', alerta: "" };
   }
 
-  const dataFormatada = new Date(item.data_validade).toLocaleDateString("pt-BR", {
-    timeZone: "UTC",
-  });
+  const data = new Date(item.data_validade).toLocaleDateString("pt-BR", { timeZone: "UTC" });
 
   if (status === "vencido") {
     return {
-      html: `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`,
-      borderClass: "border-danger",
+      html: `<span class="validade-vencida"><i class="bi bi-exclamation-octagon-fill me-1"></i>Venceu em ${data}</span>`,
+      alerta: "alerta-vencido",
     };
   }
   if (status === "vence_breve") {
+    const dias = diasParaVencer(item);
+    const falta = dias <= 0 ? "vence hoje" : dias === 1 ? "falta 1 dia" : `faltam ${dias} dias`;
     return {
-      html: `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`,
-      borderClass: "border-warning",
+      html: `<span class="validade-breve"><i class="bi bi-hourglass-split me-1"></i>${data} <small>(${falta})</small></span>`,
+      alerta: "alerta-breve",
     };
   }
-  return {
-    html: `<span class="badge bg-success badge-validade"><span class="d-none d-md-inline">Validade: </span>${dataFormatada}</span>`,
-    borderClass: "",
-  };
+  return { html: `<span>${data}</span>`, alerta: "" };
+}
+
+// Resumo no topo: quantos frascos pedem atenção. Cada contagem é um atalho
+// para o filtro de situação.
+function renderResumo() {
+  if (!resumoEl) return;
+  const contar = (situacao) => itensCache.filter((i) => atendeSituacao(i, situacao)).length;
+  const grupos = [
+    {
+      situacao: "vencido",
+      n: contar("vencido"),
+      um: "vencido",
+      varios: "vencidos",
+      icone: "bi-exclamation-octagon-fill",
+      classe: "resumo-vencido",
+    },
+    {
+      situacao: "vence_breve",
+      n: contar("vence_breve"),
+      um: "vence em até 30 dias",
+      varios: "vencem em até 30 dias",
+      icone: "bi-hourglass-split",
+      classe: "resumo-breve",
+    },
+    {
+      situacao: "esgotado",
+      n: contar("esgotado"),
+      um: "esgotado",
+      varios: "esgotados",
+      icone: "bi-slash-circle",
+      classe: "resumo-esgotado",
+    },
+  ].filter((g) => g.n > 0);
+
+  if (itensCache.length === 0) {
+    resumoEl.innerHTML = "";
+    return;
+  }
+  if (grupos.length === 0) {
+    resumoEl.innerHTML =
+      '<p class="resumo-ok mb-0"><i class="bi bi-check-circle me-1"></i>Nenhum frasco vencido, vencendo ou esgotado.</p>';
+    return;
+  }
+
+  const ativo = filtroValidade.value;
+  resumoEl.innerHTML = grupos
+    .map(
+      (
+        g
+      ) => `<button type="button" class="btn-resumo ${g.classe}" data-situacao="${g.situacao}" aria-pressed="${ativo === g.situacao}">
+            <i class="bi ${g.icone}"></i> <strong>${g.n}</strong> ${g.n === 1 ? g.um : g.varios}
+        </button>`
+    )
+    .join("");
 }
 
 // ===============================================
@@ -151,6 +217,7 @@ async function fetchestoque(labId) {
 }
 
 function aplicarFiltrosERenderizar() {
+  renderResumo();
   const termo = inputBusca.value.trim().toLowerCase();
   const fValidade = filtroValidade.value; // '' = todas
   const fUnidade = filtroUnidade.value; // '' = todas
@@ -160,7 +227,7 @@ function aplicarFiltrosERenderizar() {
     .filter((item) => {
       const nome = item.reagente?.nome?.toLowerCase() || "";
       if (termo && !nome.includes(termo)) return false;
-      if (fValidade && classificarValidade(item) !== fValidade) return false;
+      if (!atendeSituacao(item, fValidade)) return false;
       if (fUnidade && item.unidade_medida !== fUnidade) return false;
       return true;
     })
@@ -203,68 +270,74 @@ function renderPaginaEstoque() {
   });
 }
 
+// Lista em colunas: Reagente, Quantidade, Validade e Ações. No celular as
+// colunas viram linhas (ver .linha-estoque no style.css).
 function renderestoque(itens) {
-  listaestoqueEl.innerHTML = "";
+  listaestoqueEl.innerHTML = `
+        <div class="linha-estoque linha-cabecalho" aria-hidden="true">
+            <div>Reagente</div>
+            <div class="le-quantidade">Quantidade</div>
+            <div>Validade</div>
+            <div class="le-acoes"></div>
+        </div>`;
 
   itens.forEach((item) => {
-    const { html: validadeHTML, borderClass } = montarValidade(item);
+    const { html: validadeHTML, alerta } = montarValidade(item);
     const nome = escapeHtml(item.reagente?.nome);
     const obs = escapeHtml(item.observacoes_operacionais || "");
 
-    // Item zerado: mostra badge "Esgotado" e desabilita o botão de consumir,
-    // sem esconder o item (mantém o histórico/rastreabilidade do frasco).
-    const esgotado = Number(item.quantidade) <= 0;
-    const badgeEsgotado = esgotado
-      ? '<span class="badge bg-dark badge-esgotado"><i class="bi bi-slash-circle"></i> Esgotado</span>'
-      : "";
-    // Todo item tem a borda lateral (transparente quando não há alerta), para o
-    // texto de todos os itens começar na mesma coluna.
-    const borderFinal = esgotado ? "border-secondary" : borderClass || "border-white";
+    // Item zerado continua na lista (rastreabilidade do frasco), com o
+    // consumo desativado.
+    const esgotado = estaEsgotado(item);
+    const classeAlerta = esgotado ? "alerta-esgotado" : alerta;
 
     const div = document.createElement("div");
-    div.className = `list-group-item item-estoque mb-3 shadow-sm rounded border-0 border-start border-4 ${borderFinal}`;
+    div.className = `linha-estoque ${classeAlerta}`;
+    div.setAttribute("role", "listitem");
     div.innerHTML = `
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 gap-md-3">
-                <div class="d-flex align-items-center min-w-0">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex flex-shrink-0" style="width:48px;height:48px;">
-                        <i class="bi bi-droplet-half fs-4"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h5 class="mb-1 fw-bold text-dark d-flex flex-wrap align-items-center gap-2">${nome}${badgeEsgotado}</h5>
-                        <div class="mb-1">
-                            <span class="text-primary fw-bold fs-5">${escapeHtml(formatarNumero(item.quantidade))}</span>
-                            <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
-                        </div>
-                        ${obs ? `<small class="text-muted d-block text-truncate" title="${obs}">${obs}</small>` : ""}
-                    </div>
-                </div>
-
-                <div class="item-estoque-acoes">
-                    <div class="mb-md-2">${validadeHTML}</div>
-                    <div class="d-flex gap-2 justify-content-md-end">
-                        <button class="btn btn-sm btn-primary btn-consumir-estoque rounded-pill px-3" data-permissao="consumo.registrar"
-                            data-id="${escapeHtml(item.id)}"
-                            data-reagente="${nome}"
-                            data-quantidade="${escapeHtml(item.quantidade)}"
-                            data-unidade="${escapeHtml(item.unidade_medida)}"
-                            aria-label="Consumir ${nome}"
-                            ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
-                            <i class="bi bi-eyedropper"></i> Consumir
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque rounded-pill px-3" data-permissao="estoque.editar"
-                            data-id="${escapeHtml(item.id)}"
-                            data-reagente-id="${escapeHtml(item.id_reagente)}"
-                            data-quantidade="${escapeHtml(item.quantidade)}"
-                            data-unidade="${escapeHtml(item.unidade_medida)}"
-                            data-validade="${escapeHtml(item.data_validade || "")}"
-                            data-observacoes="${obs}"
-                            aria-label="Editar ${nome}">
-                            <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item" aria-label="Excluir ${nome}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
+            <div class="le-reagente">
+                <div class="le-nome">${nome}</div>
+                ${obs ? `<small class="text-muted d-block text-truncate" title="${obs}">${obs}</small>` : ""}
+            </div>
+            <div class="le-quantidade">
+                <span class="le-qtd">${escapeHtml(formatarNumero(item.quantidade))}</span>
+                <span class="le-unidade">${escapeHtml(item.unidade_medida)}</span>
+                ${esgotado ? '<span class="badge bg-secondary ms-1">Esgotado</span>' : ""}
+            </div>
+            <div class="le-validade">${validadeHTML}</div>
+            <div class="le-acoes">
+                <button class="btn btn-sm btn-primary btn-consumir-estoque rounded-pill px-3" data-permissao="consumo.registrar"
+                    data-id="${escapeHtml(item.id)}"
+                    data-reagente="${nome}"
+                    data-quantidade="${escapeHtml(item.quantidade)}"
+                    data-unidade="${escapeHtml(item.unidade_medida)}"
+                    aria-label="Consumir ${nome}"
+                    ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
+                    <i class="bi bi-eyedropper"></i> Consumir
+                </button>
+                <div class="dropdown" data-permissao="estoque.editar">
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle btn-mais" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mais ações para ${nome}">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button class="dropdown-item btn-edit-estoque" type="button"
+                                data-id="${escapeHtml(item.id)}"
+                                data-reagente-id="${escapeHtml(item.id_reagente)}"
+                                data-quantidade="${escapeHtml(item.quantidade)}"
+                                data-unidade="${escapeHtml(item.unidade_medida)}"
+                                data-validade="${escapeHtml(item.data_validade || "")}"
+                                data-observacoes="${obs}">
+                                <i class="bi bi-pencil me-2"></i>Editar
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item text-danger btn-delete-estoque" type="button" data-id="${escapeHtml(item.id)}">
+                                <i class="bi bi-trash me-2"></i>Excluir
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
         `;
@@ -512,6 +585,15 @@ inputBusca.addEventListener("input", aplicarFiltrosERenderizar);
 filtroValidade.addEventListener("change", aplicarFiltrosERenderizar);
 filtroUnidade.addEventListener("change", aplicarFiltrosERenderizar);
 ordenarSelect.addEventListener("change", aplicarFiltrosERenderizar);
+
+// Atalhos do resumo: aplicam (ou tiram, se já ativo) o filtro de situação.
+resumoEl?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-resumo");
+  if (!btn) return;
+  const situacao = btn.dataset.situacao;
+  filtroValidade.value = filtroValidade.value === situacao ? "" : situacao;
+  aplicarFiltrosERenderizar();
+});
 
 listaestoqueEl.addEventListener("click", (e) => {
   const btnEdit = e.target.closest(".btn-edit-estoque");
