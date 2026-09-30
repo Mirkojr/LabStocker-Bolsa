@@ -1,4 +1,5 @@
 import { showToast } from "../../shared/utils/toast.js";
+import { checkIsAdmin } from "../../shared/sessionManager.js";
 import {
   excluirreagente,
   listarreagentes,
@@ -42,6 +43,10 @@ let ID_PARA_EXCLUIR = null;
 
 // Estado de paginação e busca
 let filtroAtual = "";
+
+// Editar e excluir entradas do catálogo é restrito a admin (RLS no banco).
+// Os botões só aparecem para quem pode usá-los.
+let SOU_ADMIN = false;
 
 async function fetchreagentes(filtroNome = "", pagina = 1) {
   filtroAtual = filtroNome;
@@ -132,6 +137,7 @@ function renderreagentes(reagentes) {
                 </div>
             </div>
         `;
+    if (!SOU_ADMIN) div.querySelector(".btn-group")?.remove();
     listareagentesEl.appendChild(div);
   });
 }
@@ -217,7 +223,8 @@ function resetModal() {
 }
 
 // --- Listeners de Inicialização ---
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  SOU_ADMIN = Boolean(await checkIsAdmin());
   fetchreagentes();
 });
 
