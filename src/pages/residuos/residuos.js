@@ -42,8 +42,10 @@ let MEU_LAB_ID = null;
 // Quando o usuário vem da tela de estoque logo após um consumo, a URL traz
 // ?consumo_id=...&reagente=...&quantidade=...&unidade=... Isso permite
 // vincular o resíduo ao consumo de origem (rastreabilidade).
+// O vínculo vale só para o primeiro formulário aberto a partir do consumo:
+// é limpo quando esse modal fecha (salvando ou cancelando).
 const paramsUrl = new URLSearchParams(window.location.search);
-const consumoIdPreenchido = paramsUrl.get("consumo_id");
+let consumoIdPendente = paramsUrl.get("consumo_id");
 
 // Estado e container de paginação
 let paginaAtualResiduos = 1;
@@ -55,6 +57,16 @@ function popularUnidades() {
   unidadeInput.innerHTML =
     '<option value="" disabled selected>Selecione...</option>' +
     UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join("");
+}
+
+// Registros antigos podem ter unidade em texto livre ("Kg", "litros") que não
+// está em UNIDADES. Inclui a unidade como opção para o <select> não ficar vazio.
+function selecionarUnidade(valor) {
+  const unidade = (valor || "").trim();
+  if (unidade && ![...unidadeInput.options].some((opcao) => opcao.value === unidade)) {
+    unidadeInput.add(new Option(unidade, unidade));
+  }
+  unidadeInput.value = unidade;
 }
 
 // ===============================================
@@ -89,13 +101,16 @@ async function init() {
 // Se veio de um consumo (via query string), abre o modal já pré-preenchido
 // com reagente/quantidade/unidade daquele consumo.
 function abrirModalViaConsumoSeNecessario() {
-  if (!consumoIdPreenchido) return;
+  if (!consumoIdPendente) return;
+
+  // Tira os parâmetros da URL para que recarregar a página não reabra o formulário
+  window.history.replaceState(null, "", window.location.pathname + window.location.hash);
 
   formresiduo.reset();
   editIdInput.value = "";
   descInput.value = `Resíduo de ${paramsUrl.get("reagente") || ""}`.trim();
   qtdInput.value = paramsUrl.get("quantidade") || "";
-  unidadeInput.value = paramsUrl.get("unidade") || "";
+  selecionarUnidade(paramsUrl.get("unidade"));
   stepperResiduo?.atualizarEstadoBotoes();
 
   modalTitle.textContent = "Registrar Resíduo do Consumo";
@@ -209,7 +224,7 @@ function handleEditClick(btn) {
   descInput.value = d.desc;
   tipoInput.value = d.tipo;
   qtdInput.value = d.qtd;
-  unidadeInput.value = d.unidade;
+  selecionarUnidade(d.unidade);
   stepperResiduo?.atualizarEstadoBotoes();
 
   modalTitle.textContent = "Editar Registro de Residuo";
@@ -260,15 +275,15 @@ async function handleFormSubmit(e) {
     tipo_perigo: tipo,
     quantidade,
     unidade_medida: unidade,
-    // Vincula o resíduo ao consumo de origem, quando aplicável.
-    // Em edições (id preenchido) ou registros manuais, fica null.
-    id_consumo: !id && consumoIdPreenchido ? consumoIdPreenchido : null,
   };
 
   try {
     // Em novos registros definimos o status inicial; edicoes preservam o status atual
     if (!id) {
       payload.status = "Em Aberto";
+      // Vincula o resíduo ao consumo de origem, quando aplicável.
+      // Em edições o campo não é enviado, para não apagar um vínculo existente.
+      if (consumoIdPendente) payload.id_consumo = consumoIdPendente;
     }
 
     const { error } = await salvarResiduo(id, payload);
@@ -321,6 +336,8 @@ async function atualizarStatus(id, novoStatus) {
 }
 
 function resetModalResiduo() {
+  consumoIdPendente = null;
+  popularUnidades(); // remove unidades antigas incluídas por selecionarUnidade
   formresiduo.reset();
   editIdInput.value = "";
   modalTitle.textContent = "Registrar Novo Resíduo";
