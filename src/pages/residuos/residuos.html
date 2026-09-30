@@ -16,9 +16,9 @@
             color: rgba(255,255,255,0.7);
         }
         .filter-badge:hover, .filter-badge.active {
-            background: #FFD700;
-            color: #132E4B;
-            border-color: #FFD700;
+            background: var(--ufc-ouro);
+            color: var(--tinta);
+            border-color: var(--ufc-ouro);
         }
     </style>
 </head>
@@ -41,8 +41,8 @@
                 </div>
             </div>
             
-            <button class="btn btn-danger fw-bold shadow-lg px-4 py-2 rounded-pill" data-permissao="residuo.registrar" data-bs-toggle="modal" data-bs-target="#modal-residuo">
-                <i class="bi bi-plus-lg me-2"></i> Novo Frasco
+            <button class="btn btn-warning fw-bold text-dark shadow-lg px-4 py-2 rounded-pill" data-permissao="residuo.registrar" data-bs-toggle="modal" data-bs-target="#modal-residuo">
+                <i class="bi bi-plus-lg me-2"></i> Registrar resíduo
             </button>
         </div>
 
@@ -56,7 +56,7 @@
             </div>
             
             <div id="spinner-res" class="text-center py-5 d-none">
-                <div class="spinner-border text-danger" role="status"></div>
+                <div class="spinner-border text-warning" role="status"></div>
                 <p class="mt-2 text-muted-light">Sincronizando inventário...</p>
             </div>
 
@@ -69,10 +69,10 @@
     <div class="modal fade" id="modal-residuo" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-content-lab">
-                <div class="modal-header modal-header-lab bg-danger text-white">
+                <div class="modal-header modal-header-lab bg-primary text-white">
                     <div class="modal-header-icon"><i class="bi bi-recycle"></i></div>
                     <div>
-                        <h5 class="modal-title-lab mb-0">Registrar Novo Resíduo</h5>
+                        <h5 class="modal-title-lab mb-0">Registrar resíduo</h5>
                         <p class="modal-subtitle-lab">Controle de descarte e destinação</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -83,19 +83,19 @@
                     
                     <div class="modal-body modal-body-lab">
                         <div class="mb-3">
-                            <label for="res-descricao" class="form-label-lab"><i class="bi bi-card-text"></i> Descrição do Material</label>
-                            <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-descricao" placeholder="Ex: Mistura de Solventes Orgânicos" required>
+                            <label for="res-descricao" class="form-label-lab"><i class="bi bi-card-text"></i> Descrição do material</label>
+                            <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="res-descricao" placeholder="Ex.: mistura de solventes orgânicos" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="res-tipo" class="form-label-lab"><i class="bi bi-shield-exclamation"></i> Tipo de Perigo Principal</label>
+                            <label for="res-tipo" class="form-label-lab"><i class="bi bi-shield-exclamation"></i> Tipo de perigo principal</label>
                             <select class="form-select rounded-pill border-0 shadow-sm px-3" id="res-tipo" required>
                                 <option value="" disabled selected>Selecione a categoria...</option>
                                 <option value="Inflamavel">Inflamável</option>
                                 <option value="Toxico">Tóxico</option>
                                 <option value="Corrosivo">Corrosivo (Ácido/Base)</option>
                                 <option value="Biologico">Biológico</option>
-                                <option value="Outro">Outro / Mistura</option>
+                                <option value="Outro">Outro / mistura</option>
                             </select>
                         </div>
 
@@ -119,7 +119,7 @@
                     
                     <div class="modal-footer modal-footer-lab">
                         <button type="button" class="btn btn-cancel-lab" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger btn-confirm-lab"><i class="bi bi-check-lg"></i> Salvar registro</button>
+                        <button type="submit" class="btn btn-primary btn-confirm-lab"><i class="bi bi-check-lg"></i> Salvar registro</button>
                     </div>
                 </form>
             </div>

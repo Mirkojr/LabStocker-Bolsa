@@ -85,7 +85,7 @@ export function renderPaginador(
   const paginaSegura = Math.min(Math.max(1, paginaAtual), paginas);
 
   const nav = document.createElement("nav");
-  nav.setAttribute("aria-label", "Navegacao de paginas");
+  nav.setAttribute("aria-label", "Navegação de páginas");
 
   const ul = document.createElement("ul");
   ul.className = "pagination mb-0";
@@ -120,7 +120,7 @@ export function renderPaginador(
   ul.appendChild(
     criarItem('<i class="bi bi-chevron-left"></i>', paginaSegura - 1, {
       desabilitado: paginaSegura === 1,
-      aria: "Pagina anterior",
+      aria: "Página anterior",
     })
   );
 
@@ -148,7 +148,7 @@ export function renderPaginador(
   ul.appendChild(
     criarItem('<i class="bi bi-chevron-right"></i>', paginaSegura + 1, {
       desabilitado: paginaSegura === paginas,
-      aria: "Proxima pagina",
+      aria: "Próxima página",
     })
   );
 

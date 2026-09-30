@@ -13,6 +13,7 @@ import { listarreagentesParaestoque } from "../../shared/services/reagentesServi
 import { registrarConsumo } from "../../shared/services/consumoService.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
 import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
+import { formatarNumero, formatarQuantidade } from "../../shared/utils/formatters.js";
 import {
   garantirContainerPaginador,
   paginarLista,
@@ -71,13 +72,6 @@ let consumoQuantidadeDisponivel = 0; // saldo do item atualmente aberto no modal
 // Container de paginacao (inserido logo abaixo da lista)
 const paginadorEstoqueEl = garantirContainerPaginador(listaestoqueEl, "paginador-estoque");
 
-// Formata número no padrão pt-BR (vírgula decimal, sem zeros sobrando)
-function formatarQuantidade(valor) {
-  const num = Number(valor);
-  if (Number.isNaN(num)) return escapeHtml(String(valor ?? ""));
-  return num.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-}
-
 // Preenche o <select> de unidades do FORM a partir da fonte única (constants.js)
 function popularUnidadesForm() {
   if (!unidadeInput) return;
@@ -131,7 +125,7 @@ function montarValidade(item) {
     };
   }
   return {
-    html: `<span class="badge bg-success badge-validade">Val: ${dataFormatada}</span>`,
+    html: `<span class="badge bg-success badge-validade"><span class="d-none d-md-inline">Validade: </span>${dataFormatada}</span>`,
     borderClass: "",
   };
 }
@@ -237,7 +231,7 @@ function renderestoque(itens) {
                     <div>
                         <h5 class="mb-1 fw-bold text-dark">${nome}${badgeEsgotado}</h5>
                         <div class="mb-1">
-                            <span class="text-primary fw-bold fs-5">${formatarQuantidade(item.quantidade)}</span>
+                            <span class="text-primary fw-bold fs-5">${escapeHtml(formatarNumero(item.quantidade))}</span>
                             <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
                         </div>
                         <small class="text-muted d-block text-truncate" style="max-width: 300px;" title="${obsTexto}">
@@ -254,8 +248,9 @@ function renderestoque(itens) {
                             data-reagente="${nome}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
                             data-unidade="${escapeHtml(item.unidade_medida)}"
+                            aria-label="Consumir ${nome}"
                             ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
-                            <i class="bi bi-flask"></i> <span class="d-none d-md-inline">Consumir</span>
+                            <i class="bi bi-eyedropper"></i> <span class="d-none d-md-inline">Consumir</span>
                         </button>
                         <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3" data-permissao="estoque.editar"
                             data-id="${escapeHtml(item.id)}"
@@ -263,10 +258,11 @@ function renderestoque(itens) {
                             data-quantidade="${escapeHtml(item.quantidade)}"
                             data-unidade="${escapeHtml(item.unidade_medida)}"
                             data-validade="${escapeHtml(item.data_validade || "")}"
-                            data-observacoes="${obs}">
+                            data-observacoes="${obs}"
+                            aria-label="Editar ${nome}">
                             <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item">
+                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item" aria-label="Excluir ${nome}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -374,8 +370,8 @@ function handleEditClickestoque(button) {
   validadeInput.value = validade;
   observacoesInput.value = observacoes;
   stepperEstoque?.atualizarEstadoBotoes();
-  modalTitle.textContent = "Editar Item";
-  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar Alterações';
+  modalTitle.textContent = "Editar item";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar alterações';
   modalestoque.show();
 }
 async function handleDeleteClickestoque(button) {
@@ -403,7 +399,7 @@ async function handleDeleteClickestoque(button) {
 function resetModalestoque() {
   formestoque.reset();
   editIdInput.value = "";
-  modalTitle.textContent = "Adicionar Item ao estoque";
+  modalTitle.textContent = "Adicionar item ao estoque";
   modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
   selectreagente.value = "";
   unidadeInput.value = "";
@@ -420,7 +416,7 @@ function handleConsumirClick(button) {
   formConsumo.reset();
   consumoItemIdInput.value = id;
   consumoItemLabel.textContent = reagente;
-  consumoDisponivelEl.textContent = `Disponível: ${formatarQuantidade(quantidade)} ${unidade}`;
+  consumoDisponivelEl.textContent = `Disponível: ${formatarQuantidade(quantidade, unidade)}`;
   consumoQuantidadeDisponivel = parseFloat(quantidade) || 0;
   stepperConsumo?.setLimites(0.01, consumoQuantidadeDisponivel);
   modalConsumo.show();
@@ -443,7 +439,7 @@ async function handleFormSubmitConsumo(evento) {
   }
   if (quantidade > consumoQuantidadeDisponivel) {
     showToast(
-      `Quantidade maior que o disponível (${formatarQuantidade(consumoQuantidadeDisponivel)}).`,
+      `Quantidade maior que o disponível (${formatarNumero(consumoQuantidadeDisponivel)}).`,
       "error"
     );
     return;

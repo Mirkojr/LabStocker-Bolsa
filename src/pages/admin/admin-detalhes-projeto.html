@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Projeto - Admin</title>
+    <title>Detalhes do projeto - LabStocker</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
@@ -41,28 +41,28 @@
                         <div class="row g-5">
                             
                             <div class="col-lg-7">
-                                <h5 class="text-secondary mb-4">Dados do Requerimento</h5>
+                                <h5 class="text-secondary mb-4">Dados do requerimento</h5>
                                 
                                 <h6 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-person me-2"></i>Responsável</h6>
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-12">
-                                        <label class="text-muted small text-uppercase fw-bold">Nome Completo</label>
+                                        <label class="text-muted small fw-bold">Nome completo</label>
                                         <div class="fs-6 text-dark" id="view-nome">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">CPF</label>
+                                        <label class="text-muted small fw-bold">CPF</label>
                                         <div class="fs-6" id="view-cpf">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">SIAPE/Matrícula</label>
+                                        <label class="text-muted small fw-bold">SIAPE ou matrícula</label>
                                         <div class="fs-6" id="view-siape">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Email</label>
+                                        <label class="text-muted small fw-bold">E-mail</label>
                                         <div class="fs-6" id="view-email">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Telefone</label>
+                                        <label class="text-muted small fw-bold">Telefone</label>
                                         <div class="fs-6" id="view-telefone">-</div>
                                     </div>
                                 </div>
@@ -70,19 +70,19 @@
                                 <h6 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-clipboard-data me-2"></i>Projeto</h6>
                                 <div class="row g-3 mb-4">
                                     <div class="col-12">
-                                        <label class="text-muted small text-uppercase fw-bold">Título do Projeto</label>
+                                        <label class="text-muted small fw-bold">Título do projeto</label>
                                         <div class="fs-6 text-dark fw-semibold" id="view-titulo">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Órgão Financiador</label>
+                                        <label class="text-muted small fw-bold">Órgão financiador</label>
                                         <div id="view-financiador">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Registro Nº</label>
+                                        <label class="text-muted small fw-bold">Nº de registro</label>
                                         <div id="view-registro">-</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Período de Execução</label>
+                                        <label class="text-muted small fw-bold">Período de execução</label>
                                         <div id="view-periodo">-</div>
                                     </div>
                                 </div>
@@ -90,16 +90,16 @@
                                 <h6 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-house-gear me-2"></i>Laboratório</h6>
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-8">
-                                        <label class="text-muted small text-uppercase fw-bold">Nome do Laboratório</label>
+                                        <label class="text-muted small fw-bold">Nome do laboratório</label>
                                         <div class="fs-6" id="view-lab-nome">-</div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="text-muted small text-uppercase fw-bold">Código SIPAC</label>
+                                        <label class="text-muted small fw-bold">Código SIPAC</label>
                                         <div class="fs-6" id="view-lab-sipac">-</div>
                                     </div>
                                 </div>
 
-                                <h6 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-box-seam me-2"></i>Produtos Solicitados</h6>
+                                <h6 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-box-seam me-2"></i>Produtos solicitados</h6>
                                 <div class="card border-0 bg-light">
                                     <ul id="view-produtos" class="list-group list-group-flush bg-transparent"></ul>
                                 </div>
@@ -114,7 +114,7 @@
                                     <div id="admin-area-aprovado" class="d-none text-center">
                                         <div class="mb-4">
                                             <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                                            <h4 class="text-success mt-2">Projeto Aprovado!</h4>
+                                            <h4 class="text-success mt-2">Projeto aprovado</h4>
                                             <p class="text-muted small">O ofício assinado já está disponível para o requerente.</p>
                                         </div>
                                         
@@ -128,7 +128,7 @@
                                         </div>
                                         
                                         <div class="mt-4 text-start">
-                                            <h6 class="text-muted small text-uppercase fw-bold mb-3">Dados Registrados</h6>
+                                            <h6 class="text-muted small fw-bold mb-3">Dados registrados</h6>
                                             <ul class="list-unstyled small">
                                                 <li class="mb-2"><strong>Cargo:</strong> <span id="read-cargo"></span></li>
                                                 <li class="mb-2"><strong>Departamento:</strong> <span id="read-depto"></span></li>
@@ -140,7 +140,7 @@
                                     <div id="admin-area-recusado" class="d-none text-center">
                                         <div class="mb-3">
                                             <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
-                                            <h4 class="text-danger mt-2">Solicitação Recusada</h4>
+                                            <h4 class="text-danger mt-2">Solicitação recusada</h4>
                                         </div>
                                         <div class="alert alert-danger text-start small">
                                             <strong>Motivo:</strong> <span id="read-motivo"></span>
@@ -152,33 +152,33 @@
                                         <div class="mb-4">
                                             <div class="d-flex align-items-center mb-3">
                                                 <span class="badge bg-primary rounded-circle me-2">1</span>
-                                                <h6 class="mb-0 fw-bold">Gerar Minuta do Ofício</h6>
+                                                <h6 class="mb-0 fw-bold">Gerar minuta do ofício</h6>
                                             </div>
                                             <p class="small text-muted mb-3">Preencha os dados administrativos para gerar o arquivo .docx. O sistema salvará uma cópia, mas <strong>não aprovará</strong> o projeto ainda.</p>
                                             
                                             <form id="form-gerar-minuta">
                                                 <div class="mb-2">
-                                                    <label class="form-label small fw-bold">Cargo do Responsável</label>
-                                                    <input type="text" id="admin-cargo" class="form-control form-control-sm" required placeholder="Ex: Coord. do Laboratório">
+                                                    <label class="form-label small fw-bold">Cargo do responsável</label>
+                                                    <input type="text" id="admin-cargo" class="form-control form-control-sm" required placeholder="Ex.: Coordenadora do laboratório">
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label small fw-bold">Departamento</label>
                                                     <input type="text" id="admin-depto" class="form-control form-control-sm" required>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label small fw-bold">Unidade Acadêmica</label>
+                                                    <label class="form-label small fw-bold">Unidade acadêmica</label>
                                                     <input type="text" id="admin-unidade" class="form-control form-control-sm" required>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label small fw-bold">Local das Atividades</label>
+                                                    <label class="form-label small fw-bold">Local das atividades</label>
                                                     <input type="text" id="admin-local-ativ" class="form-control form-control-sm" required>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label small fw-bold">Depto. das Atividades</label>
+                                                    <label class="form-label small fw-bold">Departamento das atividades</label>
                                                     <input type="text" id="admin-depto-ativ" class="form-control form-control-sm" required>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label small fw-bold">Órgão Controlador</label>
+                                                    <label class="form-label small fw-bold">Órgão controlador</label>
                                                     <input type="text" id="admin-orgao" class="form-control form-control-sm" required>
                                                 </div>
 
@@ -191,13 +191,13 @@
                                         <div id="area-upload-pdf" class="border-top pt-4 mt-4 d-none">
                                             <div class="d-flex align-items-center mb-3">
                                                 <span class="badge bg-success rounded-circle me-2">2</span>
-                                                <h6 class="mb-0 fw-bold text-success">Aprovação Final</h6>
+                                                <h6 class="mb-0 fw-bold text-success">Aprovação final</h6>
                                             </div>
                                             <p class="small text-muted mb-3">Após assinar o documento, digitalize e anexe o PDF abaixo para finalizar.</p>
                                             
                                             <form id="form-upload-pdf">
                                                 <div class="mb-3">
-                                                    <label for="input-pdf" class="form-label small fw-bold">Arquivo PDF Assinado</label>
+                                                    <label for="input-pdf" class="form-label small fw-bold">Arquivo PDF assinado</label>
                                                     <input class="form-control form-control-sm" type="file" id="input-pdf" accept="application/pdf" required>
                                                 </div>
                                                 <button type="submit" class="btn btn-success w-100 shadow-sm" id="btn-finalizar">

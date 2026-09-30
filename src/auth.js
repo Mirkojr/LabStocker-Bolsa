@@ -33,11 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Erro ao buscar perfil:", perfilError.message);
           // Desloga o usuario se ele nao tiver perfil vinculado
           await logout();
-          throw new Error("Usuario autenticado, mas nenhum perfil correspondente foi encontrado.");
+          throw new Error("Usuário autenticado, mas nenhum perfil correspondente foi encontrado.");
         }
 
         // SUCESSO!
-        showToast("Login realizado com sucesso! Redirecionando...", "success");
+        showToast("Login feito. Abrindo o painel...", "success");
 
         setTimeout(() => {
           window.location.href = "pages/dashboard/dashboard.html";
@@ -48,9 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const mensagemErro = error && error.message ? error.message : "Erro desconhecido";
 
         if (mensagemErro.includes("Invalid login credentials")) {
-          showToast("Email ou senha incorretos.", "error");
+          showToast("E-mail ou senha incorretos.", "error");
         } else if (mensagemErro.includes("Email not confirmed")) {
-          showToast("Por favor, confirme seu e-mail antes de acessar.", "error");
+          showToast("Confirme seu e-mail antes de entrar.", "error");
         } else {
           showToast("Erro ao entrar: " + mensagemErro, "error");
         }

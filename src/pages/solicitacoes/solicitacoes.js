@@ -2,6 +2,8 @@ import { getCurrentLabId } from "../../shared/sessionManager.js";
 import { obterLaboratorioAtivo, aplicarPermissoes } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { confirmar, confirmarRecusa } from "../../shared/utils/confirmacao.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
+import { formatarQuantidade } from "../../shared/utils/formatters.js";
 import {
   listarSolicitacoesPendentes,
   aprovarTransferencia,
@@ -33,7 +35,7 @@ async function init() {
     }
   } catch (error) {
     console.error(error);
-    showToast("Erro ao carregar dados da sessao.", "error");
+    showToast("Erro ao carregar os dados da sessão.", "error");
   }
 }
 
@@ -51,14 +53,14 @@ async function fetchPedidosRecebidos() {
       listaPedidos.innerHTML = `
                 <div class="text-center py-5 text-muted-light">
                     <i class="bi bi-inbox fs-1 opacity-25"></i>
-                    <p class="mt-3">Nenhuma solicitacao pendente no momento.</p>
+                    <p class="mt-3">Nenhum pedido pendente no momento.</p>
                 </div>`;
     } else {
       renderPedidos(data);
     }
   } catch (error) {
     console.error(error);
-    showToast("Erro ao carregar lista de pedidos.", "error");
+    showToast("Erro ao carregar os pedidos.", "error");
   } finally {
     spinner.classList.add("d-none");
   }
@@ -66,10 +68,13 @@ async function fetchPedidosRecebidos() {
 
 function renderPedidos(pedidos) {
   pedidos.forEach((pedido) => {
-    const nomeLabSolicitante = pedido.laboratorio?.nome_laboratorio || "Lab Externo";
-    const nomereagente = pedido.estoquelab?.reagente?.nome || "Item desconhecido";
-    const quantidade = pedido.quantidade_transferida;
-    const unidade = pedido.estoquelab?.unidade_medida || "un";
+    const nomeLabSolicitante = escapeHtml(
+      pedido.laboratorio?.nome_laboratorio || "Outro laboratório"
+    );
+    const nomereagente = escapeHtml(pedido.estoquelab?.reagente?.nome || "Item desconhecido");
+    const quantidade = escapeHtml(
+      formatarQuantidade(pedido.quantidade_transferida, pedido.estoquelab?.unidade_medida || "un")
+    );
     const data = new Date(pedido.data_solicitacao).toLocaleDateString("pt-BR");
 
     const div = document.createElement("div");
@@ -82,16 +87,16 @@ function renderPedidos(pedidos) {
                 <div class="mb-3 mb-md-0">
                     <h5 class="mb-1 fw-bold text-white">${nomereagente}</h5>
                     <p class="mb-1 text-muted-light">
-                        <span class="text-info fw-bold">${nomeLabSolicitante}</span> solicitou 
-                        <span class="badge bg-light bg-opacity-10 text-white border border-white border-opacity-25">${quantidade} ${unidade}</span>
+                        <span class="text-white fw-bold">${nomeLabSolicitante}</span> pediu
+                        <span class="badge bg-light bg-opacity-10 text-white border border-white border-opacity-25">${quantidade}</span>
                     </p>
                     <small class="opacity-50 text-white"><i class="bi bi-calendar3 me-1"></i>Pedido em: ${data}</small>
                 </div>
                 <div class="d-flex gap-2" data-permissao="transferencia.aprovar">
-                    <button class="btn btn-success rounded-pill px-4 fw-bold btn-aprovar shadow-sm" data-id="${pedido.id}">
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold btn-aprovar shadow-sm" data-id="${escapeHtml(pedido.id)}">
                         <i class="bi bi-check-lg me-1"></i> Aprovar
                     </button>
-                    <button class="btn btn-outline-danger rounded-pill px-4 btn-recusar" data-id="${pedido.id}">
+                    <button class="btn btn-outline-danger rounded-pill px-4 btn-recusar" data-id="${escapeHtml(pedido.id)}">
                         <i class="bi bi-x-lg me-1"></i> Recusar
                     </button>
                 </div>
@@ -104,10 +109,11 @@ function renderPedidos(pedidos) {
 
 async function handleAprovar(id) {
   const ok = await confirmar({
-    titulo: "Aprovar transferência",
-    mensagem: "O item será debitado do seu estoque imediatamente e o histórico será registrado.",
+    titulo: "Aprovar pedido",
+    mensagem:
+      "A quantidade sai do seu estoque na hora e a transferência fica registrada no histórico.",
     textoConfirmar: "Aprovar",
-    tipo: "success",
+    tipo: "primary",
     icone: "bi-check-circle-fill",
   });
   if (!ok) return;
@@ -116,18 +122,22 @@ async function handleAprovar(id) {
     const { error } = await aprovarTransferencia(id);
     if (error) throw error;
 
-    showToast("Transferencia aprovada! estoques atualizados com sucesso.", "success");
+    showToast(
+      "Pedido aprovado. A transferência foi registrada e os estoques atualizados.",
+      "success"
+    );
     fetchPedidosRecebidos();
   } catch (error) {
     console.error(error);
-    showToast("Erro ao processar aprovacao: " + error.message, "error");
+    showToast("Erro ao aprovar o pedido: " + error.message, "error");
   }
 }
 
 async function handleRecusar(id) {
   const { confirmado, motivo } = await confirmarRecusa({
-    titulo: "Recusar solicitação",
-    mensagem: "Descreva o motivo da recusa. Ele ficará visível no histórico do solicitante.",
+    titulo: "Recusar pedido",
+    mensagem:
+      "Descreva o motivo da recusa. Ele fica visível no histórico do laboratório que fez o pedido.",
     textoConfirmar: "Recusar pedido",
   });
   if (!confirmado) return;
@@ -136,7 +146,7 @@ async function handleRecusar(id) {
     const { error } = await recusarTransferencia(id, motivo);
     if (error) throw error;
 
-    showToast("Solicitacao recusada.", "warning");
+    showToast("Pedido recusado.", "warning");
     fetchPedidosRecebidos();
   } catch (error) {
     console.error(error);

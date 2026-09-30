@@ -23,11 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- VALIDACOES INICIAIS ---
     if (senha !== confirmarSenha) {
-      alert("As senhas nao coincidem!");
+      alert("As senhas não coincidem.");
       return;
     }
     if (!tipoIdentificador) {
-      alert("Por favor, selecione se e Tecnico ou Aluno.");
+      alert(
+        "Selecione o seu vínculo com a UFC: docente ou técnico (SIAPE), ou discente (matrícula)."
+      );
       return;
     }
 
@@ -45,8 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // SUCESSO!
       alert(
-        "Cadastro realizado! Para acessar um laboratorio, peca ao chefe (ou a um gestor) " +
-          "para adicionar voce pelo e-mail informado. Voce sera redirecionado para o login."
+        "Conta criada. Para acessar um laboratório, peça ao chefe (ou a um gestor) " +
+          "para adicionar você pelo e-mail informado. Agora você vai para a tela de login."
       );
       window.location.href = "../../index.html";
     } catch (error) {

@@ -6,6 +6,7 @@ import {
   salvarreagente,
 } from "../../shared/services/reagentesService.js";
 import { formatarFormulaQuimica } from "../../shared/utils/formatters.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
 import {
   garantirContainerPaginador,
   renderPaginador,
@@ -90,19 +91,17 @@ function renderreagentes(reagentes) {
   listareagentesEl.innerHTML = "";
 
   reagentes.forEach((reagente) => {
-    let badgeControlado = "";
-    if (reagente.instituicao_controladora) {
-      badgeControlado = `
-                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-2">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> ${reagente.instituicao_controladora}
-                </span>`;
-    }
+    // Controle é regra de compra, não risco químico: marca neutra, e nada
+    // quando o reagente não é controlado.
+    const nome = escapeHtml(reagente.nome);
+    const badgeControlado = reagente.instituicao_controladora
+      ? `<span class="badge text-primary-emphasis bg-primary-subtle border border-primary-subtle fw-semibold">
+                    <i class="bi bi-file-earmark-lock me-1"></i>Controlado: ${escapeHtml(reagente.instituicao_controladora)}
+                </span>`
+      : "";
 
     const div = document.createElement("div");
     div.className = "list-group-item p-3 mb-2 shadow-sm rounded border-0";
-    div.style.transition = "transform 0.2s";
-    div.onmouseover = () => (div.style.transform = "translateX(5px)");
-    div.onmouseout = () => (div.style.transform = "translateX(0)");
 
     div.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
@@ -112,26 +111,25 @@ function renderreagentes(reagentes) {
                     </div>
                     <div>
                         <h5 class="mb-1 fw-bold text-dark">
-                            ${reagente.nome}
+                            ${nome}
                         </h5>
-                        <p class="mb-1 text-muted small font-monospace">
+                        <p class="mb-1 text-muted small">
                             ${formatarFormulaQuimica(reagente.composicao_quimica) || '<span class="text-muted opacity-50">Sem fórmula</span>'}
                         </p>
-                        <div class="mt-1">
-                             ${badgeControlado || '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Não Controlado</span>'}
-                        </div>
+                        ${badgeControlado ? `<div class="mt-1">${badgeControlado}</div>` : ""}
                     </div>
                 </div>
                 
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm btn-outline-primary btn-edit rounded-start-pill px-3" 
-                        data-id="${reagente.id}"
-                        data-nome="${reagente.nome}"
-                        data-composicao="${reagente.composicao_quimica || ""}"
-                        data-controladora="${reagente.instituicao_controladora || ""}">
+                        data-id="${escapeHtml(reagente.id)}"
+                        data-nome="${nome}"
+                        data-composicao="${escapeHtml(reagente.composicao_quimica || "")}"
+                        data-controladora="${escapeHtml(reagente.instituicao_controladora || "")}"
+                        aria-label="Editar ${nome}">
                         <i class="bi bi-pencil-fill"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete rounded-end-pill px-3" data-id="${reagente.id}">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete rounded-end-pill px-3" data-id="${escapeHtml(reagente.id)}" aria-label="Excluir ${nome}">
                         <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
@@ -157,7 +155,7 @@ async function handleFormSubmit(evento) {
     const { error } = await salvarreagente(id || null, dadosForm);
     if (error) throw error;
 
-    showToast(id ? "reagente atualizado!" : "reagente cadastrado!", "success");
+    showToast(id ? "Reagente atualizado." : "Reagente cadastrado.", "success");
     modalreagente.hide();
     fetchreagentes(inputBusca.value, 1);
   } catch (error) {
@@ -206,7 +204,7 @@ btnConfirmarExclusao.addEventListener("click", async () => {
       throw error;
     }
 
-    showToast("reagente excluído com sucesso.", "success");
+    showToast("Reagente excluído.", "success");
     fetchreagentes(inputBusca.value, 1);
   } catch (error) {
     showToast("Erro ao excluir: " + error.message, "error");
@@ -218,7 +216,7 @@ btnConfirmarExclusao.addEventListener("click", async () => {
 function resetModal() {
   formreagente.reset();
   editIdInput.value = "";
-  modalTitle.textContent = "Cadastrar Novo reagente";
+  modalTitle.textContent = "Cadastrar reagente";
   modalSubmitBtn.textContent = "Salvar";
 }
 

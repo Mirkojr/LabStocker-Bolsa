@@ -1,4 +1,9 @@
-import { formatarCPF, formatarTelefone } from "../../shared/utils/formatters.js";
+import {
+  formatarCPF,
+  formatarQuantidade,
+  formatarTelefone,
+} from "../../shared/utils/formatters.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
 import {
   buscarProjetoPorId,
   salvarMinuta,
@@ -65,7 +70,7 @@ async function carregarDetalhes() {
     data.produtos.forEach((prod, index) => {
       const li = document.createElement("li");
       li.className = "list-group-item d-flex justify-content-between align-items-center";
-      li.innerHTML = `<span><strong>${index + 1}.</strong> ${prod.nome}</span><span class="badge bg-secondary rounded-pill">${prod.quantidade} ${formatarUnidade(prod.unidade)}</span>`;
+      li.innerHTML = `<span><strong>${index + 1}.</strong> ${escapeHtml(prod.nome)}</span><span class="badge bg-secondary rounded-pill">${escapeHtml(formatarQuantidade(prod.quantidade, formatarUnidade(prod.unidade)))}</span>`;
       listaProd.appendChild(li);
     });
   }
@@ -188,12 +193,10 @@ document.getElementById("form-gerar-minuta").addEventListener("submit", async (e
           itens: produtosFormatados,
         });
 
-        const out = doc
-          .getZip()
-          .generate({
-            type: "blob",
-            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          });
+        const out = doc.getZip().generate({
+          type: "blob",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        });
 
         saveAs(out, `Minuta_${projetoId}.docx`);
 

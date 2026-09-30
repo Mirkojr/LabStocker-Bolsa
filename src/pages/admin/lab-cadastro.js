@@ -19,13 +19,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (error) throw error;
 
-        showToast("Laboratorio cadastrado com sucesso!", "success");
+        showToast("Laboratório cadastrado.", "success");
         formlaboratorio.reset();
       } catch (error) {
         console.error("Erro:", error);
         // Trata erro de codigo duplicado de forma amigavel
         if (error.message.includes("unique constraint")) {
-          showToast("Erro: Este codigo SIPAC ja esta cadastrado.", "error");
+          showToast("Este código SIPAC já está cadastrado.", "error");
         } else {
           showToast("Erro ao cadastrar: " + error.message, "error");
         }

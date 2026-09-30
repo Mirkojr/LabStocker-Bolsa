@@ -26,7 +26,7 @@ async function init() {
   try {
     const isAdmin = await checkIsAdmin();
     if (!isAdmin) {
-      alert("Acesso Negado: Esta pagina e restrita para administradores.");
+      alert("Acesso negado: esta página é restrita a administradores.");
       window.location.href = "../dashboard/dashboard.html";
       return;
     }
@@ -46,7 +46,7 @@ async function fetchLabs() {
 
   if (labsResp.error || chefesResp.error) {
     console.error(labsResp.error || chefesResp.error);
-    listaLabs.innerHTML = '<div class="alert alert-danger">Erro ao carregar laboratorios.</div>';
+    listaLabs.innerHTML = '<div class="alert alert-danger">Erro ao carregar laboratórios.</div>';
     return;
   }
 
@@ -70,7 +70,7 @@ function renderLabs(labs) {
 
   if (labs.length === 0) {
     listaLabs.innerHTML =
-      '<div class="text-muted text-center">Nenhum laboratorio cadastrado.</div>';
+      '<div class="text-muted text-center">Nenhum laboratório cadastrado.</div>';
     return;
   }
 
@@ -78,10 +78,11 @@ function renderLabs(labs) {
     const nome = escapeHtml(lab.nome_laboratorio);
     const chefe = lab.chefe
       ? `<i class="bi bi-person-badge me-1"></i>Chefe: ${escapeHtml(`${lab.chefe.nome} ${lab.chefe.sobrenome}`)} <span class="text-muted">(${escapeHtml(lab.chefe.email || "")})</span>`
-      : '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sem chefe</span>';
+      : '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sem chefe</span>';
 
     const item = document.createElement("li");
-    item.className = `list-group-item d-flex flex-wrap gap-2 justify-content-between align-items-center${lab.chefe ? "" : " list-group-item-danger"}`;
+    item.className =
+      "list-group-item d-flex flex-wrap gap-2 justify-content-between align-items-center";
     item.innerHTML = `
             <div>
                 <strong>${nome}</strong>
@@ -89,7 +90,7 @@ function renderLabs(labs) {
                 <div class="small mt-1">${chefe}</div>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-sm ${lab.chefe ? "btn-outline-dark" : "btn-dark"} btn-chefe"
+                <button class="btn btn-sm ${lab.chefe ? "btn-outline-primary" : "btn-primary"} btn-chefe"
                     data-id="${escapeHtml(lab.id)}" data-nome="${nome}" data-tem-chefe="${lab.chefe ? "1" : ""}">
                     ${lab.chefe ? "Trocar chefe" : "Definir chefe"}
                 </button>
@@ -123,7 +124,7 @@ async function handleCadastro(e) {
 
     if (error) throw error;
 
-    alert("Laboratorio criado com sucesso!");
+    alert("Laboratório criado.");
     formLab.reset();
     fetchLabs(); // Atualiza a lista
   } catch (error) {
@@ -137,7 +138,8 @@ async function handleCadastro(e) {
 
 // 5. Excluir Laboratorio
 async function handleDelete(id) {
-  if (!confirm("ATENCAO: Tem certeza que deseja excluir este laboratorio?")) return;
+  if (!confirm("Tem certeza que deseja excluir este laboratório? Esta ação não pode ser desfeita."))
+    return;
 
   try {
     const { error } = await excluirLaboratorio(id);
@@ -146,7 +148,7 @@ async function handleDelete(id) {
       // Se houver erro de chave estrangeira (FK), avisa o usuario
       if (error.code === "23503") {
         throw new Error(
-          "Nao e possivel excluir: Existem usuarios ou estoque vinculados a este laboratorio."
+          "Não é possível excluir: há usuários ou estoque vinculados a este laboratório."
         );
       }
       throw error;

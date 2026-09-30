@@ -4,6 +4,12 @@ import { showToast } from "../../shared/utils/toast.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
 import { UNIDADES } from "../../shared/constants.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
+import {
+  formatarQuantidade,
+  formatarStatusResiduo,
+  formatarTipoPerigo,
+} from "../../shared/utils/formatters.js";
 import {
   listarResiduosPorLaboratorio,
   salvarResiduo,
@@ -97,7 +103,7 @@ async function init() {
   } catch (error) {
     console.error("Erro no init:", error);
     mostrarErro(listaresiduos, {
-      mensagem: "Erro ao carregar dados de sessao.",
+      mensagem: "Erro ao carregar os dados da sessão.",
       onTentarNovamente: init,
     });
   }
@@ -118,14 +124,14 @@ function abrirModalViaConsumoSeNecessario() {
   selecionarUnidade(paramsUrl.get("unidade"));
   stepperResiduo?.atualizarEstadoBotoes();
 
-  modalTitle.textContent = "Registrar Resíduo do Consumo";
+  modalTitle.textContent = "Registrar resíduo do consumo";
   modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Registrar';
   modalresiduo.show();
 }
 
 async function fetchresiduos(pagina = 1) {
   paginaAtualResiduos = pagina;
-  mostrarCarregando(listaresiduos, "Sincronizando inventario...");
+  mostrarCarregando(listaresiduos, "Carregando resíduos...");
   if (paginadorResiduosEl) paginadorResiduosEl.innerHTML = "";
 
   try {
@@ -144,7 +150,7 @@ async function fetchresiduos(pagina = 1) {
   } catch (error) {
     console.error("Erro ao buscar residuos:", error.message);
     mostrarErro(listaresiduos, {
-      mensagem: "Nao foi possivel carregar o inventario de residuos.",
+      mensagem: "Não foi possível carregar os resíduos.",
       onTentarNovamente: () => fetchresiduos(paginaAtualResiduos),
     });
   }
@@ -157,8 +163,8 @@ function renderresiduos(residuos) {
   if (residuos.length === 0) {
     mostrarVazio(listaresiduos, {
       icone: "bi-recycle",
-      titulo: "Nenhum residuo registrado",
-      mensagem: "Os residuos cadastrados para este laboratorio aparecerao aqui.",
+      titulo: "Nenhum resíduo registrado",
+      mensagem: "Os resíduos registrados neste laboratório aparecem aqui.",
     });
     return;
   }
@@ -182,13 +188,13 @@ function renderresiduos(residuos) {
             <div class="card h-100 border-white border-opacity-10 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255,255,255,0.03);">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <span class="badge ${statusClass} rounded-pill px-3">${res.status}</span>
+                        <span class="badge ${statusClass} rounded-pill px-3">${escapeHtml(formatarStatusResiduo(res.status))}</span>
                         <small class="text-muted-light">${dataF}</small>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">${res.descricao}</h5>
+                    <h5 class="fw-bold text-white mb-2">${escapeHtml(res.descricao)}</h5>
                     <p class="small text-muted-light mb-2">
-                        <i class="bi bi-shield-exclamation me-1"></i> ${res.tipo_perigo} | 
-                        <strong>${res.quantidade} ${res.unidade_medida}</strong>
+                        <i class="bi bi-shield-exclamation me-1"></i> ${escapeHtml(formatarTipoPerigo(res.tipo_perigo))} | 
+                        <strong>${escapeHtml(formatarQuantidade(res.quantidade, res.unidade_medida))}</strong>
                     </p>
                     ${badgeConsumo ? `<p class="mb-3">${badgeConsumo}</p>` : '<div class="mb-3"></div>'}
                     
@@ -197,16 +203,16 @@ function renderresiduos(residuos) {
                           isAberto
                             ? `
                             <button class="btn btn-sm btn-outline-info rounded-pill flex-grow-1 btn-editar" 
-                                data-id="${res.id}" data-desc="${res.descricao}" data-tipo="${res.tipo_perigo}" 
-                                data-qtd="${res.quantidade}" data-unidade="${res.unidade_medida}">
+                                data-id="${escapeHtml(res.id)}" data-desc="${escapeHtml(res.descricao)}" data-tipo="${escapeHtml(res.tipo_perigo)}" 
+                                data-qtd="${escapeHtml(res.quantidade)}" data-unidade="${escapeHtml(res.unidade_medida)}">
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
-                            <button class="btn btn-sm btn-success rounded-pill px-3 btn-descartar" data-id="${res.id}">
+                            <button class="btn btn-sm btn-success rounded-pill px-3 btn-descartar" data-id="${escapeHtml(res.id)}">
                                 <i class="bi bi-check-lg"></i> Descartar
                             </button>
                         `
                             : `
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill flex-grow-1 btn-reabrir" data-id="${res.id}">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill flex-grow-1 btn-reabrir" data-id="${escapeHtml(res.id)}">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reabrir
                             </button>
                         `
@@ -233,7 +239,7 @@ function handleEditClick(btn) {
   selecionarUnidade(d.unidade);
   stepperResiduo?.atualizarEstadoBotoes();
 
-  modalTitle.textContent = "Editar Registro de Residuo";
+  modalTitle.textContent = "Editar registro de resíduo";
   modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Atualizar registro';
   modalresiduo.show();
 }
@@ -251,11 +257,11 @@ async function handleFormSubmit(e) {
 
   // Validacoes no cliente (mesmo padrao do estoque: toast + bloqueia o envio).
   if (!descricao) {
-    showToast("Informe a descricao do material.", "error");
+    showToast("Informe a descrição do material.", "error");
     return;
   }
   if (descricao.length > DESC_MAX) {
-    showToast(`A descricao deve ter no maximo ${DESC_MAX} caracteres.`, "error");
+    showToast(`A descrição deve ter no máximo ${DESC_MAX} caracteres.`, "error");
     return;
   }
   if (!tipo) {
@@ -264,7 +270,7 @@ async function handleFormSubmit(e) {
   }
   if (!(quantidade > 0) || quantidade > QTD_MAX) {
     showToast(
-      `A quantidade deve ser maior que zero e ate ${QTD_MAX.toLocaleString("pt-BR")}.`,
+      `A quantidade deve ser maior que zero e até ${QTD_MAX.toLocaleString("pt-BR")}.`,
       "error"
     );
     return;
@@ -295,10 +301,7 @@ async function handleFormSubmit(e) {
     const { error } = await salvarResiduo(id, payload);
     if (error) throw error;
 
-    showToast(
-      id ? "Registro atualizado com sucesso!" : "Residuo adicionado ao inventario.",
-      "success"
-    );
+    showToast(id ? "Registro atualizado." : "Resíduo registrado.", "success");
     modalresiduo.hide();
     fetchresiduos();
   } catch (error) {
@@ -308,20 +311,20 @@ async function handleFormSubmit(e) {
 }
 
 async function atualizarStatus(id, novoStatus) {
-  let titulo = "Confirmar alteracao";
-  let mensagem = `Deseja alterar o status para: ${novoStatus}?`;
+  let titulo = "Confirmar alteração";
+  let mensagem = `Deseja alterar o status para: ${formatarStatusResiduo(novoStatus)}?`;
   let tipo = "primary";
   let icone = "bi-question-circle-fill";
 
   if (novoStatus === "Em Aberto") {
     titulo = "Reabrir frasco";
-    mensagem = "Ele voltara a figurar como um descarte pendente.";
+    mensagem = "Ele volta a aparecer como descarte pendente.";
     tipo = "secondary";
     icone = "bi-arrow-counterclockwise";
   }
   if (novoStatus === "Descartado") {
     titulo = "Confirmar descarte";
-    mensagem = "Esta acao finalizara o controle deste residuo.";
+    mensagem = "Esta ação encerra o controle deste resíduo.";
     tipo = "success";
     icone = "bi-check-circle-fill";
   }
@@ -333,11 +336,11 @@ async function atualizarStatus(id, novoStatus) {
     const { error } = await atualizarStatusResiduo(id, novoStatus);
     if (error) throw error;
 
-    showToast(`Residuo atualizado para ${novoStatus}.`, "success");
+    showToast(novoStatus === "Descartado" ? "Resíduo descartado." : "Resíduo reaberto.", "success");
     fetchresiduos();
   } catch (error) {
     console.error("Erro ao atualizar status:", error.message);
-    showToast("Erro na atualizacao: " + error.message, "error");
+    showToast("Erro na atualização: " + error.message, "error");
   }
 }
 
@@ -346,7 +349,7 @@ function resetModalResiduo() {
   popularUnidades(); // remove unidades antigas incluídas por selecionarUnidade
   formresiduo.reset();
   editIdInput.value = "";
-  modalTitle.textContent = "Registrar Novo Resíduo";
+  modalTitle.textContent = "Registrar resíduo";
   modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar registro';
   stepperResiduo?.atualizarEstadoBotoes();
 }
@@ -362,7 +365,7 @@ if (btnNovoresiduo) {
   btnNovoresiduo.addEventListener("click", () => {
     formresiduo.reset();
     editIdInput.value = "";
-    modalTitle.textContent = "Registrar Novo Resíduo";
+    modalTitle.textContent = "Registrar resíduo";
     modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar registro';
   });
 }
