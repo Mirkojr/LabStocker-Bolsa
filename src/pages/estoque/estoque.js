@@ -1,4 +1,5 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
+import { obterLaboratorioAtivo, aplicarPermissoes } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
 import { UNIDADES } from "../../shared/constants.js";
@@ -61,6 +62,7 @@ const stepperConsumo = criarStepperQuantidade(
 );
 
 let ID_LAB_DO_USUARIO = null;
+let ACOES_LAB = []; // ações permitidas no laboratório ativo (ver shared/permissoes.js)
 let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
 let itensFiltrados = []; // resultado dos filtros/ordenacao; paginado no cliente
 let paginaAtualEstoque = 1;
@@ -247,7 +249,7 @@ function renderestoque(itens) {
                 <div class="text-end">
                     <div class="mb-2">${validadeHTML}</div>
                     <div>
-                        <button class="btn btn-sm btn-primary btn-consumir-estoque me-1 rounded-pill px-3"
+                        <button class="btn btn-sm btn-primary btn-consumir-estoque me-1 rounded-pill px-3" data-permissao="consumo.registrar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente="${nome}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
@@ -255,7 +257,7 @@ function renderestoque(itens) {
                             ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
                             <i class="bi bi-flask"></i> <span class="d-none d-md-inline">Consumir</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3"
+                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3" data-permissao="estoque.editar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente-id="${escapeHtml(item.id_reagente)}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
@@ -264,13 +266,14 @@ function renderestoque(itens) {
                             data-observacoes="${obs}">
                             <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-id="${escapeHtml(item.id)}" title="Excluir item">
+                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
                 </div>
             </div>
         `;
+    aplicarPermissoes(div, ACOES_LAB);
     listaestoqueEl.appendChild(div);
   });
 }
@@ -431,6 +434,8 @@ async function handleFormSubmitConsumo(evento) {
   const idItem = consumoItemIdInput.value;
   const quantidade = parseFloat(consumoQuantidadeInput.value);
   const finalidade = consumoFinalidadeInput.value.trim() || null;
+  // Lido antes de fechar o modal: ao fechar, o rótulo é limpo (resetModalConsumo)
+  const nomeReagente = consumoItemLabel.textContent;
 
   if (!(quantidade > 0)) {
     showToast("Informe uma quantidade válida.", "error");
@@ -464,7 +469,7 @@ async function handleFormSubmitConsumo(evento) {
     if (desejaResiduo) {
       const params = new URLSearchParams({
         consumo_id: consumo.id,
-        reagente: consumo.reagente?.nome || consumoItemLabel.textContent,
+        reagente: nomeReagente,
         quantidade: consumo.quantidade,
         unidade: consumo.unidade_medida,
       });
@@ -491,11 +496,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   popularUnidadesFiltro();
 
   ID_LAB_DO_USUARIO = await getCurrentLabId();
+  ACOES_LAB = (await obterLaboratorioAtivo())?.acoes || [];
+  aplicarPermissoes(document.body, ACOES_LAB);
   if (ID_LAB_DO_USUARIO) {
     fetchestoque(ID_LAB_DO_USUARIO);
     fetchreagentesParaModal();
   } else {
-    showToast("Laboratório não identificado. Faça login novamente.", "error");
+    showToast(
+      "Você ainda não tem vínculo com nenhum laboratório. Peça ao chefe para adicionar você.",
+      "warning"
+    );
   }
 });
 

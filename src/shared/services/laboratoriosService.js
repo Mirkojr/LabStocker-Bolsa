@@ -18,10 +18,6 @@ export async function buscarLaboratorioPorId(labId) {
     .maybeSingle();
 }
 
-export async function buscarIdPorSipac(codigoSipac) {
-  return supabaseClient.from("laboratorio").select("id").eq("codigo_sipac", codigoSipac).single();
-}
-
 export async function buscarNomePorSipac(codigoSipac) {
   return supabaseClient
     .from("laboratorio")

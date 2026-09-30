@@ -24,7 +24,10 @@
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2 class="mb-0">Gestão de Laboratórios</h2>
-                            <a href="../dashboard/dashboard.html" class="btn btn-outline-dark">Voltar</a>
+                            <div class="d-flex gap-2">
+                                <a href="admin-admins.html" class="btn btn-outline-dark"><i class="bi bi-people-fill me-1"></i>Admins</a>
+                                <a href="../dashboard/dashboard.html" class="btn btn-outline-dark">Voltar</a>
+                            </div>
                         </div>
 
                         <div class="card bg-light mb-4">
@@ -48,7 +51,10 @@
 
                         <hr>
 
-                        <h5>Laboratórios Existentes</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Laboratórios Existentes</h5>
+                            <span id="resumo-sem-chefe" class="badge bg-danger d-none"></span>
+                        </div>
                         <ul class="list-group mt-3" id="lista-labs">
                             <div class="text-center py-3">
                                 <div class="spinner-border spinner-border-sm" role="status"></div> Carregando...
@@ -61,6 +67,35 @@
         </div>
     </div>
     
+    <!-- MODAL: definir / trocar chefe -->
+    <div class="modal fade" id="modal-chefe" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="form-chefe">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold" id="titulo-modal-chefe">Definir chefe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="chefe-lab-id">
+                    <p class="small text-muted" id="chefe-aviso"></p>
+                    <div class="mb-3">
+                        <label for="chefe-email" class="form-label fw-bold small">E-mail do novo chefe</label>
+                        <input type="email" id="chefe-email" class="form-control" placeholder="pessoa@ufc.br" required>
+                        <div class="form-text">A pessoa precisa já ter conta no LabStocker.</div>
+                    </div>
+                    <div class="mb-1">
+                        <label for="chefe-motivo" class="form-label fw-bold small">Motivo da troca (opcional)</label>
+                        <input type="text" id="chefe-motivo" class="form-control" maxlength="300" placeholder="Ex: nova coordenação">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-dark">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="admin-labs.js"></script>
 </body>

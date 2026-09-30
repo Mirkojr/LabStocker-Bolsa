@@ -3,7 +3,7 @@ import { supabaseClient } from "../supabaseClient.js";
 export async function buscarPerfilPorId(usuarioId) {
   return supabaseClient
     .from("perfis")
-    .select("nome, sobrenome, identificador, id_laboratorio")
+    .select("nome, sobrenome, identificador, tipo_identificador, cargo")
     .eq("id", usuarioId)
     .maybeSingle();
 }
@@ -16,20 +16,8 @@ export async function buscarPerfilPorIdentificador(identificador) {
     .maybeSingle();
 }
 
-export async function buscarPerfisPorlaboratorio(laboratorioId) {
-  return supabaseClient
-    .from("perfis")
-    .select("*")
-    .eq("id_laboratorio", laboratorioId)
-    .order("nome");
-}
-
 export async function buscarNomePorId(usuarioId) {
   return supabaseClient.from("perfis").select("nome").eq("id", usuarioId).single();
-}
-
-export async function buscarFlagAdminPorId(usuarioId) {
-  return supabaseClient.from("perfis").select("is_admin").eq("id", usuarioId).single();
 }
 
 export async function criarPerfilUsuario(email, password, data) {

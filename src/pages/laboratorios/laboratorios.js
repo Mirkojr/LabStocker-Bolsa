@@ -1,4 +1,5 @@
 import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from "../../shared/sessionManager.js";
+import { pode } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { listarLaboratorios } from "../../shared/services/laboratoriosService.js";
 import { listarEstoqueDisponivelPorLaboratorio } from "../../shared/services/estoqueService.js";
@@ -28,6 +29,7 @@ const erroQtd = document.getElementById("erro-qtd");
 // --- Variaveis de Estado (cache) ---
 let MEU_LAB_ID = null;
 let SOU_ADMIN = false;
+let POSSO_SOLICITAR = false; // membro+ do laboratório ativo pede transferência
 let LABS_CACHE = [];
 let ESTOQUE_ATUAL_CACHE = [];
 
@@ -36,6 +38,7 @@ async function init() {
   try {
     MEU_LAB_ID = await getCurrentLabId();
     SOU_ADMIN = await checkIsAdmin();
+    POSSO_SOLICITAR = await pode("transferencia.solicitar");
     await fetchlaboratorios();
   } catch (e) {
     console.error("Erro ao inicializar a pagina de laboratorios:", e);
@@ -71,7 +74,7 @@ function renderlaboratorios(labs) {
       btnAdmin = `
                 <button class="btn btn-sm btn-warning w-100 mt-2 fw-bold rounded-pill btn-gerenciar-admin shadow-sm" 
                     data-id="${lab.id}" data-nome="${lab.nome_laboratorio}">
-                    <i class="bi bi-shield-lock-fill me-1"></i> ACESSAR COMO ADMIN
+                    <i class="bi bi-shield-lock-fill me-1"></i> VER COMO ADMIN (SOMENTE LEITURA)
                 </button>`;
     }
 
@@ -153,6 +156,7 @@ function renderestoqueExterno(itens) {
                 data-lab="${item.id_laboratorio}">
                 Solicitar
             </button>`;
+    if (!POSSO_SOLICITAR) div.querySelector(".btn-solicitar")?.remove();
     listaestoqueExt.appendChild(div);
   });
 }
@@ -228,7 +232,7 @@ document.addEventListener("click", (e) => {
   if (btnAdmin) {
     const { id, nome } = btnAdmin.dataset;
     if (
-      confirm(`ATENCAO: Voce entrara no sistema como se fosse do laboratorio "${nome}". Continuar?`)
+      confirm(`Voce vai visualizar o laboratorio "${nome}" em modo somente leitura. Continuar?`)
     ) {
       setAdminLabContext(id, nome);
       window.location.href = "../dashboard/dashboard.html";

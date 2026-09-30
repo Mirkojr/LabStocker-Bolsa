@@ -15,7 +15,7 @@
     <div id="toast-container"></div>
 
     <div class="container my-5">
-        
+
         <div class="d-flex justify-content-between align-items-center mb-4 text-white">
             <div class="d-flex align-items-center">
                 <a href="../dashboard/dashboard.html" class="btn btn-outline-light me-3 rounded-circle border-2" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">
@@ -23,31 +23,57 @@
                 </a>
                 <div>
                     <h2 class="mb-0 fw-bold">Equipe do Laboratório</h2>
-                    <p class="mb-0 opacity-75 small">Gerencie técnicos, alunos e pesquisadores</p>
+                    <p class="mb-0 opacity-75 small" id="equipe-subtitulo">Carregando...</p>
                 </div>
             </div>
         </div>
 
         <div class="glass-panel-dark">
-            
-            <div class="alert alert-light bg-opacity-10 border-0 text-white mb-4 d-flex align-items-center shadow-sm" style="background: rgba(255,255,255,0.1); border-radius: 15px;">
-                <i class="bi bi-info-circle me-3 fs-4"></i>
-                <div class="small">
-                    Estes são os usuários vinculados ao seu laboratório. Apenas administradores podem alterar permissões.
-                </div>
-            </div>
 
-            <div id="lista-usuarios">
+            <!-- Adicionar pessoa (chefe e gestor) -->
+            <form id="form-vinculo" class="d-none mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.06);">
+                <h6 class="text-white fw-bold mb-3"><i class="bi bi-person-plus-fill me-2"></i>Adicionar pessoa ao laboratório</h6>
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-5">
+                        <label for="vinculo-email" class="form-label small text-muted-light mb-1">E-mail da conta</label>
+                        <input type="email" id="vinculo-email" class="form-control" placeholder="pessoa@ufc.br" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="vinculo-papel" class="form-label small text-muted-light mb-1">Papel</label>
+                        <select id="vinculo-papel" class="form-select">
+                            <option value="membro">Membro</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="vinculo-validade" class="form-label small text-muted-light mb-1">Válido até (opcional)</label>
+                        <input type="date" id="vinculo-validade" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-warning fw-bold w-100">Adicionar</button>
+                    </div>
                 </div>
-            
+                <p class="small text-muted-light mb-0 mt-2">
+                    A pessoa precisa já ter criado a conta no LabStocker. Se ela já tiver vínculo aqui, o papel é substituído.
+                </p>
+            </form>
+
+            <div id="lista-usuarios"></div>
+
             <div id="spinner-users" class="text-center py-5 d-none">
                 <div class="spinner-border text-warning" role="status"></div>
-                <p class="mt-2 text-muted-light">Carregando membros...</p>
+                <p class="mt-2 text-muted-light">Carregando equipe...</p>
             </div>
 
-        </div> 
+            <details id="historico-vinculos" class="mt-4 d-none">
+                <summary class="text-white fw-bold mb-3" style="cursor: pointer;">
+                    <i class="bi bi-clock-history me-2"></i>Histórico de vínculos
+                </summary>
+                <div id="lista-historico"></div>
+            </details>
+
+        </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="usuarios.js"></script>
 </body>
