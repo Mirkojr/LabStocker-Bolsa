@@ -13,6 +13,9 @@
 -- 3. consumo.id_usuario: nullable, para que excluir um usuário
 --    não falhe (a FK já era ON DELETE SET NULL). O DEFAULT
 --    auth.uid() é mantido.
+-- 4. registrar_consumo só pode ser chamada por usuário logado.
+--    Funções nascem com EXECUTE liberado para PUBLIC, e o Supabase
+--    também concede ao papel anon; o GRANT da 001 não tirava isso.
 -- ============================================================
 
 -- 1. RPC com a checagem de permissão tratando NULL explicitamente
@@ -74,6 +77,8 @@ BEGIN
 END;
 $$;
 
+-- 4. Só usuário logado pode chamar a função
+REVOKE EXECUTE ON FUNCTION public.registrar_consumo(uuid, numeric, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.registrar_consumo(uuid, numeric, text) TO authenticated;
 
 -- 2. Item de estoque excluído não apaga nem bloqueia o histórico de consumo

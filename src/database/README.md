@@ -32,9 +32,9 @@ Rode estes, **nesta ordem**, para montar um banco novo. Depois, rode **todas** a
 
 Rode em ordem crescente. Num banco que já tem uma migration aplicada, rode só as seguintes.
 
-| #   | Arquivo                     | O que faz                                                                                                                                                                                                                              |
-| --- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 001 | `001_consumo_reagentes.sql` | Cria a tabela `consumo` (com RLS), as colunas `id_consumo` e `id_usuario` em `residuo` e a RPC `registrar_consumo`.                                                                                                                    |
-| 002 | `002_correcoes_consumo.sql` | Corrige a checagem de permissão da `registrar_consumo` (usuário sem laboratório não consome mais estoque alheio) e deixa `consumo.id_item_estoque` / `consumo.id_usuario` nullable, para permitir excluir itens de estoque e usuários. |
+| #   | Arquivo                     | O que faz                                                                                                                                                                                                                                                                     |
+| --- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001 | `001_consumo_reagentes.sql` | Cria a tabela `consumo` (com RLS), as colunas `id_consumo` e `id_usuario` em `residuo` e a RPC `registrar_consumo`.                                                                                                                                                           |
+| 002 | `002_correcoes_consumo.sql` | Corrige a checagem de permissão da `registrar_consumo` (usuário sem laboratório não consome mais estoque alheio), restringe a função a usuários logados e deixa `consumo.id_item_estoque` / `consumo.id_usuario` nullable, para permitir excluir itens de estoque e usuários. |
 
 > ⚠️ Não edite uma migration que já foi aplicada. Para corrigir algo, crie a próxima (`003_...sql`).
