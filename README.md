@@ -8,13 +8,13 @@
 
 ## ✨ Funcionalidades
 
-- **Autenticação** de usuários com perfis vinculados a um laboratório
+- **Autenticação** de usuários, com papéis por laboratório (chefe, gestor, membro) e admin do sistema
 - **Gestão de estoque** de reagentes por laboratório
 - **Catálogo global de reagentes** (com composição química)
 - **Controle de resíduos** com classificação de perigo
 - **Transferências** de itens entre laboratórios (solicitar / aprovar / recusar)
 - **Relatórios e histórico** de movimentações, com exportação em CSV
-- **Painel de administração**: usuários, permissões, laboratórios e catálogo
+- **Painel de administração**: laboratórios, chefes, admins e catálogo
 - **Autorizações de projeto**: geração de minuta de ofício em `.docx` e upload do PDF assinado
 - **Feedback / suporte** ao usuário
 
@@ -27,6 +27,7 @@
 | Build / Dev server  | Vite                                        |
 | Qualidade de código | ESLint + Prettier                           |
 | Back-end / BaaS     | Supabase (PostgreSQL, Auth, RLS, Storage)   |
+| Migrations / testes | Supabase CLI + pgTAP (Docker)               |
 | Cliente do banco    | `@supabase/supabase-js`                     |
 | Documentos          | docxtemplater + PizZip + FileSaver          |
 | Deploy              | GitHub Pages                                |
@@ -40,7 +41,8 @@ fica centralizado em `src/shared/`.
 ## ✅ Pré-requisitos
 
 - **Node.js 20.19+** (obrigatório — o Vite 8 não roda em versões anteriores)
-- Conta no Supabase (o plano gratuito serve)
+- Conta no Supabase (o plano gratuito serve) ou um Supabase self-hosted
+- **Docker** (só para rodar o banco local e os testes do banco)
 - Um navegador moderno
 
 Verifique sua versão com `node -v`.
@@ -57,20 +59,20 @@ npm install
 
 ### 2. Configurar o Supabase
 
+O banco é versionado em `supabase/migrations/` e aplicado com o Supabase CLI (já instalado
+pelo `npm install`). O passo a passo completo, inclusive para bancos que já existiam antes
+das migrations, está em [supabase/README.md](supabase/README.md).
+
 1. Crie um projeto novo no painel do Supabase.
-2. No **SQL Editor**, rode os scripts de `src/database/` nesta ordem:
+2. Aplique as migrations (cria tabelas, funções, políticas e o bucket de documentos):
 
-   | Ordem | Arquivo                            | O que faz                                  |
-   | ----- | ---------------------------------- | ------------------------------------------ |
-   | 1     | `schema.sql`                       | Cria as tabelas                            |
-   | 2     | `funcoes_auxiliares.sql`           | Funções `get_my_lab_id()` e `am_i_admin()` |
-   | 3     | `criar_perfil_trigger.sql`         | Cria o perfil automaticamente no cadastro  |
-   | 4     | `policies.sql`                     | Políticas de RLS                           |
-   | 5     | `storage_policies.sql`             | Políticas do bucket de documentos          |
-   | 6     | `funcao_aprovar_transferencia.sql` | RPC transacional de aprovação              |
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <ref-do-projeto>
+   npx supabase db push
+   ```
 
-3. Crie o bucket **privado** `documentos-projetos` em **Storage**.
-4. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
+3. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
 
 ### 3. Criar o arquivo de variáveis de ambiente
 
@@ -117,6 +119,11 @@ Acesse o endereço exibido no terminal.
 | `npm run lint:fix`     | Corrige automaticamente o que for possível                    |
 | `npm run format`       | Formata o código com Prettier                                 |
 | `npm run format:check` | Só verifica a formatação                                      |
+| `npm run db:start`     | Sobe o Supabase local (Docker) com todas as migrations        |
+| `npm run test:db`      | Roda os testes do banco (pgTAP)                               |
+| `npm run db:reset`     | Recria o banco local do zero                                  |
+| `npm run db:stop`      | Desliga o Supabase local                                      |
+| `npm run criar-admin`  | Cria o primeiro admin (veja abaixo)                           |
 
 ## 🧹 Qualidade de código
 
@@ -127,11 +134,32 @@ extensões recomendadas do VS Code e o editor cuida disso ao salvar.
 - `dbaeumer.vscode-eslint`
 - `esbenp.prettier-vscode`
 
+### Testes do banco
+
+As regras de permissão vivem no banco e são testadas com **pgTAP**. Com o Docker rodando:
+
+```bash
+npm run db:start
+npm run test:db
+```
+
+Detalhes em [supabase/README.md](supabase/README.md#-rodando-o-banco-e-os-testes-localmente-docker).
+
 ## 👤 Criando o primeiro usuário admin
 
-1. Cadastre-se normalmente pela tela de registro do app.
-2. No Supabase, na tabela **`perfis`**, marque `is_admin = true` no seu usuário.
-3. Vincule um `id_laboratorio` ao perfil, se necessário.
+Não há admin fixo no código nem senha conhecida no seed. Na instalação:
+
+1. A pessoa que vai administrar cria a conta pela tela de cadastro.
+2. Quem faz o deploy roda, com a chave **service_role** do projeto (nunca vai para o front
+   nem para o repositório):
+
+   ```bash
+   SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=<chave> npm run criar-admin -- pessoa@ufc.br
+   ```
+
+O comando só funciona enquanto não existir nenhum admin. Depois, admins gerenciam outros
+admins, laboratórios e chefes pela interface. Veja
+[supabase/README.md](supabase/README.md#-primeiro-admin) (inclui a versão para PowerShell).
 
 ## 🚢 Deploy
 
@@ -165,6 +193,10 @@ Para que o build do CI funcione, os secrets abaixo precisam estar cadastrados em
   (`paginarLista`).
 - A segurança dos dados é garantida por **RLS** no Supabase: cada usuário só acessa o que
   a política permite.
+- **Permissões**: cada usuário tem um papel por laboratório (chefe, gestor ou membro) e pode
+  ter vínculo com vários laboratórios. A regra fica numa única função do banco,
+  `tem_permissao(laboratorio, acao)`, usada por todas as políticas e RPCs. Veja
+  [supabase/README.md](supabase/README.md#-modelo-de-permissões).
 
 ## 🤝 Contribuindo
 

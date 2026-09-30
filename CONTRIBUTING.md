@@ -80,7 +80,7 @@ teste
 - Certifique-se de que o código funciona
 - Revise seu próprio código
 - Garanta que não há erros básicos
-- Se a mudança mexe no banco, indique quais scripts SQL rodar (veja `src/database/README.md`)
+- Se a mudança mexe no banco, crie uma migration nova em `supabase/migrations/`, cubra a regra com teste em `supabase/tests/` e rode `npm run test:db` (veja `supabase/README.md`)
 
 ### 📌 O PR deve conter
 
@@ -115,7 +115,8 @@ Rodar a migration `migracao_movimentacao.sql` no Supabase
   - `src/pages/` → telas (HTML + JS de cada página)
   - `src/shared/services/` → acesso a dados (Supabase)
   - `src/shared/utils/` → utilitários (toast, formatadores, validadores)
-  - `src/database/` → scripts SQL (schema, policies, funções, migrations)
+  - `supabase/migrations/` → banco versionado (tabelas, funções, políticas, migrations)
+  - `supabase/tests/` → testes do banco (pgTAP)
 - Manter a lógica de acesso a dados nos **services**, não direto nas páginas
 - Não misturar múltiplas funcionalidades no mesmo PR
 

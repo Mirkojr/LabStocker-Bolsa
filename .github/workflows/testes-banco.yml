@@ -1,0 +1,36 @@
+name: Testes do banco
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pgtap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Subir Supabase local e aplicar migrations
+        run: npx supabase start -x studio,imgproxy,mailpit,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta
+
+      - name: Rodar testes pgTAP
+        run: npx supabase test db
+
+      - name: Desligar Supabase local
+        if: always()
+        run: npx supabase stop --no-backup
