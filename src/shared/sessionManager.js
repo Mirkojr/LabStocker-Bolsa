@@ -1,47 +1,40 @@
-import { supabaseClient } from "./supabaseClient.js";
+import {
+  carregarPermissoes,
+  entrarModoAdmin,
+  obterLaboratorioAtivo,
+  sairModoAdmin,
+} from "./permissoes.js";
+
+// Interface usada pelas páginas desde o início do projeto. Por baixo,
+// tudo vem do modelo de vínculos (shared/permissoes.js).
 
 /**
- * Função central para pegar o ID do laboratório atual.
- * Primeiro tenta pegar do sessionStorage (cache), depois faz uma RPC no banco.
+ * ID do laboratório em que o usuário está trabalhando: o escolhido no
+ * painel (quando tem vínculo com vários), ou o que o admin está
+ * visualizando. Null se o usuário não tem vínculo ativo.
  */
 export async function getCurrentLabId() {
-  const adminSelectedLab = sessionStorage.getItem("ADMIN_SELECTED_LAB_ID");
-  if (adminSelectedLab) return adminSelectedLab;
-
-  const cache = sessionStorage.getItem("MY_LAB_ID");
-  if (cache) return cache; // evita RPC repetido
-
-  const { data: labId, error } = await supabaseClient.rpc("get_my_lab_id");
-  if (error) {
-    console.error("Erro ao buscar Lab ID:", error);
-    return null;
-  }
-
-  if (labId) sessionStorage.setItem("MY_LAB_ID", labId); // cacheia
-  return labId;
+  const lab = await obterLaboratorioAtivo();
+  return lab ? lab.id : null;
 }
 
-/**
- * Verifica se o usuário atual é Admin
- */
+/** O usuário atual é admin do sistema? */
 export async function checkIsAdmin() {
-  const { data, error } = await supabaseClient.rpc("am_i_admin");
-  if (error) return false;
-  return data;
+  try {
+    const { admin } = await carregarPermissoes();
+    return admin;
+  } catch (error) {
+    console.error("Erro ao verificar admin:", error);
+    return false;
+  }
 }
 
-/**
- * (Para uso do Admin) Define qual laboratório vamos gerenciar agora
- */
+/** (Admin) Passa a visualizar um laboratório, em modo somente leitura. */
 export function setAdminLabContext(labId, labName) {
-  sessionStorage.setItem("ADMIN_SELECTED_LAB_ID", labId);
-  sessionStorage.setItem("ADMIN_SELECTED_LAB_NAME", labName);
+  entrarModoAdmin(labId, labName);
 }
 
-/**
- * Limpa a seleção do Admin (volta ao estado normal)
- */
+/** (Admin) Sai da visualização do laboratório. */
 export function clearAdminContext() {
-  sessionStorage.removeItem("ADMIN_SELECTED_LAB_ID");
-  sessionStorage.removeItem("ADMIN_SELECTED_LAB_NAME");
+  sairModoAdmin();
 }

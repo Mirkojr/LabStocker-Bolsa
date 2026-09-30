@@ -1,5 +1,5 @@
 import { showToast } from "../../shared/utils/toast.js";
-import { checkIsAdmin } from "../../shared/sessionManager.js";
+import { podeGlobal } from "../../shared/permissoes.js";
 import {
   excluirreagente,
   listarreagentes,
@@ -44,9 +44,9 @@ let ID_PARA_EXCLUIR = null;
 // Estado de paginação e busca
 let filtroAtual = "";
 
-// Editar e excluir entradas do catálogo é restrito a admin (RLS no banco).
-// Os botões só aparecem para quem pode usá-los.
-let SOU_ADMIN = false;
+// Editar e excluir entradas do catálogo é restrito a chefes e admins (RLS
+// no banco). Os botões só aparecem para quem pode usá-los.
+let POSSO_EDITAR = false;
 
 async function fetchreagentes(filtroNome = "", pagina = 1) {
   filtroAtual = filtroNome;
@@ -137,7 +137,7 @@ function renderreagentes(reagentes) {
                 </div>
             </div>
         `;
-    if (!SOU_ADMIN) div.querySelector(".btn-group")?.remove();
+    if (!POSSO_EDITAR) div.querySelector(".btn-group")?.remove();
     listareagentesEl.appendChild(div);
   });
 }
@@ -224,7 +224,12 @@ function resetModal() {
 
 // --- Listeners de Inicialização ---
 document.addEventListener("DOMContentLoaded", async () => {
-  SOU_ADMIN = Boolean(await checkIsAdmin());
+  const [podeEditar, podeCadastrar] = await Promise.all([
+    podeGlobal("reagente.editar"),
+    podeGlobal("reagente.cadastrar"),
+  ]);
+  POSSO_EDITAR = podeEditar;
+  if (!podeCadastrar) btnCadastrar?.remove();
   fetchreagentes();
 });
 

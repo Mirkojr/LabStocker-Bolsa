@@ -1,4 +1,5 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
+import { obterLaboratorioAtivo, aplicarPermissoes } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
@@ -38,6 +39,7 @@ const stepperResiduo = criarStepperQuantidade(qtdInput.closest(".qty-stepper"), 
 });
 
 let MEU_LAB_ID = null;
+let ACOES_LAB = []; // ações permitidas no laboratório ativo (ver shared/permissoes.js)
 
 // Quando o usuário vem da tela de estoque logo após um consumo, a URL traz
 // ?consumo_id=...&reagente=...&quantidade=...&unidade=... Isso permite
@@ -78,15 +80,18 @@ async function init() {
 
   try {
     MEU_LAB_ID = await getCurrentLabId();
+    ACOES_LAB = (await obterLaboratorioAtivo())?.acoes || [];
+    aplicarPermissoes(document.body, ACOES_LAB);
 
     if (MEU_LAB_ID) {
       await fetchresiduos();
-      abrirModalViaConsumoSeNecessario();
+      if (ACOES_LAB.includes("residuo.registrar")) abrirModalViaConsumoSeNecessario();
     } else {
       mostrarVazio(listaresiduos, {
         icone: "bi-exclamation-triangle",
-        titulo: "Laboratorio nao identificado",
-        mensagem: "Verifique sua sessao e tente novamente.",
+        titulo: "Sem laboratório",
+        mensagem:
+          "Você ainda não tem vínculo com nenhum laboratório. Peça ao chefe para adicionar você.",
       });
     }
   } catch (error) {
@@ -187,7 +192,7 @@ function renderresiduos(residuos) {
                     </p>
                     ${badgeConsumo ? `<p class="mb-3">${badgeConsumo}</p>` : '<div class="mb-3"></div>'}
                     
-                    <div class="d-flex gap-2 border-top border-white border-opacity-10 pt-3">
+                    <div class="d-flex gap-2 border-top border-white border-opacity-10 pt-3" data-permissao="residuo.registrar">
                         ${
                           isAberto
                             ? `
@@ -210,6 +215,7 @@ function renderresiduos(residuos) {
                 </div>
             </div>
         `;
+    aplicarPermissoes(col, ACOES_LAB);
     listaresiduos.appendChild(col);
   });
 }

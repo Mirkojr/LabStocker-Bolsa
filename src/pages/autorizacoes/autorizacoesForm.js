@@ -4,6 +4,7 @@ import { showToast } from "../../shared/utils/toast.js";
 import { validarCPF, validarTelefone, validarEmail } from "../../shared/utils/validators.js";
 import { buscarPerfilPorId } from "../../shared/services/perfisService.js";
 import { getUsuarioLogado } from "../../shared/services/authService.js";
+import { getCurrentLabId } from "../../shared/sessionManager.js";
 import {
   buscarLaboratorioPorId,
   buscarNomePorSipac,
@@ -49,8 +50,9 @@ export async function preencherDadosUsuario() {
       preencherCampoBloqueado("responsavel-siape", perfil.identificador);
     }
 
-    if (perfil.id_laboratorio) {
-      const { data: lab } = await buscarLaboratorioPorId(perfil.id_laboratorio);
+    const labId = await getCurrentLabId();
+    if (labId) {
+      const { data: lab } = await buscarLaboratorioPorId(labId);
       if (lab) {
         preencherCampoBloqueado("lab-nome", lab.nome_laboratorio);
         preencherCampoBloqueado("lab-sipac", lab.codigo_sipac);

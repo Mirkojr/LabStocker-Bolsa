@@ -1,4 +1,5 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
+import { obterLaboratorioAtivo, aplicarPermissoes } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
 import { confirmar, confirmarRecusa } from "../../shared/utils/confirmacao.js";
 import {
@@ -11,16 +12,24 @@ import {
 const listaPedidos = document.getElementById("lista-pedidos");
 const spinner = document.getElementById("spinner-solic");
 let MEU_LAB_ID = null;
+let ACOES_LAB = []; // ações permitidas no laboratório ativo (ver shared/permissoes.js)
 
 async function init() {
   try {
     MEU_LAB_ID = await getCurrentLabId();
+    ACOES_LAB = (await obterLaboratorioAtivo())?.acoes || [];
 
     if (MEU_LAB_ID) {
+      if (!ACOES_LAB.includes("transferencia.aprovar")) {
+        listaPedidos.insertAdjacentHTML(
+          "beforebegin",
+          '<p class="text-muted-light small mb-3"><i class="bi bi-info-circle me-1"></i>Somente o chefe ou um gestor do laboratório aprova ou recusa pedidos.</p>'
+        );
+      }
       fetchPedidosRecebidos();
     } else {
       listaPedidos.innerHTML =
-        '<div class="text-center text-warning p-5">Laboratorio nao identificado.</div>';
+        '<div class="text-center text-warning p-5">Você ainda não tem vínculo com nenhum laboratório.</div>';
     }
   } catch (error) {
     console.error(error);
@@ -78,7 +87,7 @@ function renderPedidos(pedidos) {
                     </p>
                     <small class="opacity-50 text-white"><i class="bi bi-calendar3 me-1"></i>Pedido em: ${data}</small>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2" data-permissao="transferencia.aprovar">
                     <button class="btn btn-success rounded-pill px-4 fw-bold btn-aprovar shadow-sm" data-id="${pedido.id}">
                         <i class="bi bi-check-lg me-1"></i> Aprovar
                     </button>
@@ -88,6 +97,7 @@ function renderPedidos(pedidos) {
                 </div>
             </div>
         `;
+    aplicarPermissoes(div, ACOES_LAB);
     listaPedidos.appendChild(div);
   });
 }

@@ -185,8 +185,9 @@ Para que o build do CI funcione, os secrets abaixo precisam estar cadastrados em
 - Toda comunicação com o banco passa pela camada de **services**
   (`src/shared/services/`), que usa o `supabaseClient`. Nenhuma página chama o Supabase
   diretamente.
-- `authGuard.js` e `sessionManager.js` controlam acesso e sessão, incluindo o contexto de
-  laboratório assumido por um administrador.
+- `authGuard.js` exige login. `shared/permissoes.js` (usado por `sessionManager.js`) sabe em
+  qual laboratório o usuário está trabalhando, quais ações pode fazer nele e se ele é admin;
+  as telas escondem os botões marcados com `data-permissao` que o papel não permite.
 - A tela de **login** (`src/index.html` + `src/auth.js`) fica na raiz de `src/`.
 - A **paginação** é centralizada em `src/shared/utils/paginacao.js`, com suporte a
   paginação no servidor (`calcularRange` + `.range()` do Supabase) e no cliente

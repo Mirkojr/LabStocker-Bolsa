@@ -49,9 +49,15 @@ Ações atuais: `laboratorio.ver`, `consumo.registrar`, `residuo.registrar`,
 nas políticas de RLS e nas RPCs. O front lê as mesmas ações por `minhas_permissoes()`, só
 para esconder o que o usuário não pode usar; quem garante a regra é o banco.
 
+No front, `src/shared/permissoes.js` guarda o laboratório ativo e as ações permitidas nele.
+Para esconder um botão, marque-o com `data-permissao="sua.acao"` e chame
+`aplicarPermissoes(elemento, acoes)` depois de renderizar.
+
 As escritas em `vinculo_laboratorio` e `administrador` só acontecem pelas RPCs
 `conceder_vinculo`, `revogar_vinculo`, `transferir_chefia`, `definir_chefe`,
-`conceder_admin`, `revogar_admin` e `definir_cargo`.
+`conceder_admin`, `revogar_admin` e `definir_cargo`. A tela de equipe lê ativos e histórico
+por `vinculos_do_laboratorio(laboratorio)`, que devolve os nomes (inclusive de
+ex-integrantes) sem abrir a tabela `perfis`.
 
 ### Dependência do Supabase Auth
 

@@ -1,6 +1,6 @@
 import { showToast } from "./shared/utils/toast.js";
 import { login, logout } from "./shared/services/authService.js";
-import { buscarFlagAdminPorId } from "./shared/services/perfisService.js";
+import { buscarNomePorId } from "./shared/services/perfisService.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const formLogin = document.getElementById("form-login");
@@ -25,10 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (authError) throw authError;
 
-        // 2. Busca a flag de admin do perfil correspondente
-        const { data: perfilData, error: perfilError } = await buscarFlagAdminPorId(
-          authData.user.id
-        );
+        // 2. Confere se existe perfil para o usuario autenticado
+        const { error: perfilError } = await buscarNomePorId(authData.user.id);
 
         // Se houver erro ao buscar o perfil (ex: o usuario nao existe na tabela perfis)
         if (perfilError) {
@@ -42,11 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Login realizado com sucesso! Redirecionando...", "success");
 
         setTimeout(() => {
-          if (perfilData && perfilData.is_admin) {
-            window.location.href = "pages/dashboard/dashboard.html";
-          } else {
-            window.location.href = "pages/dashboard/dashboard.html";
-          }
+          window.location.href = "pages/dashboard/dashboard.html";
         }, 1500);
       } catch (error) {
         console.error("Erro completo retornado pelo Supabase:", error);
