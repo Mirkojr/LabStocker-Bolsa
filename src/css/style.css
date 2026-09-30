@@ -29,6 +29,41 @@
 
   --raio-controle: 8px;
   --raio-painel: 12px;
+
+  /* Cores do Bootstrap apontando para a identidade UFC: assim bg-primary,
+     text-warning, alert-success, links etc. deixam de usar o azul, o ciano e
+     o amarelo padrão. "info" vira um azul-claro derivado do azul UFC, legível
+     sobre o fundo escuro das telas ainda não migradas. */
+  --bs-primary: #00629b;
+  --bs-primary-rgb: 0, 98, 155;
+  --bs-primary-text-emphasis: #003e62;
+  --bs-primary-bg-subtle: #e0edf5;
+  --bs-primary-border-subtle: #a9cbe1;
+  --bs-info: #6cb3de;
+  --bs-info-rgb: 108, 179, 222;
+  --bs-info-text-emphasis: #003e62;
+  --bs-info-bg-subtle: #e0edf5;
+  --bs-info-border-subtle: #a9cbe1;
+  --bs-success: #008f36;
+  --bs-success-rgb: 0, 143, 54;
+  --bs-success-text-emphasis: #005a22;
+  --bs-success-bg-subtle: #dcf1e3;
+  --bs-success-border-subtle: #9bd3ae;
+  --bs-warning: #e2bf3f;
+  --bs-warning-rgb: 226, 191, 63;
+  --bs-warning-text-emphasis: #5c4a0c;
+  --bs-warning-bg-subtle: #fbf4da;
+  --bs-warning-border-subtle: #eed994;
+  --bs-danger: #b3261e;
+  --bs-danger-rgb: 179, 38, 30;
+  --bs-danger-text-emphasis: #6f1712;
+  --bs-danger-bg-subtle: #f8e1df;
+  --bs-danger-border-subtle: #e3a29d;
+  --bs-link-color: #00629b;
+  --bs-link-color-rgb: 0, 98, 155;
+  --bs-link-hover-color: #004b77;
+  --bs-link-hover-color-rgb: 0, 75, 119;
+  --bs-focus-ring-color: rgba(226, 191, 63, 0.35);
 }
 
 body {
@@ -90,6 +125,81 @@ h6,
   --bs-btn-active-color: var(--tinta);
   --bs-btn-active-bg: var(--ufc-ouro);
   --bs-btn-active-border-color: var(--ufc-ouro);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--ufc-azul);
+  --bs-btn-border-color: var(--ufc-azul);
+  --bs-btn-hover-bg: var(--ufc-azul);
+  --bs-btn-hover-border-color: var(--ufc-azul);
+  --bs-btn-active-bg: var(--ufc-azul-escuro);
+  --bs-btn-active-border-color: var(--ufc-azul-escuro);
+  --bs-btn-disabled-color: var(--ufc-azul);
+  --bs-btn-disabled-border-color: var(--ufc-azul);
+}
+
+.btn-outline-info {
+  --bs-btn-color: var(--bs-info);
+  --bs-btn-border-color: var(--bs-info);
+  --bs-btn-hover-color: var(--tinta);
+  --bs-btn-hover-bg: var(--bs-info);
+  --bs-btn-hover-border-color: var(--bs-info);
+  --bs-btn-active-color: var(--tinta);
+  --bs-btn-active-bg: var(--bs-info);
+  --bs-btn-active-border-color: var(--bs-info);
+}
+
+.btn-success {
+  --bs-btn-bg: var(--ufc-verde);
+  --bs-btn-border-color: var(--ufc-verde);
+  --bs-btn-hover-bg: #00732b;
+  --bs-btn-hover-border-color: #00732b;
+  --bs-btn-active-bg: #00732b;
+  --bs-btn-active-border-color: #00732b;
+  --bs-btn-disabled-bg: var(--ufc-verde);
+  --bs-btn-disabled-border-color: var(--ufc-verde);
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--alerta);
+  --bs-btn-border-color: var(--alerta);
+  --bs-btn-hover-bg: #8f1e18;
+  --bs-btn-hover-border-color: #8f1e18;
+  --bs-btn-active-bg: #8f1e18;
+  --bs-btn-active-border-color: #8f1e18;
+  --bs-btn-disabled-bg: var(--alerta);
+  --bs-btn-disabled-border-color: var(--alerta);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--alerta);
+  --bs-btn-border-color: var(--alerta);
+  --bs-btn-hover-bg: var(--alerta);
+  --bs-btn-hover-border-color: var(--alerta);
+  --bs-btn-active-bg: #8f1e18;
+  --bs-btn-active-border-color: #8f1e18;
+}
+
+/* Foco e seleção dos campos e a paginação, que o Bootstrap compila em azul */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--ufc-azul);
+  box-shadow: 0 0 0 0.25rem rgba(0, 98, 155, 0.2);
+}
+
+.form-check-input:checked {
+  background-color: var(--ufc-azul);
+  border-color: var(--ufc-azul);
+}
+
+.pagination {
+  --bs-pagination-color: var(--ufc-azul);
+  --bs-pagination-hover-color: var(--ufc-azul-escuro);
+  --bs-pagination-focus-color: var(--ufc-azul-escuro);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(226, 191, 63, 0.35);
+  --bs-pagination-active-bg: var(--ufc-azul);
+  --bs-pagination-active-border-color: var(--ufc-azul);
 }
 
 .glass-panel {
@@ -194,11 +304,28 @@ h6,
   overflow: hidden;
 }
 
+/* No painel escuro (telas ainda não migradas para a tela clara), o texto
+   colorido usa versões claras das cores para manter o contraste. */
+.glass-panel-dark .text-primary {
+  color: var(--bs-info) !important;
+}
+.glass-panel-dark .text-success {
+  color: #5cc98a !important;
+}
+.glass-panel-dark .text-danger {
+  color: #f08a82 !important;
+}
+.glass-panel-dark .btn-outline-danger {
+  --bs-btn-color: #f08a82;
+  --bs-btn-border-color: #f08a82;
+}
+
 .form-control-dark:disabled,
 .form-control-dark[readonly] {
-  background-color: #1b3d61 !important; /* Um azul levemente mais claro que o fundo da página */
-  color: #00e5ff !important; /* Texto em ciano/neon para dar um contraste absurdo e estético */
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  /* Campo preenchido pelo sistema: aparência de texto travado, não de destaque */
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.3) !important;
   opacity: 1 !important; /* Remove a opacidade padrão do Bootstrap que esconde o texto */
   cursor: not-allowed;
 }
