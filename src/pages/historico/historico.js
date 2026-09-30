@@ -37,6 +37,41 @@ function resolverStatusTransfer(status) {
   return STATUS_TRANSFER[chave] || { label: status || "Pendente", badge: "bg-secondary" };
 }
 
+// Direção vista pelo laboratório atual (convenção em transferenciasService.js):
+// origem = dono do reagente (o material sai dele), destino = quem pediu (o material entra nele).
+// Só um pedido aprovado vira transferência; pendentes e recusados não movimentaram estoque.
+function descreverTransferencia(item) {
+  const souOrigem = String(item.id_lab_origem) === String(MEU_LAB_ID);
+  const labParceiro = escapeHtml(
+    (souOrigem ? item.LabDestino : item.LabOrigem)?.nome_laboratorio || "Lab Externo"
+  );
+  const status = String(item.status || "").toLowerCase();
+
+  if (status === "aprovado") {
+    return souOrigem
+      ? {
+          cor: "danger",
+          icone: "bi-arrow-up-right-circle-fill",
+          textoAcao: `Enviado para <strong>${labParceiro}</strong>`,
+        }
+      : {
+          cor: "success",
+          icone: "bi-arrow-down-left-circle-fill",
+          textoAcao: `Recebido de <strong>${labParceiro}</strong>`,
+        };
+  }
+
+  const pedido = souOrigem
+    ? `Pedido de <strong>${labParceiro}</strong>`
+    : `Pedido a <strong>${labParceiro}</strong>`;
+
+  if (status === "recusado") {
+    return { cor: "secondary", icone: "bi-x-circle-fill", textoAcao: `${pedido} recusado` };
+  }
+
+  return { cor: "warning", icone: "bi-hourglass-split", textoAcao: pedido };
+}
+
 async function init() {
   try {
     MEU_LAB_ID = await getCurrentLabId();
@@ -262,27 +297,12 @@ function renderHistorico(itens) {
                     </div>
                 </div>`;
     }
-    // TIPO 4: TRANSFERENCIA (TROCA)
+    // TIPO 4: PEDIDO / TRANSFERENCIA
     else {
-      const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID);
-      let cor, icone, textoAcao;
+      const { cor, icone, textoAcao } = descreverTransferencia(item);
 
-      if (euFizOPedido) {
-        // RECEBIDO (Entrada por troca)
-        cor = "success";
-        icone = "bi-arrow-down-left-circle-fill";
-        const labParceiro = item.LabDestino?.nome_laboratorio || "Lab Externo";
-        textoAcao = `Recebido de <strong>${labParceiro}</strong>`;
-      } else {
-        // ENVIADO (Saida por troca)
-        cor = "danger";
-        icone = "bi-arrow-up-right-circle-fill";
-        const labParceiro = item.LabOrigem?.nome_laboratorio || "Lab Externo";
-        textoAcao = `Enviado para <strong>${labParceiro}</strong>`;
-      }
-
-      const nomereagente = item.estoquelab?.reagente?.nome || "Item desconhecido";
-      const unidade = item.estoquelab?.unidade_medida || "";
+      const nomereagente = escapeHtml(item.estoquelab?.reagente?.nome || "Item desconhecido");
+      const unidade = escapeHtml(item.estoquelab?.unidade_medida || "");
 
       // Status normalizado (label + cor) e motivo de recusa, quando houver.
       const { label: statusLabel, badge: statusBadgeClass } = resolverStatusTransfer(item.status);
@@ -305,7 +325,7 @@ function renderHistorico(itens) {
                             <p class="mb-1 small text-muted-light">${textoAcao}</p>
                             ${motivoHtml}
                             <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
+                                <small class="text-white-50">Qtd: <strong>${escapeHtml(item.quantidade_transferida)} ${unidade}</strong></small>
                                 <small class="text-white-50 opacity-75">${dataCompleta}</small>
                             </div>
                         </div>
