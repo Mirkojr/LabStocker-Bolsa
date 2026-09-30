@@ -9,7 +9,7 @@ import { getSessao } from "./services/authService.js";
 
   if (!session) {
     // Se NAO houver sessao (usuario nao logado)
-    alert("Voce precisa estar logado para acessar esta pagina.");
+    alert("Entre no LabStocker para acessar esta página.");
     window.location.href = "../../index.html";
   }
 })();

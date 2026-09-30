@@ -1,5 +1,7 @@
 import { getCurrentLabId, checkIsAdmin } from "../../shared/sessionManager.js";
 import { showToast } from "../../shared/utils/toast.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
+import { formatarNumero, formatarTipoPerigo } from "../../shared/utils/formatters.js";
 import { listarLaboratoriosResumo } from "../../shared/services/laboratoriosService.js";
 import { listarMovimentacoesPorPeriodo } from "../../shared/services/movimentacoesService.js";
 import { listarTransferenciasPorPeriodo } from "../../shared/services/transferenciasService.js";
@@ -38,13 +40,13 @@ async function init() {
     const labSelecionado = sessionStorage.getItem("ADMIN_SELECTED_LAB_ID");
     if (SOU_ADMIN && !labSelecionado) {
       MODO_GLOBAL = true;
-      if (tituloPagina) tituloPagina.innerHTML = "Relatorio Geral (Todos os Laboratorios)";
+      if (tituloPagina) tituloPagina.textContent = "Relatório geral (todos os laboratórios)";
 
-      // Adiciona coluna "Laboratorio" se for admin global
+      // Adiciona coluna "Laboratório" se for admin global
       const headerRow = document.querySelector("#tabela-preview thead tr");
-      if (headerRow && !headerRow.innerHTML.includes("Laboratorio")) {
+      if (headerRow && !headerRow.innerHTML.includes("Laboratório")) {
         const thLab = document.createElement("th");
-        thLab.textContent = "Laboratorio";
+        thLab.textContent = "Laboratório";
         thLab.className = "py-3";
         headerRow.insertBefore(thLab, headerRow.children[1]);
       }
@@ -64,11 +66,11 @@ async function init() {
       // Carrega preview inicial
       carregarDados(dataInicioInput.value, dataFimInput.value, false);
     } else {
-      if (!SOU_ADMIN) showToast("Erro: Laboratorio nao identificado.", "error");
+      if (!SOU_ADMIN) showToast("Laboratório não identificado.", "error");
     }
   } catch (error) {
     console.error(error);
-    showToast("Erro na inicializacao da pagina.", "error");
+    showToast("Erro ao carregar a página.", "error");
   }
 }
 
@@ -138,7 +140,8 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         lista.push({
           data: m.data_movimentacao,
           laboratorio: nomeLab,
-          tipo: "COMPRA/ENTRADA",
+          tipo: "Entrada (compra)",
+          cor: "bg-success",
           item: m.item_nome,
           qtd: m.quantidade,
           unidade: m.unidade,
@@ -147,10 +150,14 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
       });
     }
 
-    // 2. Transferencias
+    // 2. Transferencias. Só o pedido aprovado vira transferência (movimenta o
+    // estoque); pedido pendente ou recusado não entra no relatório.
     if (resTransf.data) {
       resTransf.data.forEach((t) => {
-        let tipoLabel = "TRANSFERENCIA";
+        if (String(t.status || "").toLowerCase() !== "aprovado") return;
+
+        let tipoLabel = "Transferência";
+        let cor = "bg-primary";
         let labPrincipal = t.LabOrigem?.nome_laboratorio;
         let detalheTexto = `Para: ${t.LabDestino?.nome_laboratorio}`;
 
@@ -159,7 +166,8 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
           const parceiro = souOrigem
             ? t.LabDestino?.nome_laboratorio
             : t.LabOrigem?.nome_laboratorio;
-          tipoLabel = souOrigem ? "SAIDA (TROCA)" : "ENTRADA (TROCA)";
+          tipoLabel = souOrigem ? "Saída (transferência)" : "Entrada (transferência)";
+          cor = souOrigem ? "bg-danger" : "bg-success";
           labPrincipal = souOrigem ? t.LabOrigem?.nome_laboratorio : t.LabDestino?.nome_laboratorio;
           detalheTexto = souOrigem ? `Enviado para ${parceiro}` : `Recebido de ${parceiro}`;
         }
@@ -171,6 +179,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
           data: t.data_solicitacao,
           laboratorio: labPrincipal || "Desconhecido",
           tipo: tipoLabel,
+          cor,
           item: nomeItem,
           qtd: t.quantidade_transferida,
           unidade: un,
@@ -186,11 +195,12 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
         lista.push({
           data: r.data_criacao,
           laboratorio: nomeLab,
-          tipo: "SAIDA (DESCARTE)",
+          tipo: "Saída (descarte)",
+          cor: "bg-secondary",
           item: r.descricao,
           qtd: r.quantidade,
           unidade: r.unidade_medida,
-          detalhes: `Tipo: ${r.tipo_perigo}`,
+          detalhes: `Tipo: ${formatarTipoPerigo(r.tipo_perigo)}`,
         });
       });
     }
@@ -200,10 +210,10 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
 
     if (isDownload) {
       if (lista.length === 0) {
-        showToast("Nao ha dados para gerar relatorio neste periodo.", "warning");
+        showToast("Não há dados para gerar o relatório neste período.", "warning");
       } else {
         gerarCSV(lista);
-        showToast("Relatorio gerado com sucesso! Download iniciado.", "success");
+        showToast("Relatório gerado. O download foi iniciado.", "success");
       }
       if (resetBtn) resetBtn();
     } else {
@@ -211,7 +221,7 @@ async function carregarDados(dataInicio, dataFim, isDownload) {
     }
   } catch (error) {
     console.error(error);
-    showToast("Erro ao processar dados do relatorio.", "error");
+    showToast("Erro ao processar os dados do relatório.", "error");
     if (resetBtn) resetBtn();
     if (!isDownload) {
       tbodyPreview.innerHTML =
@@ -233,7 +243,7 @@ function desenharPaginaPreview() {
 
   if (!listaPreview || listaPreview.length === 0) {
     tbodyPreview.innerHTML =
-      '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste periodo.</td></tr>';
+      '<tr><td colspan="100%" class="text-center text-muted py-5">Nenhum registro encontrado neste período.</td></tr>';
     if (paginadorRelEl) paginadorRelEl.innerHTML = "";
     return;
   }
@@ -242,23 +252,17 @@ function desenharPaginaPreview() {
 
   itensPagina.forEach((item) => {
     const dataF = new Date(item.data).toLocaleDateString("pt-BR");
-    const colLab = MODO_GLOBAL
-      ? `<td><span class="badge bg-light text-dark border">${item.laboratorio}</span></td>`
-      : "";
+    const colLab = MODO_GLOBAL ? `<td class="small">${escapeHtml(item.laboratorio)}</td>` : "";
 
-    let badgeTipo = "bg-secondary";
-    if (item.tipo.includes("ENTRADA")) badgeTipo = "bg-success";
-    if (item.tipo.includes("SAIDA")) badgeTipo = "bg-danger";
-    if (item.tipo.includes("TRANSFERENCIA")) badgeTipo = "bg-primary";
-
+    // A unidade vai exatamente como está (mL, g): em caixa alta ela muda de sentido.
     const tr = `
             <tr>
                 <td class="ps-3">${dataF}</td>
                 ${colLab}
-                <td><span class="badge ${badgeTipo}" style="font-size: 0.75rem;">${item.tipo}</span></td>
-                <td class="fw-semibold">${item.item}</td>
-                <td>${item.qtd} <small class="text-muted text-uppercase">${item.unidade}</small></td>
-                <td class="pe-3 text-muted small">${item.detalhes}</td>
+                <td><span class="badge ${item.cor}" style="font-size: 0.75rem;">${escapeHtml(item.tipo)}</span></td>
+                <td class="fw-semibold">${escapeHtml(item.item)}</td>
+                <td class="text-nowrap">${escapeHtml(formatarNumero(item.qtd))} <small class="text-muted">${escapeHtml(item.unidade)}</small></td>
+                <td class="pe-3 text-muted small">${escapeHtml(item.detalhes)}</td>
             </tr>
         `;
     tbodyPreview.innerHTML += tr;
@@ -277,7 +281,7 @@ function desenharPaginaPreview() {
 
 function gerarCSV(lista) {
   let header = "Data,Tipo,Item,Quantidade,Unidade,Detalhes";
-  if (MODO_GLOBAL) header = "Data,laboratorio,Tipo,Item,Quantidade,Unidade,Detalhes";
+  if (MODO_GLOBAL) header = "Data,Laboratório,Tipo,Item,Quantidade,Unidade,Detalhes";
   let csvContent = header + "\n";
 
   lista.forEach((row) => {
@@ -293,7 +297,8 @@ function gerarCSV(lista) {
     }
   });
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  // O BOM faz o Excel abrir o arquivo como UTF-8 e mostrar os acentos certos.
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);

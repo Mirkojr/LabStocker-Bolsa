@@ -25,7 +25,7 @@ async function enviarfeedback(e) {
       data: { user },
     } = await getUsuarioLogado();
 
-    if (!user) throw new Error("A sessao expirou. Faca login novamente.");
+    if (!user) throw new Error("A sessão expirou. Entre novamente.");
 
     // Salva na tabela 'feedback' via camada de service
     const { error } = await enviarFeedback({
@@ -38,7 +38,7 @@ async function enviarfeedback(e) {
     if (error) throw error;
 
     // Sucesso
-    showToast("Obrigado! Sua mensagem foi enviada a equipe tecnica.", "success");
+    showToast("Mensagem enviada à equipe técnica.", "success");
     formfeedback.reset();
   } catch (error) {
     console.error("Erro suporte:", error);

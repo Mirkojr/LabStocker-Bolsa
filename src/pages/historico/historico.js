@@ -1,6 +1,11 @@
 import { getCurrentLabId } from "../../shared/sessionManager.js";
 import { mostrarCarregando, mostrarVazio, mostrarErro } from "../../shared/utils/estados.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
+import {
+  formatarDataHora,
+  formatarQuantidade,
+  formatarTipoPerigo,
+} from "../../shared/utils/formatters.js";
 import { listarTransferenciasPorLaboratorio } from "../../shared/services/transferenciasService.js";
 import { listarResiduosDescartadosPorLaboratorio } from "../../shared/services/residuosService.js";
 import { listarEntradasPorLaboratorio } from "../../shared/services/movimentacoesService.js";
@@ -25,18 +30,6 @@ let listaExibida = [];
 let paginaAtualHist = 1;
 const paginadorHistEl = garantirContainerPaginador(listaHistorico, "paginador-historico");
 
-// Normaliza o status da transferencia (banco usa minusculo) para label + cor.
-const STATUS_TRANSFER = {
-  aprovado: { label: "Aprovado", badge: "bg-success" },
-  recusado: { label: "Recusado", badge: "bg-danger" },
-  pendente: { label: "Pendente", badge: "bg-warning text-dark" },
-};
-
-function resolverStatusTransfer(status) {
-  const chave = String(status || "").toLowerCase();
-  return STATUS_TRANSFER[chave] || { label: status || "Pendente", badge: "bg-secondary" };
-}
-
 async function init() {
   try {
     MEU_LAB_ID = await getCurrentLabId();
@@ -46,21 +39,21 @@ async function init() {
     } else {
       mostrarVazio(listaHistorico, {
         icone: "bi-exclamation-triangle",
-        titulo: "Laboratorio nao identificado",
-        mensagem: "Verifique sua sessao e tente novamente.",
+        titulo: "Laboratório não identificado",
+        mensagem: "Verifique sua sessão e tente novamente.",
       });
     }
   } catch (error) {
     console.error("Erro no init:", error);
     mostrarErro(listaHistorico, {
-      mensagem: "Erro ao carregar dados do laboratorio.",
+      mensagem: "Erro ao carregar os dados do laboratório.",
       onTentarNovamente: init,
     });
   }
 }
 
 async function fetchHistorico() {
-  mostrarCarregando(listaHistorico, "Reconstruindo a linha do tempo...");
+  mostrarCarregando(listaHistorico, "Carregando o histórico...");
   if (paginadorHistEl) paginadorHistEl.innerHTML = "";
 
   try {
@@ -112,8 +105,8 @@ async function fetchHistorico() {
     if (listaCompleta.length === 0) {
       mostrarVazio(listaHistorico, {
         icone: "bi-clock-history",
-        titulo: "Linha do tempo vazia",
-        mensagem: "Nenhuma movimentacao registrada ate o momento.",
+        titulo: "Histórico vazio",
+        mensagem: "Nenhuma movimentação registrada até o momento.",
       });
       if (paginadorHistEl) paginadorHistEl.innerHTML = "";
     } else {
@@ -122,7 +115,7 @@ async function fetchHistorico() {
   } catch (error) {
     console.error("Erro ao buscar historico:", error);
     mostrarErro(listaHistorico, {
-      mensagem: "Falha ao reconstruir a linha do tempo.",
+      mensagem: "Não foi possível carregar o histórico.",
       onTentarNovamente: fetchHistorico,
     });
   }
@@ -138,7 +131,7 @@ function exibirHistorico(lista) {
     mostrarVazio(listaHistorico, {
       icone: "bi-search",
       titulo: "Nada encontrado",
-      mensagem: "Nenhum registro corresponde a sua busca.",
+      mensagem: "Nenhum registro corresponde à sua busca.",
     });
     if (paginadorHistEl) paginadorHistEl.innerHTML = "";
     return;
@@ -163,135 +156,10 @@ function desenharPaginaHist() {
   });
 }
 
-/**
- * Renderiza os itens na interface seguindo o padrao Dark Glass
- */
-function renderHistorico(itens) {
-  if (itens.length === 0) {
-    mostrarVazio(listaHistorico, {
-      icone: "bi-search",
-      titulo: "Nada encontrado",
-      mensagem: "Nenhum registro corresponde a sua busca.",
-    });
-    return;
-  }
-
-  listaHistorico.innerHTML = "";
-
-  itens.forEach((item) => {
-    const dataObj = new Date(item.data_ordenacao);
-    const dataFormatada = dataObj.toLocaleDateString("pt-BR");
-    const horaFormatada = dataObj.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const dataCompleta = `${dataFormatada} as ${horaFormatada}`;
-
-    let html;
-
-    // TIPO 1: ENTRADA DE ESTOQUE (COMPRA)
-    if (item.tipo_registro === "ENTRADA_ESTOQUE") {
-      html = `
-                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="bi bi-cart-plus-fill text-primary fs-4"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${item.item_nome}</h6>
-                                <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">Compra</span>
-                            </div>
-                            <p class="mb-1 small text-muted-light">Novo item adicionado ao inventario.</p>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Qtd: <strong>${item.quantidade} ${item.unidade}</strong></small>
-                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-    }
-    // TIPO 2: RESIDUO (DESCARTE)
-    else if (item.tipo_registro === "RESIDUO") {
-      html = `
-                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-secondary bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="bi bi-trash3-fill text-white-50 fs-4"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${item.descricao}</h6>
-                                <span class="badge bg-secondary text-uppercase" style="font-size: 0.65rem;">Descarte</span>
-                            </div>
-                            <p class="mb-1 small text-muted-light">
-                                Enviado para tratamento (${item.tipo_perigo})
-                            </p>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Vol: <strong>${item.quantidade} ${item.unidade_medida}</strong></small>
-                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-    }
-    // TIPO 3: CONSUMO (USO INTERNO)
-    else if (item.tipo_registro === "CONSUMO") {
-      const nomeReagente = escapeHtml(item.reagente?.nome || "Reagente desconhecido");
-
-      html = `
-                <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-info bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="bi bi-flask-fill text-info fs-4"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${nomeReagente}</h6>
-                                <span class="badge bg-info text-dark text-uppercase" style="font-size: 0.65rem;">Consumo</span>
-                            </div>
-                            <p class="mb-1 small text-muted-light">
-                                Consumido por: <strong>${escapeHtml(item.nome_usuario)}</strong><br>
-                                <span class="fst-italic">Motivo: ${escapeHtml(item.finalidade || "Não informado")}</span>
-                            </p>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Qtd: <strong>${escapeHtml(item.quantidade)} ${escapeHtml(item.unidade_medida)}</strong></small>
-                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-    }
-    // TIPO 4: TRANSFERENCIA (TROCA)
-    else {
-      const euFizOPedido = String(item.id_lab_origem) === String(MEU_LAB_ID);
-      let cor, icone, textoAcao;
-
-      if (euFizOPedido) {
-        // RECEBIDO (Entrada por troca)
-        cor = "success";
-        icone = "bi-arrow-down-left-circle-fill";
-        const labParceiro = item.LabDestino?.nome_laboratorio || "Lab Externo";
-        textoAcao = `Recebido de <strong>${labParceiro}</strong>`;
-      } else {
-        // ENVIADO (Saida por troca)
-        cor = "danger";
-        icone = "bi-arrow-up-right-circle-fill";
-        const labParceiro = item.LabOrigem?.nome_laboratorio || "Lab Externo";
-        textoAcao = `Enviado para <strong>${labParceiro}</strong>`;
-      }
-
-      const nomereagente = item.estoquelab?.reagente?.nome || "Item desconhecido";
-      const unidade = item.estoquelab?.unidade_medida || "";
-
-      // Status normalizado (label + cor) e motivo de recusa, quando houver.
-      const { label: statusLabel, badge: statusBadgeClass } = resolverStatusTransfer(item.status);
-      const motivoHtml =
-        String(item.status).toLowerCase() === "recusado" && item.motivo_recusa
-          ? `<p class="mb-1 small text-danger"><i class="bi bi-info-circle me-1"></i>Motivo: ${escapeHtml(item.motivo_recusa)}</p>`
-          : "";
-
-      html = `
+// Um item do histórico: ícone, título, selo do tipo, linhas de detalhe,
+// quantidade e data. Todo texto que vem do banco chega aqui já escapado.
+function montarItem({ cor, icone, titulo, selo, seloClasse, detalhes, quantidade, data }) {
+  return `
                 <div class="list-group-item bg-transparent border-white border-opacity-10 py-3 mb-2 rounded-4">
                     <div class="d-flex align-items-center">
                         <div class="bg-${cor} bg-opacity-25 rounded-circle p-3 me-3">
@@ -299,18 +167,141 @@ function renderHistorico(itens) {
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="mb-0 fw-bold text-white">${nomereagente}</h6>
-                                <span class="badge ${statusBadgeClass} text-uppercase" style="font-size: 0.65rem;">${statusLabel}</span>
+                                <h6 class="mb-0 fw-bold text-white">${titulo}</h6>
+                                <span class="badge ${seloClasse}">${selo}</span>
                             </div>
-                            <p class="mb-1 small text-muted-light">${textoAcao}</p>
-                            ${motivoHtml}
+                            ${detalhes}
                             <div class="d-flex justify-content-between">
-                                <small class="text-white-50">Qtd: <strong>${item.quantidade_transferida} ${unidade}</strong></small>
-                                <small class="text-white-50 opacity-75">${dataCompleta}</small>
+                                <small class="text-white-50">Quantidade: <strong>${quantidade}</strong></small>
+                                <small class="text-white-50 opacity-75">${data}</small>
                             </div>
                         </div>
                     </div>
                 </div>`;
+}
+
+// Transferência vista pelo laboratório atual. No banco, id_lab_origem é o
+// laboratório dono do reagente (de onde o material sai) e id_lab_destino é
+// quem fez o pedido e recebe o material (ver transferenciasService.js).
+// Enquanto o pedido não é aprovado, nada saiu nem entrou: aparece como pedido.
+function descreverTransferencia(item) {
+  const souDono = String(item.id_lab_origem) === String(MEU_LAB_ID);
+  const outroLab = escapeHtml(
+    (souDono ? item.LabDestino?.nome_laboratorio : item.LabOrigem?.nome_laboratorio) ||
+      "outro laboratório"
+  );
+  const status = String(item.status || "pendente").toLowerCase();
+
+  if (status === "aprovado") {
+    return souDono
+      ? {
+          cor: "danger",
+          icone: "bi-arrow-up-right-circle-fill",
+          texto: `Transferência enviada para <strong>${outroLab}</strong>`,
+          selo: "Transferência",
+          seloClasse: "bg-danger",
+        }
+      : {
+          cor: "success",
+          icone: "bi-arrow-down-left-circle-fill",
+          texto: `Transferência recebida de <strong>${outroLab}</strong>`,
+          selo: "Transferência",
+          seloClasse: "bg-success",
+        };
+  }
+
+  const texto = souDono
+    ? `Pedido feito por <strong>${outroLab}</strong>`
+    : `Pedido feito a <strong>${outroLab}</strong>`;
+
+  if (status === "recusado") {
+    return {
+      cor: "secondary",
+      icone: "bi-x-circle-fill",
+      texto,
+      selo: "Pedido recusado",
+      seloClasse: "bg-secondary",
+    };
+  }
+  return {
+    cor: "warning",
+    icone: "bi-hourglass-split",
+    texto,
+    selo: "Pedido pendente",
+    seloClasse: "bg-warning text-dark",
+  };
+}
+
+function renderHistorico(itens) {
+  if (itens.length === 0) {
+    mostrarVazio(listaHistorico, {
+      icone: "bi-search",
+      titulo: "Nada encontrado",
+      mensagem: "Nenhum registro corresponde à sua busca.",
+    });
+    return;
+  }
+
+  listaHistorico.innerHTML = "";
+
+  itens.forEach((item) => {
+    const data = formatarDataHora(item.data_ordenacao);
+    let html;
+
+    if (item.tipo_registro === "ENTRADA_ESTOQUE") {
+      html = montarItem({
+        cor: "success",
+        icone: "bi-box-arrow-in-down",
+        titulo: escapeHtml(item.item_nome),
+        selo: "Entrada",
+        seloClasse: "bg-success",
+        detalhes: `<p class="mb-1 small text-muted-light">${escapeHtml(item.observacao || "Item adicionado ao estoque.")}</p>`,
+        quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade)),
+        data,
+      });
+    } else if (item.tipo_registro === "RESIDUO") {
+      html = montarItem({
+        cor: "secondary",
+        icone: "bi-trash3-fill",
+        titulo: escapeHtml(item.descricao),
+        selo: "Descarte",
+        seloClasse: "bg-secondary",
+        detalhes: `<p class="mb-1 small text-muted-light">Enviado para tratamento (${escapeHtml(formatarTipoPerigo(item.tipo_perigo))})</p>`,
+        quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
+        data,
+      });
+    } else if (item.tipo_registro === "CONSUMO") {
+      html = montarItem({
+        cor: "info",
+        icone: "bi-eyedropper",
+        titulo: escapeHtml(item.reagente?.nome || "Reagente desconhecido"),
+        selo: "Consumo",
+        seloClasse: "bg-info text-dark",
+        detalhes: `<p class="mb-1 small text-muted-light">
+                                Consumido por: <strong>${escapeHtml(item.nome_usuario)}</strong><br>
+                                <span class="fst-italic">Finalidade: ${escapeHtml(item.finalidade || "não informada")}</span>
+                            </p>`,
+        quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
+        data,
+      });
+    } else {
+      const t = descreverTransferencia(item);
+      const motivo =
+        String(item.status).toLowerCase() === "recusado" && item.motivo_recusa
+          ? `<p class="mb-1 small text-danger"><i class="bi bi-info-circle me-1"></i>Motivo: ${escapeHtml(item.motivo_recusa)}</p>`
+          : "";
+      html = montarItem({
+        cor: t.cor,
+        icone: t.icone,
+        titulo: escapeHtml(item.estoquelab?.reagente?.nome || "Item desconhecido"),
+        selo: t.selo,
+        seloClasse: t.seloClasse,
+        detalhes: `<p class="mb-1 small text-muted-light">${t.texto}</p>${motivo}`,
+        quantidade: escapeHtml(
+          formatarQuantidade(item.quantidade_transferida, item.estoquelab?.unidade_medida)
+        ),
+        data,
+      });
     }
 
     listaHistorico.innerHTML += html;

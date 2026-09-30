@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Laboratórios (Admin) - LabStocker</title>
+    <title>Laboratórios e chefes - LabStocker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../css/style.css">
@@ -23,7 +23,7 @@
                     <div class="card-body p-4">
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="mb-0">Gestão de Laboratórios</h2>
+                            <h2 class="mb-0">Laboratórios e chefes</h2>
                             <div class="d-flex gap-2">
                                 <a href="admin-admins.html" class="btn btn-outline-dark"><i class="bi bi-people-fill me-1"></i>Admins</a>
                                 <a href="../dashboard/dashboard.html" class="btn btn-outline-dark">Voltar</a>
@@ -32,17 +32,17 @@
 
                         <div class="card bg-light mb-4">
                             <div class="card-body">
-                                <h5 class="card-title mb-3">Cadastrar Novo Laboratório</h5>
+                                <h5 class="card-title mb-3">Cadastrar laboratório</h5>
                                 <form id="form-lab">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <input type="text" id="lab-nome" class="form-control" placeholder="Nome do Laboratório" required>
+                                            <input type="text" id="lab-nome" class="form-control" placeholder="Nome do laboratório" required>
                                         </div>
                                         <div class="col-md-4">
                                             <input type="text" id="lab-sipac" class="form-control" placeholder="Código SIPAC" required>
                                         </div>
                                         <div class="col-md-2">
-                                            <button type="submit" class="btn btn-dark w-100">Criar</button>
+                                            <button type="submit" class="btn btn-primary w-100">Criar</button>
                                         </div>
                                     </div>
                                 </form>
@@ -52,8 +52,8 @@
                         <hr>
 
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Laboratórios Existentes</h5>
-                            <span id="resumo-sem-chefe" class="badge bg-danger d-none"></span>
+                            <h5 class="mb-0">Laboratórios cadastrados</h5>
+                            <span id="resumo-sem-chefe" class="badge bg-warning text-dark d-none"></span>
                         </div>
                         <ul class="list-group mt-3" id="lista-labs">
                             <div class="text-center py-3">
@@ -85,12 +85,12 @@
                     </div>
                     <div class="mb-1">
                         <label for="chefe-motivo" class="form-label fw-bold small">Motivo da troca (opcional)</label>
-                        <input type="text" id="chefe-motivo" class="form-control" maxlength="300" placeholder="Ex: nova coordenação">
+                        <input type="text" id="chefe-motivo" class="form-control" maxlength="300" placeholder="Ex.: nova coordenação">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-dark">Salvar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
                 </div>
             </form>
         </div>

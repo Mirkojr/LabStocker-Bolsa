@@ -33,29 +33,29 @@
             <div class="alert alert-light border shadow-sm rounded-4 mb-4 d-flex align-items-center">
                 <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
                 <div>
-                    <strong>Gere extratos detalhados</strong>
-                    <div class="small text-muted">Selecione o período abaixo para visualizar na tela ou baixar o arquivo .CSV (Excel).</div>
+                    <strong>Extrato por período</strong>
+                    <div class="small text-muted">Escolha o período para ver os registros abaixo ou baixar o arquivo CSV (abre no Excel).</div>
                 </div>
             </div>
 
             <form id="form-relatorio" class="row g-3 mb-5 align-items-end">
                 <div class="col-md-4">
-                    <label for="data-inicio" class="form-label fw-bold text-secondary small text-uppercase">Data Início</label>
+                    <label for="data-inicio" class="form-label fw-bold text-secondary small">Data de início</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3"><i class="bi bi-calendar-event text-primary"></i></span>
                         <input type="date" class="form-control border-start-0 rounded-end-5 ps-2 py-2" id="data-inicio" required>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label for="data-fim" class="form-label fw-bold text-secondary small text-uppercase">Data Fim</label>
+                    <label for="data-fim" class="form-label fw-bold text-secondary small">Data de fim</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3"><i class="bi bi-calendar-event-fill text-primary"></i></span>
+                        <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3"><i class="bi bi-calendar-event text-primary"></i></span>
                         <input type="date" class="form-control border-start-0 rounded-end-5 ps-2 py-2" id="data-fim" required>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-success w-100 rounded-pill py-2 fw-bold shadow-sm">
-                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Baixar Relatório (CSV)
+                    <button type="submit" class="btn btn-warning text-dark w-100 rounded-pill py-2 fw-bold shadow-sm">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Baixar relatório (CSV)
                     </button>
                 </div>
             </form>
@@ -67,12 +67,12 @@
 
             <div class="table-responsive rounded-3 border">
                 <table class="table table-hover table-striped mb-0" id="tabela-preview">
-                    <thead class="table-dark">
+                    <thead class="table-light">
                         <tr>
                             <th class="py-3 ps-3">Data</th>
                             <th class="py-3">Tipo</th>
                             <th class="py-3">Item</th>
-                            <th class="py-3">Qtd.</th>
+                            <th class="py-3">Quantidade</th>
                             <th class="py-3 pe-3">Detalhes</th>
                         </tr>
                     </thead>

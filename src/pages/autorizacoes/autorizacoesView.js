@@ -1,5 +1,5 @@
 import { escapeHtml, $ } from "../../shared/utils/dom.js";
-import { formatarTelefone } from "../../shared/utils/formatters.js";
+import { formatarQuantidade, formatarTelefone } from "../../shared/utils/formatters.js";
 import { gerarSignedUrl } from "../../shared/services/projetosService.js";
 import { UNIDADES } from "../../shared/constants.js";
 
@@ -71,7 +71,7 @@ function renderProdutosModal(produtos) {
     li.className = "list-group-item bg-transparent d-flex justify-content-between";
     li.innerHTML =
       `<span>${escapeHtml(p.nome)}</span>` +
-      `<span class="text-muted">${escapeHtml(p.quantidade)} ${escapeHtml(p.unidade || "")}</span>`;
+      `<span class="text-muted">${escapeHtml(formatarQuantidade(p.quantidade, p.unidade))}</span>`;
     lista.appendChild(li);
   });
 }
@@ -90,7 +90,7 @@ async function renderBotaoDownload(proj) {
   btn.id = "modal-btn-download";
   btn.className = "btn btn-success rounded-pill px-4 me-auto";
   btn.target = "_blank";
-  btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar Ofício Assinado';
+  btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Baixar ofício assinado';
 
   const { data: signed } = await gerarSignedUrl(proj.pdf_assinado_url);
   btn.href = signed?.signedUrl || "#";
@@ -118,12 +118,12 @@ export function adicionarLinhaProduto() {
   tr.innerHTML = `
         <td class="text-muted-light">${index}</td>
         <td><input type="text" class="form-control form-control-dark form-control-sm product-name" placeholder="Nome do reagente/material"></td>
-        <td><input type="number" min="0" step="any" class="form-control form-control-dark form-control-sm product-qty" placeholder="0"></td>
+        <td><input type="number" min="0" step="any" class="form-control form-control-dark form-control-sm product-qty" placeholder="Quantidade"></td>
         <td>
             <select class="form-select form-select-sm product-unit">${opcoesUnidade}</select>
         </td>
         <td>
-            <button type="button" class="btn btn-outline-danger btn-sm btn-remover-item">
+            <button type="button" class="btn btn-outline-danger btn-sm btn-remover-item" aria-label="Remover item">
                 <i class="bi bi-trash"></i>
             </button>
         </td>

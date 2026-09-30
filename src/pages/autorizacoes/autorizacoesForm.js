@@ -150,7 +150,7 @@ export function iniciarLogicaFormulario(onSucesso) {
       const { error } = await criarProjeto(dados);
       if (error) throw error;
 
-      showToast("Solicitação enviada para análise com sucesso!", "success");
+      showToast("Solicitação enviada para análise.", "success");
       form.reset();
       tbody.innerHTML = "";
       adicionarLinhaProduto();

@@ -161,10 +161,10 @@ function criarItemVinculo(v) {
 
   const cargo = possoEditarCargo(v)
     ? `<select class="form-select form-select-sm select-cargo" data-usuario="${escapeHtml(v.id_usuario)}" style="width: auto;" aria-label="Cargo">
-         <option value="">Sem cargo</option>
+         <option value="">Cargo não informado</option>
          ${CARGOS.map((c) => `<option value="${c}" ${perfil.cargo === c ? "selected" : ""}>${c}</option>`).join("")}
        </select>`
-    : `<small class="text-muted-light">${escapeHtml(perfil.cargo || "Sem cargo")}</small>`;
+    : `<small class="text-muted-light">Cargo: ${escapeHtml(perfil.cargo || "não informado")}</small>`;
 
   const acoes = [];
   if (possoMudarPapel(v)) {

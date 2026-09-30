@@ -1,6 +1,8 @@
 import { getCurrentLabId, checkIsAdmin, setAdminLabContext } from "../../shared/sessionManager.js";
 import { pode } from "../../shared/permissoes.js";
 import { showToast } from "../../shared/utils/toast.js";
+import { escapeHtml } from "../../shared/utils/dom.js";
+import { formatarQuantidade } from "../../shared/utils/formatters.js";
 import { listarLaboratorios } from "../../shared/services/laboratoriosService.js";
 import { listarEstoqueDisponivelPorLaboratorio } from "../../shared/services/estoqueService.js";
 import { criarSolicitacao } from "../../shared/services/transferenciasService.js";
@@ -42,7 +44,7 @@ async function init() {
     await fetchlaboratorios();
   } catch (e) {
     console.error("Erro ao inicializar a pagina de laboratorios:", e);
-    showToast("Falha na conexao com o banco.", "error");
+    showToast("Não foi possível carregar os laboratórios.", "error");
   } finally {
     spinner.classList.add("d-none");
   }
@@ -61,20 +63,23 @@ function renderlaboratorios(labs) {
 
   if (labs.length === 0) {
     gridLabs.innerHTML =
-      '<div class="col-12 text-center py-5 text-muted">Nenhum laboratorio encontrado.</div>';
+      '<div class="col-12 text-center py-5 text-muted">Nenhum laboratório encontrado.</div>';
     return;
   }
 
   labs.forEach((lab) => {
     const isMeuLab = String(lab.id) === String(MEU_LAB_ID);
 
-    // Logica de Admin (Personificacao)
+    const nomeLab = escapeHtml(lab.nome_laboratorio);
+
+    // Admin pode abrir outro laboratório em modo somente leitura. É uma ação
+    // secundária (não compete com "Ver estoque") e não aparece no próprio laboratório.
     let btnAdmin = "";
-    if (SOU_ADMIN) {
+    if (SOU_ADMIN && !isMeuLab) {
       btnAdmin = `
-                <button class="btn btn-sm btn-warning w-100 mt-2 fw-bold rounded-pill btn-gerenciar-admin shadow-sm" 
-                    data-id="${lab.id}" data-nome="${lab.nome_laboratorio}">
-                    <i class="bi bi-shield-lock-fill me-1"></i> VER COMO ADMIN (SOMENTE LEITURA)
+                <button class="btn btn-sm btn-outline-secondary w-100 mt-2 rounded-pill btn-gerenciar-admin"
+                    data-id="${escapeHtml(lab.id)}" data-nome="${nomeLab}">
+                    <i class="bi bi-shield-lock me-1"></i> Abrir como admin (somente leitura)
                 </button>`;
     }
 
@@ -86,12 +91,12 @@ function renderlaboratorios(labs) {
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
                         <i class="bi bi-building fs-2"></i>
                     </div>
-                    <h5 class="fw-bold text-dark mb-1 text-truncate">${lab.nome_laboratorio}</h5>
-                    <p class="text-muted small mb-3">SIPAC: ${lab.codigo_sipac}</p>
-                    
-                    <button class="btn ${isMeuLab ? "btn-light disabled border" : "btn-primary"} w-100 rounded-pill fw-bold btn-ver-estoque py-2" 
-                        data-id="${lab.id}" data-nome="${lab.nome_laboratorio}">
-                        ${isMeuLab ? "Seu Laboratorio" : '<i class="bi bi-eye me-2"></i>Ver estoque'}
+                    <h5 class="fw-bold text-dark mb-1 text-truncate">${nomeLab}</h5>
+                    <p class="text-muted small mb-3">SIPAC: ${escapeHtml(lab.codigo_sipac)}</p>
+
+                    <button class="btn ${isMeuLab ? "btn-light disabled border" : "btn-primary"} w-100 rounded-pill fw-bold btn-ver-estoque py-2"
+                        data-id="${escapeHtml(lab.id)}" data-nome="${nomeLab}">
+                        ${isMeuLab ? "Seu laboratório" : '<i class="bi bi-eye me-2"></i>Ver estoque'}
                     </button>
                     ${btnAdmin}
                 </div>
@@ -112,7 +117,7 @@ buscaLabInput.addEventListener("keyup", () => {
 });
 
 async function fetchestoqueExterno(labId, labNome) {
-  tituloLabSelecionado.innerHTML = `<i class="bi bi-building me-2"></i>estoque: ${labNome}`;
+  tituloLabSelecionado.innerHTML = `<i class="bi bi-building me-2"></i>Estoque de ${escapeHtml(labNome)}`;
   listaestoqueExt.innerHTML =
     '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
   modalestoqueExt.show();
@@ -126,7 +131,7 @@ async function fetchestoqueExterno(labId, labNome) {
     renderestoqueExterno(ESTOQUE_ATUAL_CACHE);
   } catch (e) {
     console.error("Erro ao carregar estoque externo:", e);
-    showToast("Erro ao carregar estoque externo.", "error");
+    showToast("Erro ao carregar o estoque do laboratório.", "error");
   }
 }
 
@@ -135,7 +140,7 @@ function renderestoqueExterno(itens) {
 
   if (itens.length === 0) {
     listaestoqueExt.innerHTML =
-      '<div class="p-5 text-center text-muted">Nao ha reagentes disponiveis neste lab.</div>';
+      '<div class="p-5 text-center text-muted">Este laboratório não tem reagentes disponíveis.</div>';
     return;
   }
 
@@ -143,18 +148,20 @@ function renderestoqueExterno(itens) {
     const div = document.createElement("div");
     div.className =
       "list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom";
+    const nomeReagente = escapeHtml(item.reagente.nome);
     div.innerHTML = `
             <div>
-                <h6 class="mb-0 fw-bold text-dark">${item.reagente.nome}</h6>
-                <span class="badge bg-light text-primary border">${item.quantidade} ${item.unidade_medida}</span>
+                <h6 class="mb-0 fw-bold text-dark">${nomeReagente}</h6>
+                <span class="badge bg-light text-primary border">${escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida))}</span>
             </div>
-            <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold btn-solicitar" 
-                data-id="${item.id}" 
-                data-nome="${item.reagente.nome}" 
-                data-unidade="${item.unidade_medida}" 
-                data-max="${item.quantidade}" 
-                data-lab="${item.id_laboratorio}">
-                Solicitar
+            <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold btn-solicitar"
+                data-id="${escapeHtml(item.id)}"
+                data-nome="${nomeReagente}"
+                data-unidade="${escapeHtml(item.unidade_medida)}"
+                data-max="${escapeHtml(item.quantidade)}"
+                data-lab="${escapeHtml(item.id_laboratorio)}"
+                aria-label="Pedir ${nomeReagente}">
+                Pedir
             </button>`;
     if (!POSSO_SOLICITAR) div.querySelector(".btn-solicitar")?.remove();
     listaestoqueExt.appendChild(div);
@@ -179,7 +186,7 @@ function abrirModalSolicitacao(btn) {
 
   qtdSolicitadaInput.value = "";
   unidadeSolicitadaSpan.textContent = unidade;
-  textoSolicitacao.innerHTML = `Voce esta solicitando <strong>${nome}</strong>.<br>Disponivel: ${max} ${unidade}`;
+  textoSolicitacao.innerHTML = `Você está pedindo <strong>${escapeHtml(nome)}</strong>.<br>Disponível: ${escapeHtml(formatarQuantidade(max, unidade))}`;
   erroQtd.classList.add("d-none");
 
   modalSolicitar.show();
@@ -209,12 +216,12 @@ formSolicitacao.addEventListener("submit", async (e) => {
 
     if (error) throw error;
 
-    showToast("Solicitacao enviada! Aguarde a aprovacao do laboratorio.", "success");
+    showToast("Pedido enviado. Aguarde a aprovação do outro laboratório.", "success");
     modalSolicitar.hide();
     modalestoqueExt.hide();
   } catch (e) {
     console.error("Erro ao criar solicitacao:", e);
-    showToast("Erro ao processar pedido.", "error");
+    showToast("Erro ao enviar o pedido.", "error");
   }
 });
 
@@ -231,9 +238,7 @@ document.addEventListener("click", (e) => {
   const btnAdmin = e.target.closest(".btn-gerenciar-admin");
   if (btnAdmin) {
     const { id, nome } = btnAdmin.dataset;
-    if (
-      confirm(`Voce vai visualizar o laboratorio "${nome}" em modo somente leitura. Continuar?`)
-    ) {
+    if (confirm(`Você vai abrir o laboratório "${nome}" em modo somente leitura. Continuar?`)) {
       setAdminLabContext(id, nome);
       window.location.href = "../dashboard/dashboard.html";
     }

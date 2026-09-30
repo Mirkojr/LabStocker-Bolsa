@@ -56,7 +56,7 @@ export function mostrarErro(alvo, opcoes = {}) {
   const el = resolverElemento(alvo);
   if (!el) return;
   const {
-    mensagem = "Nao foi possivel carregar os dados.",
+    mensagem = "Não foi possível carregar os dados.",
     textoBotao = "Tentar novamente",
     onTentarNovamente = null,
   } = opcoes;
@@ -64,7 +64,7 @@ export function mostrarErro(alvo, opcoes = {}) {
   el.innerHTML = `
         <div class="w-100 text-center py-5 text-muted-light">
             <i class="bi bi-exclamation-octagon-fill fs-1 text-danger opacity-75 d-block mb-3"></i>
-            <h6 class="fw-bold mb-1 text-white">Ops, algo deu errado</h6>
+            <h6 class="fw-bold mb-1 text-white">Algo deu errado</h6>
             <p class="mb-3 small">${mensagem}</p>
             ${
               onTentarNovamente

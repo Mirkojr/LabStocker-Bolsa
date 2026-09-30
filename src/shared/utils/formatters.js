@@ -1,3 +1,5 @@
+import { escapeHtml } from "./dom.js";
+
 // Função para formatar CPF brasileiro
 // Recebe uma string de CPF (com ou sem formatação) e retorna no formato XXX.XXX.XXX-XX
 export function formatarCPF(cpf) {
@@ -17,7 +19,55 @@ export function formatarTelefone(telefone) {
   return telefone;
 }
 
+// Escapa a fórmula e põe os números em subscrito (H2SO4 -> H<sub>2</sub>SO<sub>4</sub>).
+// As entidades criadas pelo escape (ex.: &#039;) ficam intactas.
 export function formatarFormulaQuimica(formula) {
-  // Essa linha procura por qualquer número (\d+) e substitui por <sub>número</sub>
-  return formula.replace(/(\d+)/g, "<sub>$1</sub>");
+  if (!formula) return "";
+  return escapeHtml(formula).replace(/(&#?\w+;)|(\d+)/g, (_m, entidade, numero) =>
+    entidade ? entidade : `<sub>${numero}</sub>`
+  );
+}
+
+// Número no padrão brasileiro (vírgula decimal, ponto de milhar), com até 3 casas.
+export function formatarNumero(valor, casas = 3) {
+  if (valor === null || valor === undefined || valor === "") return "-";
+  const num = Number(valor);
+  if (Number.isNaN(num)) return String(valor);
+  return num.toLocaleString("pt-BR", { maximumFractionDigits: casas });
+}
+
+// Quantidade com unidade, ex.: "2,5 L", "800 mL". A unidade vai exatamente como
+// está (mL, g, kg): em unidade de medida, maiúscula muda o sentido (ML = megalitro).
+export function formatarQuantidade(valor, unidade) {
+  const numero = formatarNumero(valor);
+  return unidade ? `${numero} ${unidade}` : numero;
+}
+
+// Data e hora no formato "30/09/2026 às 17:40".
+export function formatarDataHora(data) {
+  const d = new Date(data);
+  if (Number.isNaN(d.getTime())) return "-";
+  const dia = d.toLocaleDateString("pt-BR");
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${dia} às ${hora}`;
+}
+
+// O banco grava o tipo de perigo sem acento; na tela ele aparece com acento.
+const ROTULOS_TIPO_PERIGO = {
+  Inflamavel: "Inflamável",
+  Toxico: "Tóxico",
+  Corrosivo: "Corrosivo",
+  Biologico: "Biológico",
+  Outro: "Outro / mistura",
+};
+
+export function formatarTipoPerigo(tipo) {
+  if (!tipo) return "Não informado";
+  return ROTULOS_TIPO_PERIGO[tipo] || tipo;
+}
+
+// Status do resíduo ("Em Aberto" no banco) em caixa de frase.
+export function formatarStatusResiduo(status) {
+  if (status === "Em Aberto") return "Em aberto";
+  return status || "-";
 }

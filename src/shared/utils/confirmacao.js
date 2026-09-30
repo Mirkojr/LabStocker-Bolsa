@@ -19,7 +19,7 @@ function criarModalBase() {
  * @returns {Promise<boolean>} true se confirmado, false caso contrario.
  */
 export function confirmar({
-  titulo = "Confirmar acao",
+  titulo = "Confirmar ação",
   mensagem = "Tem certeza?",
   textoConfirmar = "Confirmar",
   textoCancelar = "Cancelar",
@@ -67,8 +67,8 @@ export function confirmar({
  * @returns {Promise<{confirmado: boolean, motivo: string}>}
  */
 export function confirmarRecusa({
-  titulo = "Recusar solicitacao",
-  mensagem = "Descreva o motivo da recusa. Ele ficara visivel para o solicitante.",
+  titulo = "Recusar pedido",
+  mensagem = "Descreva o motivo da recusa. Ele fica visível para quem fez o pedido.",
   textoConfirmar = "Recusar",
   obrigatorio = true,
   maxLength = 300,
@@ -85,7 +85,7 @@ export function confirmarRecusa({
                     <div class="modal-body p-4">
                         <p class="text-muted small mb-2">${mensagem}</p>
                         <textarea class="form-control" data-campo="motivo" rows="3" maxlength="${maxLength}"
-                            placeholder="Ex: Estoque insuficiente no momento."></textarea>
+                            placeholder="Ex.: estoque insuficiente no momento."></textarea>
                         <div class="text-danger small mt-1 d-none" data-erro="motivo"></div>
                     </div>
                     <div class="modal-footer border-0">

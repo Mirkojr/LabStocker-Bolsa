@@ -13,6 +13,7 @@ import { listarreagentesParaestoque } from "../../shared/services/reagentesServi
 import { registrarConsumo } from "../../shared/services/consumoService.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
 import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
+import { formatarNumero, formatarQuantidade } from "../../shared/utils/formatters.js";
 import {
   garantirContainerPaginador,
   paginarLista,
@@ -71,13 +72,6 @@ let consumoQuantidadeDisponivel = 0; // saldo do item atualmente aberto no modal
 // Container de paginacao (inserido logo abaixo da lista)
 const paginadorEstoqueEl = garantirContainerPaginador(listaestoqueEl, "paginador-estoque");
 
-// Formata número no padrão pt-BR (vírgula decimal, sem zeros sobrando)
-function formatarQuantidade(valor) {
-  const num = Number(valor);
-  if (Number.isNaN(num)) return escapeHtml(String(valor ?? ""));
-  return num.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-}
-
 // Preenche o <select> de unidades do FORM a partir da fonte única (constants.js)
 function popularUnidadesForm() {
   if (!unidadeInput) return;
@@ -90,7 +84,7 @@ function popularUnidadesForm() {
 function popularUnidadesFiltro() {
   if (!filtroUnidade) return;
   filtroUnidade.innerHTML =
-    '<option value="">Todas as unidades</option>' +
+    '<option value="">Toda unidade</option>' +
     UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join("");
 }
 
@@ -121,17 +115,17 @@ function montarValidade(item) {
   if (status === "vencido") {
     return {
       html: `<span class="badge bg-danger badge-validade"><i class="bi bi-exclamation-octagon"></i> Venceu: ${dataFormatada}</span>`,
-      borderClass: "border-start border-danger border-4",
+      borderClass: "border-danger",
     };
   }
   if (status === "vence_breve") {
     return {
       html: `<span class="badge bg-warning text-dark badge-validade"><i class="bi bi-hourglass-split"></i> Vence: ${dataFormatada}</span>`,
-      borderClass: "border-start border-warning border-4",
+      borderClass: "border-warning",
     };
   }
   return {
-    html: `<span class="badge bg-success badge-validade">Val: ${dataFormatada}</span>`,
+    html: `<span class="badge bg-success badge-validade"><span class="d-none d-md-inline">Validade: </span>${dataFormatada}</span>`,
     borderClass: "",
   };
 }
@@ -216,57 +210,58 @@ function renderestoque(itens) {
     const { html: validadeHTML, borderClass } = montarValidade(item);
     const nome = escapeHtml(item.reagente?.nome);
     const obs = escapeHtml(item.observacoes_operacionais || "");
-    const obsTexto = obs || "Sem observações operacionais.";
 
     // Item zerado: mostra badge "Esgotado" e desabilita o botão de consumir,
     // sem esconder o item (mantém o histórico/rastreabilidade do frasco).
     const esgotado = Number(item.quantidade) <= 0;
     const badgeEsgotado = esgotado
-      ? '<span class="badge bg-dark badge-esgotado ms-2"><i class="bi bi-slash-circle"></i> Esgotado</span>'
+      ? '<span class="badge bg-dark badge-esgotado"><i class="bi bi-slash-circle"></i> Esgotado</span>'
       : "";
-    const borderFinal = esgotado ? "border-start border-secondary border-4" : borderClass;
+    // Todo item tem a borda lateral (transparente quando não há alerta), para o
+    // texto de todos os itens começar na mesma coluna.
+    const borderFinal = esgotado ? "border-secondary" : borderClass || "border-white";
 
     const div = document.createElement("div");
-    div.className = `list-group-item mb-3 shadow-sm rounded border-0 ${borderFinal}`;
+    div.className = `list-group-item item-estoque mb-3 shadow-sm rounded border-0 border-start border-4 ${borderFinal}`;
     div.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex" style="width:48px;height:48px;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 gap-md-3">
+                <div class="d-flex align-items-center min-w-0">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary d-none d-md-flex flex-shrink-0" style="width:48px;height:48px;">
                         <i class="bi bi-droplet-half fs-4"></i>
                     </div>
-                    <div>
-                        <h5 class="mb-1 fw-bold text-dark">${nome}${badgeEsgotado}</h5>
+                    <div class="min-w-0">
+                        <h5 class="mb-1 fw-bold text-dark d-flex flex-wrap align-items-center gap-2">${nome}${badgeEsgotado}</h5>
                         <div class="mb-1">
-                            <span class="text-primary fw-bold fs-5">${formatarQuantidade(item.quantidade)}</span>
+                            <span class="text-primary fw-bold fs-5">${escapeHtml(formatarNumero(item.quantidade))}</span>
                             <small class="text-muted fw-bold">${escapeHtml(item.unidade_medida)}</small>
                         </div>
-                        <small class="text-muted d-block text-truncate" style="max-width: 300px;" title="${obsTexto}">
-                            ${obsTexto}
-                        </small>
+                        ${obs ? `<small class="text-muted d-block text-truncate" title="${obs}">${obs}</small>` : ""}
                     </div>
                 </div>
 
-                <div class="text-end">
-                    <div class="mb-2">${validadeHTML}</div>
-                    <div>
-                        <button class="btn btn-sm btn-primary btn-consumir-estoque me-1 rounded-pill px-3" data-permissao="consumo.registrar"
+                <div class="item-estoque-acoes">
+                    <div class="mb-md-2">${validadeHTML}</div>
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button class="btn btn-sm btn-primary btn-consumir-estoque rounded-pill px-3" data-permissao="consumo.registrar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente="${nome}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
                             data-unidade="${escapeHtml(item.unidade_medida)}"
+                            aria-label="Consumir ${nome}"
                             ${esgotado ? 'disabled title="Item esgotado, sem saldo para consumir"' : ""}>
-                            <i class="bi bi-flask"></i> <span class="d-none d-md-inline">Consumir</span>
+                            <i class="bi bi-eyedropper"></i> Consumir
                         </button>
-                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque me-1 rounded-pill px-3" data-permissao="estoque.editar"
+                        <button class="btn btn-sm btn-outline-primary btn-edit-estoque rounded-pill px-3" data-permissao="estoque.editar"
                             data-id="${escapeHtml(item.id)}"
                             data-reagente-id="${escapeHtml(item.id_reagente)}"
                             data-quantidade="${escapeHtml(item.quantidade)}"
                             data-unidade="${escapeHtml(item.unidade_medida)}"
                             data-validade="${escapeHtml(item.data_validade || "")}"
-                            data-observacoes="${obs}">
+                            data-observacoes="${obs}"
+                            aria-label="Editar ${nome}">
                             <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item">
+                        <button class="btn btn-sm btn-outline-danger btn-delete-estoque rounded-circle" data-permissao="estoque.editar" data-id="${escapeHtml(item.id)}" title="Excluir item" aria-label="Excluir ${nome}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -374,8 +369,8 @@ function handleEditClickestoque(button) {
   validadeInput.value = validade;
   observacoesInput.value = observacoes;
   stepperEstoque?.atualizarEstadoBotoes();
-  modalTitle.textContent = "Editar Item";
-  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar Alterações';
+  modalTitle.textContent = "Editar item";
+  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar alterações';
   modalestoque.show();
 }
 async function handleDeleteClickestoque(button) {
@@ -403,7 +398,7 @@ async function handleDeleteClickestoque(button) {
 function resetModalestoque() {
   formestoque.reset();
   editIdInput.value = "";
-  modalTitle.textContent = "Adicionar Item ao estoque";
+  modalTitle.textContent = "Adicionar item ao estoque";
   modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
   selectreagente.value = "";
   unidadeInput.value = "";
@@ -420,7 +415,7 @@ function handleConsumirClick(button) {
   formConsumo.reset();
   consumoItemIdInput.value = id;
   consumoItemLabel.textContent = reagente;
-  consumoDisponivelEl.textContent = `Disponível: ${formatarQuantidade(quantidade)} ${unidade}`;
+  consumoDisponivelEl.textContent = `Disponível: ${formatarQuantidade(quantidade, unidade)}`;
   consumoQuantidadeDisponivel = parseFloat(quantidade) || 0;
   stepperConsumo?.setLimites(0.01, consumoQuantidadeDisponivel);
   modalConsumo.show();
@@ -443,7 +438,7 @@ async function handleFormSubmitConsumo(evento) {
   }
   if (quantidade > consumoQuantidadeDisponivel) {
     showToast(
-      `Quantidade maior que o disponível (${formatarQuantidade(consumoQuantidadeDisponivel)}).`,
+      `Quantidade maior que o disponível (${formatarNumero(consumoQuantidadeDisponivel)}).`,
       "error"
     );
     return;

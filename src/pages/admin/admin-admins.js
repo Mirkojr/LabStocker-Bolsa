@@ -18,7 +18,7 @@ let MEU_ID = null;
 
 async function init() {
   if (!(await checkIsAdmin())) {
-    alert("Acesso Negado: Esta pagina e restrita para administradores.");
+    alert("Acesso negado: esta página é restrita a administradores.");
     window.location.href = "../dashboard/dashboard.html";
     return;
   }
