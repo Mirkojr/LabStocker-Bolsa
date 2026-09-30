@@ -1,109 +1,95 @@
 /* Style do site */
+
+/* Fontes: Archivo (títulos, em largura condensada, como rótulo de frasco) e
+   Atkinson Hyperlegible Next (texto: distingue l/I/1 e 0/O, importante em
+   fórmulas e quantidades). */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Atkinson+Hyperlegible+Next:wght@400..700&display=swap");
+
+/* ===============================================
+   IDENTIDADE UFC
+   Cores tiradas do brasão da UFC: o campo azul, a banda dourada
+   ameada e as carnaúbas verdes.
+   =============================================== */
+:root {
+  --ufc-azul: #00629b;
+  --ufc-azul-escuro: #004b77;
+  --ufc-ouro: #e2bf3f;
+  --ufc-ouro-escuro: #c9a42a;
+  --ufc-verde: #008f36;
+  --alerta: #b3261e;
+
+  --tinta: #1b2a36;
+  --tinta-suave: #52616e;
+  --papel: #f2f5f7;
+  --superficie: #ffffff;
+  --linha: #d6dee4;
+
+  --fonte-texto: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
+  --fonte-titulo: "Archivo", "Arial Narrow", "Segoe UI", sans-serif;
+
+  --raio-controle: 8px;
+  --raio-painel: 12px;
+}
+
 body {
   background: linear-gradient(135deg, #132e4b 0%, #0d2136 100%);
   min-height: 100vh;
   color: #f8f9fa;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--fonte-texto);
 }
 
-.logo-container img {
-  max-height: 180px;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.modal-title-lab {
+  font-family: var(--fonte-titulo);
+  font-stretch: 87.5%;
 }
 
-.dashboard-card {
-  background-color: #ffffff;
-  border-radius: 16px;
-  padding: 1.5rem;
-  text-decoration: none;
-  color: #132e4b;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: hidden;
-  height: 100%;
+:focus-visible {
+  outline: 3px solid var(--ufc-ouro);
+  outline-offset: 2px;
 }
 
-.icon-box {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  transition: transform 0.3s ease;
+/* Botões do Bootstrap nas cores da UFC */
+.btn-primary {
+  --bs-btn-bg: var(--ufc-azul);
+  --bs-btn-border-color: var(--ufc-azul);
+  --bs-btn-hover-bg: var(--ufc-azul-escuro);
+  --bs-btn-hover-border-color: var(--ufc-azul-escuro);
+  --bs-btn-active-bg: var(--ufc-azul-escuro);
+  --bs-btn-active-border-color: var(--ufc-azul-escuro);
+  --bs-btn-disabled-bg: var(--ufc-azul);
+  --bs-btn-disabled-border-color: var(--ufc-azul);
 }
 
-.dashboard-card span {
-  font-weight: 600;
-  font-size: 1.1rem;
-  text-align: center;
-  letter-spacing: 0.5px;
+.btn-warning {
+  --bs-btn-color: var(--tinta);
+  --bs-btn-bg: var(--ufc-ouro);
+  --bs-btn-border-color: var(--ufc-ouro);
+  --bs-btn-hover-color: var(--tinta);
+  --bs-btn-hover-bg: var(--ufc-ouro-escuro);
+  --bs-btn-hover-border-color: var(--ufc-ouro-escuro);
+  --bs-btn-active-color: var(--tinta);
+  --bs-btn-active-bg: var(--ufc-ouro-escuro);
+  --bs-btn-active-border-color: var(--ufc-ouro-escuro);
+  --bs-btn-disabled-color: var(--tinta);
+  --bs-btn-disabled-bg: var(--ufc-ouro);
+  --bs-btn-disabled-border-color: var(--ufc-ouro);
 }
 
-.dashboard-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
-  color: #132e4b;
-}
-
-.dashboard-card:hover .icon-box {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.bg-icon-primary {
-  background-color: #e6f0ff;
-  color: #0d6efd;
-}
-.bg-icon-success {
-  background-color: #e6fffa;
-  color: #198754;
-}
-.bg-icon-info {
-  background-color: #e0f7fa;
-  color: #0dcaf0;
-}
-.bg-icon-warning {
-  background-color: #fff8e1;
-  color: #ffc107;
-}
-.bg-icon-danger {
-  background-color: #ffebee;
-  color: #dc3545;
-}
-.bg-icon-secondary {
-  background-color: #f3f4f6;
-  color: #6c757d;
-}
-.bg-icon-dark {
-  background-color: #e2e3e5;
-  color: #212529;
-}
-.bg-icon-purple {
-  background-color: #f3e5f5;
-  color: #6f42c1;
-}
-
-.btn-logout-custom {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #ccc;
-  padding: 10px 30px;
-  border-radius: 30px;
-  transition: 0.3s;
-}
-.btn-logout-custom:hover {
-  background-color: #dc3545;
-  color: white;
-  border-color: #dc3545;
+.btn-outline-warning {
+  --bs-btn-color: var(--ufc-ouro);
+  --bs-btn-border-color: var(--ufc-ouro);
+  --bs-btn-hover-color: var(--tinta);
+  --bs-btn-hover-bg: var(--ufc-ouro);
+  --bs-btn-hover-border-color: var(--ufc-ouro);
+  --bs-btn-active-color: var(--tinta);
+  --bs-btn-active-bg: var(--ufc-ouro);
+  --bs-btn-active-border-color: var(--ufc-ouro);
 }
 
 .glass-panel {
@@ -122,8 +108,8 @@ body {
   transition: all 0.3s;
 }
 .search-input:focus {
-  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
-  border-color: #0d6efd;
+  box-shadow: 0 4px 10px rgba(0, 98, 155, 0.15);
+  border-color: var(--ufc-azul);
   outline: none;
 }
 
@@ -146,30 +132,30 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation: slideIn 0.3s ease-out forwards;
   border-left: 5px solid #ccc;
   opacity: 0;
 }
 
 .toast-success {
-  border-left-color: #198754;
+  border-left-color: var(--ufc-verde);
 }
 .toast-success i {
-  color: #198754;
+  color: var(--ufc-verde);
 }
 
 .toast-error {
-  border-left-color: #dc3545;
+  border-left-color: var(--alerta);
 }
 .toast-error i {
-  color: #dc3545;
+  color: var(--alerta);
 }
 
 .toast-warning {
-  border-left-color: #ffc107;
+  border-left-color: var(--ufc-ouro);
 }
 .toast-warning i {
-  color: #ffc107;
+  color: var(--ufc-ouro-escuro);
 }
 
 .badge-validade {
@@ -219,7 +205,7 @@ body {
 
 .form-control-dark:focus {
   background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 0 4px rgba(226, 191, 63, 0.35);
   outline: none;
 }
 
@@ -234,21 +220,19 @@ body {
 }
 
 .btn-contrast {
-  background-color: #ffd700; /* Dourado */
-  color: #132e4b;
-  font-weight: 800;
+  background-color: var(--ufc-ouro);
+  color: var(--tinta);
+  font-weight: 700;
+  font-size: 1.05rem;
   border: none;
   border-radius: 50px;
   padding: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .btn-contrast:hover {
-  background-color: #ffc107;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+  background-color: var(--ufc-ouro-escuro);
+  color: var(--tinta);
 }
 
 .btn-outline-light-custom {
@@ -316,11 +300,9 @@ body {
 }
 
 .form-label-lab {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #6c757d;
+  color: var(--tinta-suave);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -359,15 +341,10 @@ body {
   font-weight: 700;
   border: none;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s;
+  transition: background-color 0.2s;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-.btn-confirm-lab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
 /* ===============================================
@@ -389,8 +366,8 @@ body {
 }
 
 .qty-stepper:focus-within {
-  border-color: #ffd700;
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.25);
+  border-color: var(--ufc-ouro);
+  box-shadow: 0 0 0 4px rgba(226, 191, 63, 0.3);
 }
 
 .qty-stepper .qty-btn {
@@ -416,10 +393,10 @@ body {
 }
 
 .qty-stepper .qty-btn:hover:not(:disabled) {
-  background: #ffd700;
+  background: var(--ufc-ouro);
 }
 .qty-stepper .qty-btn:active:not(:disabled) {
-  background: #ffc107;
+  background: var(--ufc-ouro-escuro);
 }
 .qty-stepper .qty-btn:disabled {
   opacity: 0.35;
@@ -460,4 +437,255 @@ body {
   border-radius: 20px;
   font-weight: 700;
   letter-spacing: 0.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-box {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ===============================================
+   TELA CLARA (identidade UFC)
+   Páginas migradas usam <body class="tela-clara">: superfície clara para
+   trabalhar de bancada e a faixa azul com a borda ameada do brasão no topo.
+   As demais páginas continuam no tema escuro até serem migradas.
+   =============================================== */
+body.tela-clara {
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+/* Faixa do topo: o campo azul do brasão, fechado pela banda dourada ameada */
+.faixa-ufc {
+  position: relative;
+  background: var(--ufc-azul);
+  color: #fff;
+  padding-bottom: 20px;
+}
+
+.faixa-ufc::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='20'%3E%3Cpath d='M0 10h14V0h28v10h14v10H0z' fill='%23e2bf3f'/%3E%3C/svg%3E")
+    repeat-x left bottom / 56px 20px;
+}
+
+.faixa-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Só o escudo do brasão: o "UFC" em preto embaixo some no azul */
+.marca-brasao {
+  height: 44px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.marca-brasao img {
+  display: block;
+  height: 61px;
+  width: auto;
+}
+
+.marca-nome {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.marca-instituicao {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.btn-sair {
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--raio-controle);
+  padding: 0.4rem 0.9rem;
+}
+
+.btn-sair:hover {
+  background: #fff;
+  color: var(--ufc-azul);
+}
+
+.faixa-saudacao {
+  padding-block: 1.5rem 2.75rem;
+}
+
+.faixa-saudacao h1 {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
+}
+
+.contexto-lab {
+  font-size: 1.05rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.contexto-lab label {
+  display: block;
+  width: 100%;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.contexto-lab .form-select {
+  max-width: 380px;
+  border-radius: var(--raio-controle);
+}
+
+.chip-papel {
+  display: inline-block;
+  background: var(--ufc-ouro);
+  color: var(--tinta);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+}
+
+.aviso-faixa {
+  max-width: 560px;
+  background: rgba(255, 255, 255, 0.12);
+  border-left: 4px solid var(--ufc-ouro);
+  padding: 0.75rem 1rem;
+  border-radius: 0 var(--raio-controle) var(--raio-controle) 0;
+}
+
+/* ===============================================
+   PAINEL: atalhos agrupados pelo tipo de trabalho
+   =============================================== */
+.painel-conteudo {
+  max-width: 1080px;
+  padding-block: 1rem 3rem;
+}
+
+.grupo-atalhos {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem 2rem;
+  padding-block: 1.75rem;
+  border-top: 1px solid var(--linha);
+}
+
+.grupo-atalhos:first-child {
+  border-top: none;
+}
+
+.grupo-atalhos h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--tinta);
+  margin: 0.9rem 0 0;
+}
+
+.atalhos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.atalho {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-painel);
+  color: var(--tinta);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.atalho:hover {
+  border-color: var(--ufc-azul);
+  background: #f7fafc;
+  color: var(--tinta);
+}
+
+.atalho > i {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--ufc-azul);
+}
+
+.atalho strong {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-stretch: 87.5%;
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.atalho span {
+  display: block;
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Atalhos de administração do sistema: marcados em dourado */
+.grupo-admin .atalho {
+  border-left: 4px solid var(--ufc-ouro);
+}
+
+.rodape-painel {
+  border-top: 1px solid var(--linha);
+  padding-top: 1.5rem;
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+}
+
+.rodape-painel a {
+  color: var(--ufc-azul);
+}
+
+@media (max-width: 767.98px) {
+  .grupo-atalhos {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .grupo-atalhos h2 {
+    margin-top: 0;
+  }
+
+  .atalhos {
+    grid-template-columns: 1fr;
+  }
+
+  .marca-instituicao {
+    display: none;
+  }
 }

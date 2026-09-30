@@ -33,17 +33,18 @@ async function loadDashboardInfo() {
     if (admin) renderAtalhosAdmin();
   } catch (error) {
     console.error("Erro ao carregar permissões:", error);
-    greetingElement.textContent = "Bem-vindo(a)!";
+    greetingElement.textContent = "Olá!";
   }
 }
 
 // Admin visualizando um laboratório em que não tem vínculo
 function renderModoAdmin(lab) {
-  greetingElement.innerHTML = `<span class="badge bg-warning text-dark px-3 py-2">MODO ADMINISTRADOR · SOMENTE LEITURA</span>`;
+  greetingElement.textContent = "Modo administrador";
   contextoLab.innerHTML = `
-    <p class="text-white mb-2">Visualizando: <strong>${escapeHtml(lab.nome)}</strong></p>
-    <button id="btn-sair-modo" class="btn btn-sm btn-outline-warning fw-bold rounded-pill">
-      Sair do laboratório (voltar ao admin)
+    <span><i class="bi bi-building me-1"></i>${escapeHtml(lab.nome)}</span>
+    <span class="chip-papel">Somente leitura</span>
+    <button id="btn-sair-modo" class="btn btn-sm btn-warning fw-bold">
+      Voltar ao painel administrativo
     </button>`;
 
   document.getElementById("btn-sair-modo").addEventListener("click", () => {
@@ -56,19 +57,19 @@ function renderModoAdmin(lab) {
 function renderContexto(vinculos, lab, admin) {
   if (!lab && admin) {
     contextoLab.innerHTML = `
-      <p class="text-white mb-0 opacity-75">
-        Você é admin do sistema. Para ver um laboratório, use <strong>Laboratórios → Ver como admin</strong>.
+      <p class="mb-0">
+        Você é admin do sistema. Para ver um laboratório, abra <strong>Laboratórios</strong>
+        e escolha <strong>Ver como admin</strong>.
       </p>`;
     return;
   }
 
   if (!lab) {
     contextoLab.innerHTML = `
-      <div class="alert alert-warning d-inline-block text-start mb-0" style="max-width: 520px;">
-        <i class="bi bi-info-circle-fill me-2"></i>
+      <p class="aviso-faixa mb-0">
         Você ainda não tem vínculo com nenhum laboratório. Peça ao chefe (ou a um gestor) do
         laboratório para adicionar você pelo e-mail da sua conta.
-      </div>`;
+      </p>`;
     return;
   }
 
@@ -76,10 +77,8 @@ function renderContexto(vinculos, lab, admin) {
 
   if (vinculos.length === 1) {
     contextoLab.innerHTML = `
-      <p class="text-white mb-0">
-        <i class="bi bi-building me-1"></i>${escapeHtml(lab.nome)}
-        <span class="badge bg-light text-dark ms-2">${papel}</span>
-      </p>`;
+      <span><i class="bi bi-building me-1"></i>${escapeHtml(lab.nome)}</span>
+      <span class="chip-papel">${papel}</span>`;
     return;
   }
 
@@ -93,8 +92,8 @@ function renderContexto(vinculos, lab, admin) {
     .join("");
 
   contextoLab.innerHTML = `
-    <label for="select-lab" class="text-white small d-block mb-1">Laboratório em que você está trabalhando</label>
-    <select id="select-lab" class="form-select form-select-sm d-inline-block" style="max-width: 360px;">
+    <label for="select-lab">Laboratório em que você está trabalhando</label>
+    <select id="select-lab" class="form-select">
       ${opcoes}
     </select>`;
 
@@ -105,16 +104,7 @@ function renderContexto(vinculos, lab, admin) {
 }
 
 function renderAtalhosAdmin() {
-  const btnContainer = document.createElement("div");
-  btnContainer.className = "text-center mb-4 d-flex flex-wrap gap-2 justify-content-center";
-  btnContainer.innerHTML = `
-      <a href="../admin/admin-labs.html" class="btn btn-warning fw-bold shadow-sm rounded-pill px-4">
-          <i class="bi bi-building-gear me-2"></i> Laboratórios e chefes
-      </a>
-      <a href="../admin/admin-admins.html" class="btn btn-outline-warning fw-bold shadow-sm rounded-pill px-4">
-          <i class="bi bi-people-fill me-2"></i> Admins
-      </a>`;
-  contextoLab.after(btnContainer);
+  document.getElementById("grupo-admin").classList.remove("d-none");
 }
 
 async function loadUserName() {
@@ -126,11 +116,11 @@ async function loadUserName() {
       const { data, error } = await buscarNomePorId(user.id);
 
       if (error) throw error;
-      if (data) greetingElement.textContent = `Ola, ${data.nome}!`;
+      if (data) greetingElement.textContent = `Olá, ${data.nome}!`;
     }
   } catch (error) {
     console.error("Erro ao carregar nome do usuario", error);
-    greetingElement.textContent = "Bem-vindo(a)!";
+    greetingElement.textContent = "Olá!";
   }
 }
 
@@ -144,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (error) {
         showToast("Erro ao sair.", "error");
       } else {
-        showToast("Sessao encerrada. Ate logo!", "success");
+        showToast("Sessão encerrada. Até logo!", "success");
         setTimeout(() => (window.location.href = "../../index.html"), 1500);
       }
     });
