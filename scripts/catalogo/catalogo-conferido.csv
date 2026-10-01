@@ -1,0 +1,277 @@
+﻿nome;numero_cas;formula;controle;fonte_controle;situacao;observacao;cid;titulo_pubchem;formula_pubchem
+Ácido acético;64-19-7;CH3COOH;Polícia Federal;PF Lista IV (054);ok;;176;Acetic Acid;C2H4O2
+Ácido acetilsalicílico;50-78-2;C9H8O4;;;ok;;2244;Aspirin;C9H8O4
+Ácido ascórbico;50-81-7;C6H8O6;;;ok;;54670067;L-Ascorbic Acid;C6H8O6
+Ácido benzoico;65-85-0;C6H5COOH;Polícia Federal;PF Lista IV (055);ok;;243;Benzoic Acid;C7H6O2
+Ácido bórico;10043-35-3;H3BO3;Polícia Federal;PF Lista IV (056);ok;;7628;Boric Acid;BH3O3
+Ácido bromídrico;10035-10-6;HBr;Polícia Federal;PF Lista IV (057);ok;;260;Hydrogen Bromide;BrH
+Ácido cítrico;77-92-9;C6H8O7;;;ok;;311;Citric Acid;C6H8O7
+Ácido cítrico monoidratado;5949-29-1;C6H8O7·H2O;;;ok;;22230;2-Hydroxy-1,2,3-propanetricarboxylic acid hydrate (1:1);C6H10O8
+Ácido clorídrico;7647-01-0;HCl;Polícia Federal;PF Lista IV (058);ok;;313;Hydrochloric Acid;ClH
+Ácido 3,5-dinitrossalicílico;609-99-4;C7H4N2O7;;;ok;;11873;3,5-Dinitrosalicylic acid;C7H4N2O7
+Ácido esteárico;57-11-4;C18H36O2;;;ok;;5281;Stearic Acid;C18H36O2
+Ácido etilenodiaminotetracético (EDTA);60-00-4;C10H16N2O8;;;ok;;6049;Ethylenediaminetetraacetic Acid;C10H16N2O8
+Ácido fluorídrico;7664-39-3;HF;Exército;Exército PCE 7.2.0020;ok;;14917;Hydrofluoric Acid;FH
+Ácido fórmico;64-18-6;HCOOH;Polícia Federal;PF Lista IV (060);ok;;284;Formic Acid;CH2O2
+Ácido fosfórico;7664-38-2;H3PO4;;;ok;;1004;Phosphoric Acid;H3O4P
+Ácido ftálico;88-99-3;C8H6O4;;;ok;;1017;Phthalic Acid;C8H6O4
+Ácido gálico;149-91-7;C7H6O5;;;ok;;370;Gallic Acid;C7H6O5
+Ácido iodídrico;10034-85-2;HI;Polícia Federal;PF Lista IV (062);ok;;24841;Hydrogen iodide;HI
+Ácido láctico;50-21-5;C3H6O3;;;ok;;612;Lactic Acid;C3H6O3
+Ácido L-glutâmico;56-86-0;C5H9NO4;;;ok;;33032;L-Glutamic Acid;C5H9NO4
+Ácido maleico;110-16-7;C4H4O4;;;ok;;444266;Maleic Acid;C4H4O4
+Ácido nítrico;7697-37-2;HNO3;Exército;Exército PCE 7.3.0010;ok;;944;Nitric Acid;HNO3
+Ácido oleico;112-80-1;C18H34O2;;;ok;;445639;Oleic Acid;C18H34O2
+Ácido oxálico;144-62-7;C2H2O4;;;ok;;971;Oxalic Acid;C2H2O4
+Ácido oxálico di-hidratado;6153-56-6;C2H2O4·2H2O;;;ok;;61373;Oxalic acid dihydrate;C2H6O6
+Ácido perclórico;7601-90-3;HClO4;Exército;Exército PCE 7.3.0020;ok;;24247;Perchloric Acid;ClHO4
+Ácido p-toluenossulfônico monoidratado;6192-52-5;C7H8O3S·H2O;;;ok;;521998;p-Toluenesulfonic acid monohydrate;C7H10O4S
+Ácido salicílico;69-72-7;C7H6O3;;;ok;;338;Salicylic Acid;C7H6O3
+Ácido succínico;110-15-6;C4H6O4;;;ok;;1110;Succinic Acid;C4H6O4
+Ácido sulfâmico;5329-14-6;H3NSO3;;;ok;;5987;Sulfamic Acid;H3NO3S
+Ácido sulfanílico;121-57-3;C6H7NO3S;;;ok;;8479;Sulfanilic acid;C6H7NO3S
+Ácido sulfúrico;7664-93-9;H2SO4;Polícia Federal;PF Lista IV (063);ok;;1118;Sulfuric Acid;H2O4S
+Ácido tartárico;87-69-4;C4H6O6;;;ok;;444305;L-Tartaric acid;C4H6O6
+Ácido tricloroacético;76-03-9;C2HCl3O2;;;ok;;6421;Trichloroacetic Acid;C2HCl3O2
+Ácido trifluoroacético;76-05-1;C2HF3O2;;;ok;;6422;Trifluoroacetic acid;C2HF3O2
+Acetaldeído;75-07-0;C2H4O;;;ok;;177;Acetaldehyde;C2H4O
+Acetato de amônio;631-61-8;CH3COONH4;;;ok;;517165;Ammonium Acetate;C2H7NO2
+Acetato de butila;123-86-4;C6H12O2;;;ok;;31272;Butyl Acetate;C6H12O2
+Acetato de chumbo(II) tri-hidratado;6080-56-4;Pb(CH3COO)2·3H2O;;;ok;;22456;Lead diacetate trihydrate;C4H12O7Pb
+Acetato de cobre(II) monoidratado;6046-93-1;Cu(CH3COO)2·H2O;;;ok;;165397;Cupric acetate monohydrate;C4H8CuO5
+Acetato de etila;141-78-6;C4H8O2;Polícia Federal;PF Lista II (031);ok;;8857;Ethyl Acetate;C4H8O2
+Acetato de isoamila;123-92-2;C7H14O2;;;ok;;31276;Isoamyl Acetate;C7H14O2
+Acetato de potássio;127-08-2;CH3COOK;;;ok;;517044;Potassium Acetate;C2H3KO2
+Acetato de sódio;127-09-3;CH3COONa;;;ok;;517045;Sodium Acetate;C2H3NaO2
+Acetato de sódio tri-hidratado;6131-90-4;CH3COONa·3H2O;;;ok;;23665404;Sodium Acetate Trihydrate;C2H9NaO5
+Acetato de zinco di-hidratado;5970-45-6;Zn(CH3COO)2·2H2O;;;ok;;2724192;Zinc acetate (USP);C4H10O6Zn
+Acetona;67-64-1;C3H6O;Polícia Federal;PF Lista II (032);ok;;180;Acetone;C3H6O
+Acetonitrila;75-05-8;CH3CN;;;ok;;6342;Acetonitrile;C2H3N
+Acrilamida;79-06-1;C3H5NO;;;ok;;6579;Acrylamide;C3H5NO
+Água oxigenada (peróxido de hidrogênio);7722-84-1;H2O2;;;ok;;784;Hydrogen Peroxide;H2O2
+Alaranjado de metila;547-58-0;C14H14N3NaO3S;;;ok;;23673835;C.I. Acid Orange 52;C14H14N3NaO3S
+Álcool isoamílico;123-51-3;C5H12O;;;ok;;31260;Isoamyl Alcohol;C5H12O
+Alúmen de potássio;7784-24-9;KAl(SO4)2·12H2O;;;ok;;62667;Aluminum potassium sulfate dodecahydrate;AlH24KO20S2
+Alumínio em pó;7429-90-5;Al;Exército;Exército PCE 7.3.0030 (só em pó);ok;;5359268;Aluminum;Al
+Anidrido acético;108-24-7;C4H6O3;Polícia Federal;PF Lista VI (067);ok;;7918;Acetic Anhydride;C4H6O3
+Anilina;62-53-3;C6H7N;;;ok;;6115;Aniline;C6H7N
+Azida sódica;26628-22-8;NaN3;Exército;Exército PCE 7.3.0040;ok;;33557;Sodium Azide;N3Na
+Azul de bromofenol;115-39-9;C19H10Br4O5S;;;ok;;8272;Bromophenol Blue;C19H10Br4O5S
+Azul de bromotimol;76-59-5;C27H28Br2O5S;;;ok;;6450;Bromothymol Blue;C27H28Br2O5S
+Azul de Coomassie R-250;6104-59-2;C45H44N3NaO7S2;;;ok;;61365;Coomassie Brilliant Blue R;C45H44N3NaO7S2
+Azul de metileno;61-73-4;C16H18ClN3S;;;ok;;6099;Methylene Blue;C16H18ClN3S
+Benzaldeído;100-52-7;C7H6O;;;ok;;240;Benzaldehyde;C7H6O
+Benzeno;71-43-2;C6H6;;;ok;;241;Benzene;C6H6
+Benzoato de sódio;532-32-1;C7H5NaO2;;;ok;;517055;Sodium Benzoate;C7H5NaO2
+Bicarbonato de potássio;298-14-6;KHCO3;Polícia Federal;PF Lista V (064);ok;;516893;Potassium Bicarbonate;CHKO3
+Bicarbonato de sódio;144-55-8;NaHCO3;;;ok;;516892;Sodium Bicarbonate;CHNaO3
+Biftalato de potássio;877-24-7;C8H5KO4;;;ok;;23676735;Potassium hydrogen phthalate;C8H5KO4
+Bórax (tetraborato de sódio decaidratado);1303-96-4;Na2B4O7·10H2O;;;ok;;16211214;Borax (B4Na2O7.10H2O);B4H20Na2O17
+Bromato de potássio;7758-01-2;KBrO3;;;ok;;23673461;Potassium Bromate;BrKO3
+Brometo de etídio;1239-45-8;C21H20BrN3;;;ok;;14710;Ethidium Bromide;C21H20BrN3
+Brometo de potássio;7758-02-3;KBr;;;ok;;253877;Potassium Bromide;BrK
+Brometo de sódio;7647-15-6;NaBr;;;ok;;253881;Sodium Bromide;BrNa
+Bromo;7726-95-6;Br2;;;ok;;24408;Bromine;Br2
+Bromobenzeno;108-86-1;C6H5Br;Polícia Federal;PF Lista VI (069);ok;;7961;Bromobenzene;C6H5Br
+Borohidreto de sódio;16940-66-2;NaBH4;Polícia Federal;PF Lista VI (068);ok;;4311764;Sodium borohydride;BH4Na
+n-Butanol;71-36-3;C4H10O;;;ok;;263;1-Butanol;C4H10O
+Cafeína;58-08-2;C8H10N4O2;Polícia Federal;PF Lista III (041);ok;;2519;Caffeine;C8H10N4O2
+Carbonato de cálcio;471-34-1;CaCO3;;;ok;;10112;Calcium Carbonate;CCaO3
+Carbonato de lítio;554-13-2;Li2CO3;;;ok;;11125;Lithium Carbonate;CLi2O3
+Carbonato de potássio;584-08-7;K2CO3;;;ok;;11430;Potassium Carbonate;CK2O3
+Carbonato de sódio;497-19-8;Na2CO3;;;ok;;10340;Sodium Carbonate;CNa2O3
+Carvão ativado;7440-44-0;C;;;ok;;5462310;Carbon;C
+Cianeto de potássio;151-50-8;KCN;Exército;Exército PCE 7.2.0100;ok;;9032;Potassium Cyanide;CKN
+Cianeto de sódio;143-33-9;NaCN;Exército;Exército PCE 7.2.0110;ok;;8929;Sodium Cyanide;CNNa
+Ciclo-hexano;110-82-7;C6H12;;;ok;;8078;Cyclohexane;C6H12
+Ciclo-hexanol;108-93-0;C6H12O;;;ok;;7966;Cyclohexanol;C6H12O
+Ciclo-hexanona;108-94-1;C6H10O;;;ok;;7967;Cyclohexanone;C6H10O
+Citrato de sódio di-hidratado;6132-04-3;Na3C6H5O7·2H2O;;;ok;;71474;Sodium Citrate Dihydrate;C6H9Na3O9
+Clorato de potássio;3811-04-9;KClO3;Exército;Exército PCE 7.3.0080;ok;;6426889;Potassium Chlorate;ClKO3
+Cloreto de acetila;75-36-5;C2H3ClO;;;ok;;6367;Acetyl chloride;C2H3ClO
+Cloreto de alumínio;7446-70-0;AlCl3;;;ok;;24012;Aluminum Chloride;AlCl3
+Cloreto de amônio;12125-02-9;NH4Cl;Polícia Federal;PF Lista VI (072);ok;;25517;Ammonium Chloride;ClH4N
+Cloreto de bário di-hidratado;10326-27-9;BaCl2·2H2O;;;ok;;5284346;Barium chloride, dihydrate;BaCl2H4O2
+Cloreto de cálcio;10043-52-4;CaCl2;;;ok;;5284359;Calcium Chloride;CaCl2
+Cloreto de cálcio di-hidratado;10035-04-8;CaCl2·2H2O;;;ok;;6093260;Calcium chloride, dihydrate;CaCl2H4O2
+Cloreto de cobalto(II) hexaidratado;7791-13-1;CoCl2·6H2O;;;ok;;24643;Cobaltous chloride hexahydrate;Cl2CoH12O6
+Cloreto de cobre(II) di-hidratado;10125-13-0;CuCl2·2H2O;;;ok;;61482;Cupric chloride dihydrate;Cl2CuH4O2
+Cloreto de cromo(III) hexaidratado;10060-12-5;CrCl3·6H2O;;;ok;;104957;Chromic chloride hexahydrate;Cl3CrH12O6
+Cloreto de estanho(II) di-hidratado;10025-69-1;SnCl2·2H2O;;;ok;;61436;Stannous chloride dihydrate;Cl2H4O2Sn
+Cloreto de estrôncio hexaidratado;10025-70-4;SrCl2·6H2O;;;ok;;6101868;Strontium dichloride hexahydrate;Cl2H12O6Sr
+Cloreto de ferro(III);7705-08-0;FeCl3;;;ok;;24380;Iron chloride (FeCl3);Cl3Fe
+Cloreto de ferro(III) hexaidratado;10025-77-1;FeCl3·6H2O;;;ok;;6093258;Ferric chloride hexahydrate;Cl3FeH12O6
+Cloreto de guanidina;50-01-1;CH5N3·HCl;;;ok;;5742;Guanidine Hydrochloride;CH6ClN3
+Cloreto de lítio;7447-41-8;LiCl;;;ok;;433294;Lithium Chloride;ClLi
+Cloreto de magnésio hexaidratado;7791-18-6;MgCl2·6H2O;;;ok;;24644;Magnesium chloride hexahydrate;Cl2H12MgO6
+Cloreto de manganês(II) tetraidratado;13446-34-9;MnCl2·4H2O;;;ok;;643989;Manganese Chloride Tetrahydrate;Cl2H8MnO4
+Cloreto de mercúrio(II);7487-94-7;HgCl2;Polícia Federal;PF Lista VI (073);ok;;24085;Mercuric Chloride;Cl2Hg
+Cloreto de níquel(II) hexaidratado;7791-20-0;NiCl2·6H2O;;;ok;;24645;Nickel chloride hexahydrate;Cl2H12NiO6
+Cloreto de potássio;7447-40-7;KCl;;;ok;;4873;Potassium Chloride;ClK
+Cloreto de sódio;7647-14-5;NaCl;;;ok;;5234;Sodium Chloride;ClNa
+Cloreto de tionila;7719-09-7;SOCl2;Exército;Exército PCE 7.2.0150;ok;;24386;Thionyl Chloride;Cl2OS
+Cloreto de zinco;7646-85-7;ZnCl2;;;ok;;5727;Zinc Chloride;Cl2Zn
+Cloridrato de hidroxilamina;5470-11-1;NH2OH·HCl;Polícia Federal;PF Lista VI (083) hidroxilamina: confirmar se o sal entra;ok;;443297;Hydroxyamine hydrochloride;ClH4NO
+Clorofórmio;67-66-3;CHCl3;Polícia Federal;PF Lista II (035);ok;;6212;Chloroform;CHCl3
+Cobre metálico;7440-50-8;Cu;;;ok;;23978;Copper;Cu
+Colesterol;57-88-5;C27H46O;;;ok;;5997;Cholesterol;C27H46O
+Cristal violeta;548-62-9;C25H30ClN3;;;ok;;11057;Crystal Violet;C25H30ClN3
+Cromato de potássio;7789-00-6;K2CrO4;Polícia Federal;PF Lista VI (074);ok;;24597;Potassium Chromate;CrK2O4
+Diclorometano;75-09-2;CH2Cl2;Polícia Federal;PF Lista II (034) cloreto de metileno;ok;;6344;Dichloromethane;CH2Cl2
+1,2-Dicloroetano;107-06-2;C2H4Cl2;Polícia Federal;PF Lista II (030);ok;;11;1,2-Dichloroethane;C2H4Cl2
+Dicromato de potássio;7778-50-9;K2Cr2O7;Polícia Federal;PF Lista VI (075);ok;;24502;Potassium Dichromate;Cr2K2O7
+Dicromato de sódio di-hidratado;7789-12-0;Na2Cr2O7·2H2O;Polícia Federal;PF Lista VI (076);ok;;108005;Sodium dichromate dihydrate;Cr2H4Na2O9
+Dietilamina;109-89-7;C4H11N;Polícia Federal;PF Lista VI (077);ok;;8021;Diethylamine;C4H11N
+Difenilamina;122-39-4;C12H11N;;;ok;;11487;Diphenylamine;C12H11N
+1,5-Difenilcarbazida;140-22-7;C13H14N4O;;;ok;;8789;Diphenylcarbazide;C13H14N4O
+Dimetilglioxima;95-45-4;C4H8N2O2;;;ok;;135459645;Dimethylglyoxime;C4H8N2O2
+Dimetilsulfóxido (DMSO);67-68-5;C2H6OS;;;ok;;679;Dimethyl Sulfoxide;C2H6OS
+N,N-Dimetilformamida (DMF);68-12-2;C3H7NO;;;ok;;6228;Dimethylformamide;C3H7NO
+1,4-Dioxano;123-91-1;C4H8O2;;;ok;;31275;1,4-Dioxane;C4H8O2
+Dióxido de manganês;1313-13-9;MnO2;;;ok;;14801;Manganese dioxide;MnO2
+Dióxido de titânio;13463-67-7;TiO2;;;ok;;26042;Titanium dioxide;O2Ti
+Dissulfeto de carbono;75-15-0;CS2;;;ok;;6348;Carbon Disulfide;CS2
+Ditiotreitol (DTT);3483-12-3;C4H10O2S2;;;ok;;439196;Dithiothreitol;C4H10O2S2
+Dodecil sulfato de sódio (SDS);151-21-3;C12H25NaO4S;;;ok;;3423265;Sodium Lauryl Sulfate;C12H25NaO4S
+EDTA dissódico di-hidratado;6381-92-6;C10H14N2Na2O8·2H2O;;;ok;CAS revisado: CAS da forma di-hidratada, 139-33-3 é o sal anidro;636371;Edetate Disodium;C10H18N2Na2O10
+Enxofre;7704-34-9;S;;;ok;;5362487;Sulfur;S
+Eosina Y;17372-87-1;C20H6Br4Na2O5;;;ok;CAS revisado: sal dissódico (o corante), a fórmula da lista é a do sal;11048;Eosin;C20H6Br4Na2O5
+Éter etílico;60-29-7;C4H10O;Polícia Federal;PF Lista II (036);ok;;3283;Diethyl Ether;C4H10O
+Etanol;64-17-5;C2H5OH;;;ok;;702;Ethanol;C2H6O
+Etilenodiamina;107-15-3;C2H8N2;;;ok;;3301;Ethylenediamine;C2H8N2
+Etilenoglicol;107-21-1;C2H6O2;;;ok;;174;Ethylene Glycol;C2H6O2
+Fenol;108-95-2;C6H5OH;;;ok;;996;Phenol;C6H6O
+Fenolftaleína;77-09-8;C20H14O4;;;ok;;4764;Phenolphthalein;C20H14O4
+1,10-Fenantrolina monoidratada;5144-89-8;C12H8N2·H2O;;;ok;;21226;1,10-Phenanthroline hydrate;C12H10N2O
+Ferricianeto de potássio;13746-66-2;K3[Fe(CN)6];;;ok;;26250;Potassium ferricyanide;C6FeK3N6
+Ferro em pó;7439-89-6;Fe;;;ok;;23925;Iron;Fe
+Ferrocianeto de potássio tri-hidratado;14459-95-1;K4[Fe(CN)6]·3H2O;;;ok;;161067;Potassium ferrocyanide trihydrate;C6H6FeK4N6O3
+Fluoreto de potássio;7789-23-3;KF;Exército;Exército PCE 7.2.0390;ok;;522689;Potassium Fluoride;FK
+Fluoreto de sódio;7681-49-4;NaF;Exército;Exército PCE 7.2.0400;ok;;5235;Sodium Fluoride;FNa
+Formaldeído;50-00-0;CH2O;;;ok;;712;Formaldehyde;CH2O
+Formamida;75-12-7;CH3NO;Polícia Federal;PF Lista VI (080);ok;;713;Formamide;CH3NO
+Formiato de amônio;540-69-2;HCOONH4;Polícia Federal;PF Lista V (065);ok;;2723923;Ammonium formate;CH5NO2
+Fosfato de amônio dibásico;7783-28-0;(NH4)2HPO4;;;ok;;24540;Diammonium hydrogen phosphate;H9N2O4P
+Fosfato de potássio dibásico;7758-11-4;K2HPO4;;;ok;;24450;Potassium Phosphate, Dibasic;HK2O4P
+Fosfato de potássio monobásico;7778-77-0;KH2PO4;;;ok;;516951;Monobasic potassium phosphate;H2KO4P
+Fosfato de sódio dibásico;7558-79-4;Na2HPO4;;;ok;;24203;Sodium Phosphate, Dibasic;HNa2O4P
+Fosfato de sódio monobásico monoidratado;10049-21-5;NaH2PO4·H2O;;;ok;;516949;Sodium Phosphate, Monobasic, Monohydrate;H4NaO5P
+Fosfato de sódio tribásico dodecaidratado;10101-89-0;Na3PO4·12H2O;;;ok;;61473;Trisodium phosphate dodecahydrate;H24Na3O16P
+Frutose;57-48-7;C6H12O6;;;ok;;2723872;D-Fructose;C6H12O6
+Glicerol;56-81-5;C3H8O3;;;ok;;753;Glycerol;C3H8O3
+Glicina;56-40-6;C2H5NO2;;;ok;;750;Glycine;C2H5NO2
+Glicose;50-99-7;C6H12O6;;;ok;;5793;D-Glucose;C6H12O6
+Glutaraldeído;111-30-8;C5H8O2;;;ok;;3485;Glutaraldehyde;C5H8O2
+Hematoxilina;517-28-2;C16H14O6;;;ok;;442514;Hematoxylin;C16H14O6
+HEPES;7365-45-9;C8H18N2O4S;;;ok;;23831;4-(2-Hydroxyethyl)-1-piperazineethanesulfonic acid;C8H18N2O4S
+Heptano;142-82-5;C7H16;;;ok;;8900;Heptane;C7H16
+Hexano;110-54-3;C6H14;;;ok;;8058;Hexane;C6H14
+Hidreto de lítio e alumínio;16853-85-3;LiAlH4;Polícia Federal;PF Lista VI (082);ok;;28112;Lithium aluminum hydride;AlH4Li
+Hidroquinona;123-31-9;C6H6O2;;;ok;;785;Hydroquinone;C6H6O2
+Hidróxido de alumínio;21645-51-2;Al(OH)3;;;ok;;10176082;Aluminum Hydroxide;AlH3O3
+Hidróxido de amônio;1336-21-6;NH4OH;Polícia Federal;PF Lista V (066);ok;;14923;Ammonium Hydroxide;H5NO
+Hidróxido de bário octaidratado;12230-71-6;Ba(OH)2·8H2O;;;ok;;17749109;Barium hydroxide, octahydrate;BaH18O10
+Hidróxido de cálcio;1305-62-0;Ca(OH)2;;;ok;;6093208;Calcium Hydroxide;CaH2O2
+Hidróxido de lítio;1310-65-2;LiOH;;;ok;;3939;Lithium Hydroxide;HLiO
+Hidróxido de magnésio;1309-42-8;Mg(OH)2;;;ok;;73981;Magnesium Hydroxide;H2MgO2
+Hidróxido de potássio;1310-58-3;KOH;;;ok;;14797;Potassium Hydroxide;HKO
+Hidróxido de sódio;1310-73-2;NaOH;;;ok;;14798;Sodium Hydroxide;HNaO
+8-Hidroxiquinolina;148-24-3;C9H7NO;;;ok;;1923;8-Hydroxyquinoline;C9H7NO
+Hipoclorito de sódio;7681-52-9;NaClO;;;ok;;23665760;Sodium Hypochlorite;ClNaO
+Imidazol;288-32-4;C3H4N2;;;ok;;795;Imidazole;C3H4N2
+Iodato de potássio;7758-05-6;KIO3;;;ok;;23665710;Potassium Iodate;IKO3
+Iodeto de potássio;7681-11-0;KI;;;ok;;4875;Potassium Iodide;IK
+Iodeto de sódio;7681-82-5;NaI;;;ok;;5238;Sodium Iodide;INa
+Iodo;7553-56-2;I2;;;ok;;807;Iodine;I2
+Isopropanol;67-63-0;C3H8O;;;ok;;3776;Isopropanol;C3H8O
+Lactose monoidratada;5989-81-1;C12H22O11·H2O;;;ok;CAS revisado: alfa-lactose monoidratada, a forma comercial, 64044-51-5 é o registro genérico de farmacopeia;104938;alpha-Lactose monohydrate;C12H24O12
+Limoneno;5989-27-5;C10H16;;;ok;;440917;(+)-Limonene;C10H16
+Magnésio em pó;7439-95-4;Mg;Exército;Exército PCE 7.3.0330 (só em pó, fita não);ok;;5462224;Magnesium;Mg
+Manitol;69-65-8;C6H14O6;Polícia Federal;PF Lista III (048);ok;;6251;Mannitol;C6H14O6
+2-Mercaptoetanol;60-24-2;C2H6OS;;;ok;;1567;2-Mercaptoethanol;C2H6OS
+Mercúrio;7439-97-6;Hg;;;ok;;23931;Mercury;Hg
+Metabissulfito de sódio;7681-57-4;Na2S2O5;;;ok;;656671;Sodium Pyrosulfite;Na2O5S2
+Metanol;67-56-1;CH3OH;;;ok;;887;Methanol;CH4O
+Metiletilcetona (butanona);78-93-3;C4H8O;Polícia Federal;PF Lista II (037);ok;;6569;Methyl Ethyl Ketone;C4H8O
+N,N'-Metilenobisacrilamida;110-26-9;C7H10N2O2;;;ok;;8041;Methylenebisacrylamide;C7H10N2O2
+Molibdato de amônio tetraidratado;12054-85-2;(NH4)6Mo7O24·4H2O;;;ok;CAS revisado: CAS de catálogo dos fornecedores, o PubChem não traz CAS para este composto;16211167;Ammonium paramolybdate tetrahydrate;H32Mo7N6O28
+Molibdato de sódio di-hidratado;10102-40-6;Na2MoO4·2H2O;;;ok;;16211258;Sodium molybdate dihydrate;H4MoNa2O6
+Naftaleno;91-20-3;C10H8;;;ok;;931;Naphthalene;C10H8
+Negro de eriocromo T;1787-61-7;C20H12N3NaO7S;;;ok;;135465089;C.I. Mordant Black 11, monosodium salt;C20H12N3NaO7S
+Ninidrina;485-47-2;C9H6O4;;;ok;;10236;Ninhydrin;C9H6O4
+Nitrato de alumínio nonaidratado;7784-27-2;Al(NO3)3·9H2O;;;ok;;24567;Aluminum nitrate nonahydrate;AlH18N3O18
+Nitrato de amônio;6484-52-2;NH4NO3;Exército;Exército PCE 7.3.0400 (acima de 70%);ok;;22985;Ammonium nitrate;H4N2O3
+Nitrato de bário;10022-31-8;Ba(NO3)2;;;ok;;24798;Barium nitrate;BaN2O6
+Nitrato de cálcio tetraidratado;13477-34-4;Ca(NO3)2·4H2O;;;ok;;16211656;Calcium nitrate tetrahydrate;CaH8N2O10
+Nitrato de chumbo(II);10099-74-8;Pb(NO3)2;;;ok;;24924;Lead nitrate;N2O6Pb
+Nitrato de cobalto(II) hexaidratado;10026-22-9;Co(NO3)2·6H2O;;;ok;;24821;Cobaltous nitrate hexahydrate;CoH12N2O12
+Nitrato de cobre(II) tri-hidratado;10031-43-3;Cu(NO3)2·3H2O;;;ok;;9837674;Copper(II) nitrate trihydrate;CuH6N2O9
+Nitrato de ferro(III) nonaidratado;7782-61-8;Fe(NO3)3·9H2O;;;ok;;16211566;Iron nitrate (Fe(NO3)3) nonahydrate;FeH18N3O18
+Nitrato de níquel(II) hexaidratado;13478-00-7;Ni(NO3)2·6H2O;;;ok;;61630;Nickel nitrate hexahydrate;H12N2NiO12
+Nitrato de potássio;7757-79-1;KNO3;Exército;Exército PCE 7.3.0420;ok;;24434;Potassium Nitrate;KNO3
+Nitrato de prata;7761-88-8;AgNO3;;;ok;;24470;Silver Nitrate;AgNO3
+Nitrato de sódio;7631-99-4;NaNO3;;;ok;;24268;Sodium Nitrate;NNaO3
+Nitrito de sódio;7632-00-0;NaNO2;;;ok;;23668193;Sodium Nitrite;NNaO2
+Nitrobenzeno;98-95-3;C6H5NO2;;;ok;;7416;Nitrobenzene;C6H5NO2
+Nitroprussiato de sódio di-hidratado;13755-38-9;Na2[Fe(CN)5NO]·2H2O;;;ok;;11953895;Sodium nitroprusside dihydrate;C5H4FeN6Na2O3
+1-Octanol;111-87-5;C8H18O;;;ok;;957;1-Octanol;C8H18O
+Óxido de alumínio;1344-28-1;Al2O3;;;ok;;9989226;Alumina;Al2O3
+Óxido de cálcio;1305-78-8;CaO;;;ok;;14778;Calcium Oxide;CaO
+Óxido de cobre(II);1317-38-0;CuO;;;ok;;164827;Copper oxide (CuO);CuO
+Óxido de cromo(III);1308-38-9;Cr2O3;;;ok;;517277;Chromia;Cr2O3
+Óxido de ferro(III);1309-37-1;Fe2O3;;;ok;;518696;Iron oxide (Fe2O3);Fe2O3
+Óxido de magnésio;1309-48-4;MgO;;;ok;;14792;Magnesium Oxide;MgO
+Óxido de zinco;1314-13-2;ZnO;;;ok;;3007857;Zinc Oxide;OZn
+Oxalato de amônio monoidratado;6009-70-7;(NH4)2C2O4·H2O;;;ok;;62600;Ammonium oxalate monohydrate;C2H10N2O5
+Oxalato de sódio;62-76-0;Na2C2O4;;;ok;;6125;Sodium Oxalate;C2Na2O4
+Paracetamol;103-90-2;C8H9NO2;Polícia Federal;PF Lista III (049);ok;;1983;Acetaminophen;C8H9NO2
+Pentano;109-66-0;C5H12;;;ok;;8003;Pentane;C5H12
+Permanganato de potássio;7722-64-7;KMnO4;Polícia Federal;PF Lista VI (088);ok;;516875;Potassium Permanganate;KMnO4
+Persulfato de amônio;7727-54-0;(NH4)2S2O8;;;ok;;62648;Ammonium Persulfate;H8N2O8S2
+Persulfato de potássio;7727-21-1;K2S2O8;;;ok;;24412;Potassium Persulfate;K2O8S2
+Piperidina;110-89-4;C5H11N;Polícia Federal;PF Lista I (026);ok;;8082;Piperidine;C5H11N
+Piridina;110-86-1;C5H5N;;;ok;;1049;Pyridine;C5H5N
+Propilenoglicol;57-55-6;C3H8O2;;;ok;;1030;Propylene Glycol;C3H8O2
+Resorcinol;108-46-3;C6H6O2;;;ok;;5054;Resorcinol;C6H6O2
+Sacarose;57-50-1;C12H22O11;;;ok;;5988;Sucrose;C12H22O11
+Safranina O;477-73-6;C20H19ClN4;;;ok;;2723800;C.I. Basic Red 2;C20H19ClN4
+Salicilato de metila;119-36-8;C8H8O3;;;ok;;4133;Methyl Salicylate;C8H8O3
+Sódio metálico;7440-23-5;Na;;;ok;;5360545;Sodium;Na
+Sulfato de alumínio octadecaidratado;7784-31-8;Al2(SO4)3·18H2O;;;ok;;22377415;Aluminium sulfate octadecahydrate;Al2H36O30S3
+Sulfato de amônio;7783-20-2;(NH4)2SO4;;;ok;;6097028;Ammonium Sulfate;H8N2O4S
+Sulfato de bário;7727-43-7;BaSO4;;;ok;;24414;Barium Sulfate;BaO4S
+Sulfato de cálcio di-hidratado;10101-41-4;CaSO4·2H2O;;;ok;CAS revisado: 13397-24-5 é o gesso (mineral);24928;Calcium Sulfate Dihydrate;CaH4O6S
+Sulfato de cobre(II);7758-98-7;CuSO4;;;ok;;24462;Copper Sulfate;CuO4S
+Sulfato de cobre(II) pentaidratado;7758-99-8;CuSO4·5H2O;;;ok;;24463;Copper sulfate pentahydrate;CuH10O9S
+Sulfato de ferro(II) amoniacal hexaidratado (sal de Mohr);7783-85-9;(NH4)2Fe(SO4)2·6H2O;;;ok;;15942308;Ferrous ammonium sulfate hexahydrate;FeH20N2O14S2
+Sulfato de ferro(II) heptaidratado;7782-63-0;FeSO4·7H2O;;;ok;;62662;Ferrous sulfate heptahydrate;FeH14O11S
+Sulfato de ferro(III) amoniacal dodecaidratado;7783-83-7;NH4Fe(SO4)2·12H2O;;;ok;;197097;Ammonium ferric sulfate dodecahydrate;FeH28NO20S2
+Sulfato de hidrazina;10034-93-2;N2H4·H2SO4;;;ok;;24842;Hydrazine Sulfate;H6N2O4S
+Sulfato de magnésio;7487-88-9;MgSO4;;;ok;;24083;Sulfuric acid magnesium salt (1:1);MgO4S
+Sulfato de magnésio heptaidratado;10034-99-8;MgSO4·7H2O;;;ok;;24843;Magnesium Sulfate Heptahydrate;H14MgO11S
+Sulfato de manganês(II) monoidratado;10034-96-5;MnSO4·H2O;;;ok;;177577;Manganese sulfate monohydrate;H2MnO5S
+Sulfato de níquel(II) hexaidratado;10101-97-0;NiSO4·6H2O;;;ok;;5284429;Nickel sulfate hexahydrate;H12NiO10S
+Sulfato de potássio;7778-80-5;K2SO4;;;ok;;24507;Potassium Sulfate;K2O4S
+Sulfato de sódio;7757-82-6;Na2SO4;;;ok;;24436;Sodium Sulfate;Na2O4S
+Sulfato de zinco heptaidratado;7446-20-0;ZnSO4·7H2O;;;ok;;62640;Zinc Sulfate Heptahydrate;H14O11SZn
+Sulfeto de sódio nonaidratado;1313-84-4;Na2S·9H2O;Exército;Exército PCE 7.2 (sulfetos de sódio);ok;;73972;Sodium sulfide nonahydrate;H18Na2O9S
+Sulfito de sódio;7757-83-7;Na2SO3;;;ok;;24437;Sodium Sulfite;Na2O3S
+Tartarato de sódio e potássio tetraidratado;6381-59-5;KNaC4H4O6·4H2O;;;ok;CAS revisado: sal de Rochelle, o PubChem tem dois registros com esse nome;165453;Potassium sodium tartrate tetrahydrate;C4H12KNaO10
+Tetracloreto de carbono;56-23-5;CCl4;;;ok;;5943;Carbon Tetrachloride;CCl4
+Tetra-hidrofurano (THF);109-99-9;C4H8O;;;ok;;8028;Tetrahydrofuran;C4H8O
+N,N,N',N'-Tetrametiletilenodiamina (TEMED);110-18-9;C6H16N2;;;ok;;8037;N,N,N',N'-Tetramethylethylenediamine;C6H16N2
+Tiocianato de amônio;1762-95-4;NH4SCN;;;ok;;15666;Ammonium thiocyanate;CH4N2S
+Tiocianato de potássio;333-20-0;KSCN;;;ok;;516872;Potassium thiocyanate;CKNS
+Tiossulfato de sódio pentaidratado;10102-17-7;Na2S2O3·5H2O;;;ok;;61475;Sodium Thiosulfate Pentahydrate;H10Na2O8S2
+Tioureia;62-56-6;CH4N2S;;;ok;;2723790;Thiourea;CH4N2S
+Tolueno;108-88-3;C7H8;Polícia Federal;PF Lista II (038);ok;;1140;Toluene;C7H8
+Trietanolamina;102-71-6;C6H15NO3;Exército;Exército PCE 7.2.0610;ok;;7618;Triethanolamine;C6H15NO3
+Trietilamina;121-44-8;C6H15N;;;ok;;8471;Triethylamine;C6H15N
+Tris(hidroximetil)aminometano (Tris);77-86-1;C4H11NO3;;;ok;;6503;Tris(hydroxymethyl)aminomethane;C4H11NO3
+Tungstato de sódio di-hidratado;10213-10-2;Na2WO4·2H2O;;;ok;;150191;Sodium Tungstate Dihydrate;H4Na2O6W
+Ureia;57-13-6;CH4N2O;;;ok;;1176;Urea;CH4N2O
+Vanilina;121-33-5;C8H8O3;;;ok;;1183;Vanillin;C8H8O3
+Verde de bromocresol;76-60-8;C21H14Br4O5S;;;ok;;6451;Bromocresol Green;C21H14Br4O5S
+Vermelho congo;573-58-0;C32H22N6Na2O6S2;;;ok;;11313;Congo red;C32H22N6Na2O6S2
+Vermelho de metila;493-52-7;C15H15N3O2;;;ok;;10303;2-((4-(Dimethylamino)phenyl)diazenyl)benzoic acid;C15H15N3O2
+Zinco metálico;7440-66-6;Zn;;;ok;;23994;Zinc;Zn

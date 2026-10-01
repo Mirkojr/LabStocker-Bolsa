@@ -19,6 +19,19 @@ export function validarCPF(cpf) {
   return d2 === parseInt(c[10], 10);
 }
 
+// Valida número CAS (NNNNNNN-NN-N) com o dígito verificador: os dígitos
+// antes dele, da direita para a esquerda, multiplicados por 1, 2, 3...;
+// a soma módulo 10 é o último dígito. Mesma regra de cas_valido() no banco.
+export function validarCAS(cas) {
+  if (!cas || !/^[1-9]\d{1,6}-\d{2}-\d$/.test(cas)) return false;
+  const digitos = cas.replace(/-/g, "");
+  let soma = 0;
+  for (let i = 1; i < digitos.length; i++) {
+    soma += Number(digitos[digitos.length - 1 - i]) * i;
+  }
+  return soma % 10 === Number(digitos[digitos.length - 1]);
+}
+
 // Valida telefone brasileiro (10 ou 11 dígitos).
 export function validarTelefone(telefone) {
   if (!telefone) return false;
