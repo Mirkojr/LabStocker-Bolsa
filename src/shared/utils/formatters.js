@@ -23,8 +23,10 @@ export function formatarTelefone(telefone) {
 // As entidades criadas pelo escape (ex.: &#039;) ficam intactas.
 export function formatarFormulaQuimica(formula) {
   if (!formula) return "";
-  return escapeHtml(formula).replace(/(&#?\w+;)|(\d+)/g, (_m, entidade, numero) =>
-    entidade ? entidade : `<sub>${numero}</sub>`
+  // O número logo depois do "·" é coeficiente e fica na linha (CuSO4·5H2O).
+  return escapeHtml(formula).replace(
+    /(&#?\w+;)|(·\d+)|(\d+)/g,
+    (_m, entidade, coeficiente, numero) => entidade || coeficiente || `<sub>${numero}</sub>`
   );
 }
 

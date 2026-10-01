@@ -82,6 +82,9 @@ BEGIN
     ('e0000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'membro', now() - interval '30 days', now() - interval '1 day', NULL),
     ('e0000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'membro', now() - interval '30 days', NULL, now() - interval '1 day');
 
+  -- Os testes partem de um catálogo conhecido, sem a carga inicial de
+  -- reagentes (as transações dos testes terminam em ROLLBACK).
+  DELETE FROM public.reagente;
   INSERT INTO public.reagente (id, nome) VALUES
     ('20000000-0000-0000-0000-000000000001', 'Acetona');
 
