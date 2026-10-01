@@ -40,7 +40,7 @@
                         <span class="input-group-text bg-white border-end-0 rounded-start-5 ps-3">
                             <i class="bi bi-search text-muted"></i>
                         </span>
-                        <input type="text" id="input-busca" class="form-control border-start-0 search-input rounded-end-5" placeholder="Pesquisar por nome ou fórmula...">
+                        <input type="text" id="input-busca" class="form-control border-start-0 search-input rounded-end-5" placeholder="Nome, fórmula ou CAS" aria-label="Pesquisar reagentes por nome, fórmula ou número CAS">
                     </div>
                 </div>
             </div>
@@ -71,6 +71,12 @@
                         <div class="mb-3">
                             <label for="reagente-nome" class="form-label fw-bold small text-secondary">Nome do reagente</label>
                             <input type="text" class="form-control rounded-pill" id="reagente-nome" placeholder="Ex.: Ácido sulfúrico" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reagente-cas" class="form-label fw-bold small text-secondary">Número CAS (opcional)</label>
+                            <input type="text" class="form-control rounded-pill" id="reagente-cas" placeholder="Ex.: 7664-93-9" inputmode="numeric" autocomplete="off" maxlength="12" aria-describedby="ajuda-cas">
+                            <div id="ajuda-cas" class="form-text">Está no rótulo e na ficha de segurança. Diferencia substâncias com a mesma fórmula. Deixe em branco para misturas e soluções preparadas.</div>
+                            <div class="invalid-feedback">Número CAS inválido. Use o formato 7664-93-9 e confira os dígitos.</div>
                         </div>
                         <div class="mb-3">
                             <label for="reagente-composicao" class="form-label fw-bold small text-secondary">Composição / Fórmula</label>

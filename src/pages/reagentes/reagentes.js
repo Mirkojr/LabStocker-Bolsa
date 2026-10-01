@@ -7,6 +7,7 @@ import {
 } from "../../shared/services/reagentesService.js";
 import { formatarFormulaQuimica } from "../../shared/utils/formatters.js";
 import { escapeHtml } from "../../shared/utils/dom.js";
+import { validarCAS } from "../../shared/utils/validators.js";
 import {
   garantirContainerPaginador,
   renderPaginador,
@@ -36,6 +37,7 @@ const modalTitle = modalEl.querySelector(".modal-title");
 const modalSubmitBtn = formreagente.querySelector('button[type="submit"]');
 const editIdInput = document.getElementById("reagente-edit-id");
 const nomeInput = document.getElementById("reagente-nome");
+const casInput = document.getElementById("reagente-cas");
 const composicaoInput = document.getElementById("reagente-composicao");
 const controladoraInput = document.getElementById("reagente-controladora");
 
@@ -101,6 +103,7 @@ function renderreagentes(reagentes) {
   reagentes.forEach((reagente) => {
     const nome = escapeHtml(reagente.nome);
     const formula = formatarFormulaQuimica(reagente.composicao_quimica);
+    const cas = escapeHtml(reagente.numero_cas || "");
     // Controle é regra de compra, não risco químico: marca neutra, e a coluna
     // fica vazia quando o reagente não é controlado.
     const controle = reagente.instituicao_controladora
@@ -111,13 +114,17 @@ function renderreagentes(reagentes) {
     div.className = "linha-reagente";
     div.setAttribute("role", "listitem");
     div.innerHTML = `
-            <div class="lr-nome le-nome">${nome}</div>
+            <div class="lr-nome">
+                <div class="le-nome">${nome}</div>
+                ${cas ? `<small class="text-muted d-block">CAS ${cas}</small>` : ""}
+            </div>
             <div class="lr-formula">${formula || '<span class="text-muted">Sem fórmula</span>'}</div>
             <div class="lr-controle">${controle}</div>
             <div class="lr-acoes le-acoes">
                 <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle btn-mais btn-edit"
                     data-id="${escapeHtml(reagente.id)}"
                     data-nome="${nome}"
+                    data-cas="${cas}"
                     data-composicao="${escapeHtml(reagente.composicao_quimica || "")}"
                     data-controladora="${escapeHtml(reagente.instituicao_controladora || "")}"
                     title="Editar" aria-label="Editar ${nome}">
@@ -139,15 +146,30 @@ async function handleFormSubmit(evento) {
   evento.preventDefault();
 
   const id = editIdInput.value;
+  const cas = casInput.value.trim();
+  if (cas && !validarCAS(cas)) {
+    casInput.classList.add("is-invalid");
+    casInput.focus();
+    return;
+  }
+
   const dadosForm = {
     nome: nomeInput.value,
+    numero_cas: cas || null,
     composicao_quimica: composicaoInput.value,
     instituicao_controladora: controladoraInput.value || null,
   };
 
   try {
     const { error } = await salvarreagente(id || null, dadosForm);
-    if (error) throw error;
+    if (error) {
+      // O nome repetido também chega como 23505, com a mensagem do banco.
+      if (error.code === "23505" && error.message.includes("numero_cas")) {
+        showToast(`O CAS ${cas} já está no catálogo, em outro reagente.`, "warning");
+        return;
+      }
+      throw error;
+    }
 
     showToast(id ? "Reagente atualizado." : "Reagente cadastrado.", "success");
     modalreagente.hide();
@@ -160,10 +182,11 @@ async function handleFormSubmit(evento) {
 
 // --- CLIQUE BOTÃO EDITAR ---
 function handleEditClick(button) {
-  const { id, nome, composicao, controladora } = button.dataset;
+  const { id, nome, cas, composicao, controladora } = button.dataset;
 
   editIdInput.value = id;
   nomeInput.value = nome;
+  casInput.value = cas;
   composicaoInput.value = composicao;
   controladoraInput.value = controladora;
 
@@ -209,6 +232,7 @@ btnConfirmarExclusao.addEventListener("click", async () => {
 
 function resetModal() {
   formreagente.reset();
+  casInput.classList.remove("is-invalid");
   editIdInput.value = "";
   modalTitle.textContent = "Cadastrar reagente";
   modalSubmitBtn.textContent = "Salvar";
@@ -226,6 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 formreagente.addEventListener("submit", handleFormSubmit);
+casInput.addEventListener("input", () => casInput.classList.remove("is-invalid"));
 
 let debounceTimer;
 inputBusca.addEventListener("keyup", () => {
