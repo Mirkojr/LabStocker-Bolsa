@@ -4,6 +4,7 @@
 import { escapeHtml } from "../../shared/utils/dom.js";
 import { formatarFormulaQuimica, formatarQuantidade } from "../../shared/utils/formatters.js";
 import { UNIDADES } from "../../shared/constants.js";
+import { limparErroCampo, mostrarErroCampo } from "../../shared/utils/validacaoCampo.js";
 
 // Unidades na ordem em que se pensa nelas: volume, massa, unidade.
 const ORDEM_UNIDADES = ["mL", "L", "mg", "g", "kg", "un"].filter((u) => UNIDADES.includes(u));
@@ -29,7 +30,18 @@ const el = {
   validadeAviso: $("estoque-validade-aviso"),
   semValidade: $("estoque-sem-validade"),
   observacoes: $("estoque-observacoes"),
+  erroReagente: $("estoque-reagente-erro"),
+  erroQuantidade: $("estoque-quantidade-erro"),
+  erroUnidade: $("estoque-unidade-erro"),
 };
+
+// Campos validados: quem recebe o erro e onde fica a mensagem.
+const CAMPOS = {
+  reagente: () => [el.busca, el.erroReagente],
+  quantidade: () => [el.quantidade, el.erroQuantidade],
+  unidade: () => [el.unidades, el.erroUnidade],
+};
+const limparErro = (campo) => limparErroCampo(...CAMPOS[campo]());
 
 let catalogo = []; // [{ id, nome, composicao_quimica, numero_cas, instituicao_controladora }]
 let itensDoLab = () => []; // itens de estoque do laboratório (para "já tem" e para ordenar)
@@ -173,7 +185,7 @@ function marcarAtivo() {
 function escolher(r) {
   escolhido = r;
   el.idReagente.value = r.id;
-  el.busca.classList.remove("is-invalid");
+  limparErro("reagente");
   abrirLista(false);
 
   const controle = r.instituicao_controladora
@@ -242,7 +254,7 @@ function unidadeEscolhida() {
 function marcarUnidade(u) {
   const radio = el.unidades.querySelector(`input[value="${CSS.escape(u || "")}"]`);
   if (radio) radio.checked = true;
-  el.unidades.classList.remove("is-invalid");
+  limparErro("unidade");
 }
 
 // ---------- Validade ----------
@@ -277,16 +289,14 @@ function limpar() {
   escolhido = null;
   el.idReagente.value = "";
   el.busca.value = "";
-  el.busca.classList.remove("is-invalid");
+  Object.keys(CAMPOS).forEach(limparErro);
   el.escolhido.classList.add("d-none");
   el.escolhido.innerHTML = "";
   el.jaTem.classList.add("d-none");
   el.procura.classList.remove("d-none");
   abrirLista(false);
   el.quantidade.value = "";
-  el.quantidade.classList.remove("is-invalid");
   el.unidades.querySelectorAll("input").forEach((r) => (r.checked = false));
-  el.unidades.classList.remove("is-invalid");
   el.validade.value = "";
   el.semValidade.checked = false;
   el.validade.disabled = false;
@@ -337,27 +347,26 @@ export function lerDados() {
   };
 }
 
-// Marca os campos com problema e devolve a primeira mensagem (ou null).
+// Mostra cada erro embaixo do seu campo e leva o foco ao primeiro.
+// Devolve true quando o formulário está válido.
 export function validar(dados, qtdMax) {
   const erros = [];
   if (!dados.id_reagente) {
-    el.busca.classList.add("is-invalid");
-    erros.push([el.busca, "Escolha o reagente no catálogo."]);
+    erros.push(["reagente", el.busca, "Escolha o reagente no catálogo."]);
   }
   if (!(dados.quantidade > 0) || dados.quantidade > qtdMax) {
-    el.quantidade.classList.add("is-invalid");
     erros.push([
+      "quantidade",
       el.quantidade,
       `Informe uma quantidade maior que zero e até ${qtdMax.toLocaleString("pt-BR")}.`,
     ]);
   }
   if (!UNIDADES.includes(dados.unidade_medida)) {
-    el.unidades.classList.add("is-invalid");
-    erros.push([el.unidades.querySelector("input"), "Escolha a unidade."]);
+    erros.push(["unidade", el.unidades.querySelector("input"), "Escolha a unidade."]);
   }
-  if (!erros.length) return null;
-  erros[0][0]?.focus();
-  return erros[0][1];
+  for (const [campo, , mensagem] of erros) mostrarErroCampo(...CAMPOS[campo](), mensagem);
+  erros[0]?.[1]?.focus();
+  return erros.length === 0;
 }
 
 // ---------- Eventos ----------
@@ -403,8 +412,8 @@ el.escolhido.addEventListener("click", (e) => {
   if (e.target.closest(".trocar")) trocar();
 });
 
-el.quantidade.addEventListener("input", () => el.quantidade.classList.remove("is-invalid"));
-el.unidades.addEventListener("change", () => el.unidades.classList.remove("is-invalid"));
+el.quantidade.addEventListener("input", () => limparErro("quantidade"));
+el.unidades.addEventListener("change", () => limparErro("unidade"));
 el.validade.addEventListener("input", atualizarAvisoValidade);
 el.validade.addEventListener("change", atualizarAvisoValidade);
 el.semValidade.addEventListener("change", alternarSemValidade);

@@ -268,6 +268,21 @@ h6,
   letter-spacing: 0.5px;
 }
 
+/* Celular: toasts embaixo, para não cobrir o título e o botão de fechar
+   dos modais. Com um modal aberto, o toast.js os coloca acima do rodapé. */
+@media (max-width: 576px) {
+  #toast-container {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .toast-box {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(120%);
@@ -1689,6 +1704,32 @@ body.tela-clara {
   border-color: var(--alerta);
 }
 
+/* Erro de validação embaixo do campo (ver shared/utils/validacaoCampo.js). */
+.cadastro .invalid-feedback {
+  color: var(--alerta);
+  font-size: 0.84rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* Stepper de quantidade (consumo) no padrão dos campos do modal. */
+.cadastro .qty-stepper {
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio-controle);
+  box-shadow: none;
+}
+.cadastro .qty-stepper .qty-btn:first-child,
+.cadastro .qty-stepper .qty-btn:last-child {
+  border-radius: 0;
+}
+.cadastro .qty-stepper:focus-within {
+  border-color: var(--ufc-azul);
+  box-shadow: 0 0 0 3px rgba(0, 98, 155, 0.18);
+}
+.cadastro .qty-stepper:has(.qty-input.is-invalid) {
+  border-color: var(--alerta);
+}
+
 .cadastro .linha-campos {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1747,7 +1788,8 @@ body.tela-clara {
   .cadastro .unidades label {
     flex: 1;
     min-width: 0;
-    padding: 10px 0;
+    min-height: 44px;
+    padding: 0;
   }
   .cadastro .cadastro-rodape {
     padding: 12px 16px 18px;

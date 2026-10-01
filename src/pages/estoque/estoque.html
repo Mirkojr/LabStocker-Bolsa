@@ -104,6 +104,7 @@
                                     <div class="resultados-rodape" id="estoque-reagente-rodape"></div>
                                 </div>
                                 <div class="ajuda" id="estoque-reagente-ajuda">Busque pelo nome, pela fórmula ou pelo número CAS.</div>
+                                <div class="invalid-feedback" id="estoque-reagente-erro"></div>
                             </div>
                             <div class="escolhido d-none" id="estoque-reagente-escolhido"></div>
                         </div>
@@ -116,6 +117,8 @@
                                 <input type="number" class="entrada" id="estoque-quantidade" step="any" min="0.01" max="1000000" inputmode="decimal" placeholder="0" required>
                                 <div class="unidades" id="estoque-unidades" role="radiogroup" aria-label="Unidade"></div>
                             </div>
+                            <div class="invalid-feedback" id="estoque-quantidade-erro"></div>
+                            <div class="invalid-feedback" id="estoque-unidade-erro"></div>
                         </div>
 
                         <div class="linha-campos">
@@ -142,37 +145,37 @@
     </div>
 
     <!-- MODAL: Registrar consumo -->
-    <div class="modal fade" id="modal-consumo" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-content-lab">
-                <div class="modal-header modal-header-lab bg-primary text-white">
-                    <div class="modal-header-icon"><i class="bi bi-eyedropper"></i></div>
+    <div class="modal fade" id="modal-consumo" tabindex="-1" aria-labelledby="consumo-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered cadastro-dialog">
+            <div class="modal-content cadastro">
+                <div class="cadastro-topo">
                     <div>
-                        <h5 class="modal-title-lab mb-0">Registrar consumo</h5>
-                        <p class="modal-subtitle-lab" id="consumo-item-label">—</p>
+                        <h2 id="consumo-modal-titulo">Registrar consumo</h2>
+                        <p id="consumo-item-label">—</p>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="cadastro-fechar" data-bs-dismiss="modal" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
                 </div>
-                <form id="form-consumo">
+                <form id="form-consumo" class="cadastro-form" novalidate>
                     <input type="hidden" id="consumo-item-id">
-                    <div class="modal-body modal-body-lab">
-                        <div class="mb-3">
-                            <label for="consumo-quantidade" class="form-label-lab"><i class="bi bi-123"></i> Quantidade consumida</label>
+                    <div class="modal-body cadastro-corpo">
+                        <div class="campo">
+                            <label for="consumo-quantidade">Quantidade consumida</label>
                             <div class="qty-stepper">
                                 <button type="button" class="qty-btn qty-btn-minus" aria-label="Diminuir quantidade"><i class="bi bi-dash-lg"></i></button>
-                                <input type="number" step="0.01" min="0.01" class="qty-input" id="consumo-quantidade" required>
+                                <input type="number" step="0.01" min="0.01" class="qty-input" id="consumo-quantidade" aria-describedby="consumo-disponivel" required>
                                 <button type="button" class="qty-btn qty-btn-plus" aria-label="Aumentar quantidade"><i class="bi bi-plus-lg"></i></button>
                             </div>
-                            <small class="qty-hint" id="consumo-disponivel"></small>
+                            <div class="ajuda" id="consumo-disponivel"></div>
+                            <div class="invalid-feedback" id="consumo-quantidade-erro"></div>
                         </div>
-                        <div class="mb-1">
-                            <label for="consumo-finalidade" class="form-label-lab"><i class="bi bi-clipboard-check"></i> Finalidade (opcional)</label>
-                            <input type="text" class="form-control rounded-pill border-0 shadow-sm px-3" id="consumo-finalidade" maxlength="300" placeholder="Ex.: aula prática, projeto de pesquisa">
+                        <div class="campo">
+                            <label for="consumo-finalidade">Finalidade <span class="opcional">(opcional)</span></label>
+                            <input type="text" class="entrada" id="consumo-finalidade" maxlength="300" placeholder="Ex.: aula prática, projeto de pesquisa">
                         </div>
                     </div>
-                    <div class="modal-footer modal-footer-lab">
+                    <div class="modal-footer cadastro-rodape">
                         <button type="button" class="btn btn-cancel-lab" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary btn-confirm-lab"><i class="bi bi-check-lg"></i> Confirmar consumo</button>
+                        <button type="submit" class="btn btn-primary btn-confirm-lab">Confirmar consumo</button>
                     </div>
                 </form>
             </div>
