@@ -1382,3 +1382,382 @@ body.tela-clara {
     padding-bottom: 5.5rem;
   }
 }
+
+/* ===============================================
+   MODAL DE CADASTRO NO ESTOQUE
+   Faixa da UFC no topo, busca do reagente no catálogo (nome, fórmula ou
+   CAS) e unidade em botões. Tudo sob .cadastro para não vazar.
+   =============================================== */
+.cadastro-dialog {
+  max-width: 560px;
+}
+.cadastro {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  color: var(--tinta);
+}
+.cadastro-topo {
+  position: relative;
+  background: var(--ufc-azul);
+  color: #fff;
+  padding: 18px 24px 30px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cadastro-topo::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='20'%3E%3Cpath d='M0 10h14V0h28v10h14v10H0z' fill='%23e2bf3f'/%3E%3C/svg%3E")
+    repeat-x left bottom / 34px 12px;
+}
+.cadastro-topo h2 {
+  font-family: var(--fonte-titulo);
+  font-stretch: 80%;
+  font-weight: 800;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  margin: 0;
+}
+.cadastro-topo p {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  opacity: 0.88;
+}
+.cadastro-topo p:empty {
+  display: none;
+}
+.cadastro-fechar {
+  margin-left: auto;
+  background: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cadastro-fechar:focus-visible {
+  outline: 3px solid var(--ufc-ouro);
+  outline-offset: 2px;
+}
+.cadastro-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cadastro .cadastro-corpo {
+  padding: 22px 24px 8px;
+  background: var(--superficie);
+}
+.cadastro .campo {
+  margin-bottom: 18px;
+}
+.cadastro .campo > label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+.cadastro .opcional {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+.cadastro .ajuda {
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+  margin-top: 5px;
+}
+.cadastro .entrada {
+  width: 100%;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio-controle);
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--tinta);
+  background: #fff;
+}
+.cadastro .entrada:focus {
+  outline: none;
+  border-color: var(--ufc-azul);
+  box-shadow: 0 0 0 3px rgba(0, 98, 155, 0.18);
+}
+.cadastro .entrada:disabled {
+  background: var(--papel);
+  color: var(--tinta-suave);
+}
+.cadastro .entrada::placeholder {
+  color: #7d8a95;
+}
+.cadastro .entrada.is-invalid {
+  border-color: var(--alerta);
+}
+
+/* Busca do reagente */
+.cadastro .busca {
+  position: relative;
+}
+.cadastro .busca .bi-search {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tinta-suave);
+}
+.cadastro .busca .entrada {
+  padding-left: 38px;
+}
+.cadastro .resultados {
+  border: 1.5px solid var(--ufc-azul);
+  border-radius: var(--raio-controle);
+  margin-top: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+.cadastro .resultados-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 290px;
+  overflow-y: auto;
+}
+.cadastro .resultado {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 9px 14px;
+  border-top: 1px solid #eef2f5;
+  cursor: pointer;
+}
+.cadastro .resultado:first-child {
+  border-top: none;
+}
+.cadastro .resultado[aria-selected="true"] {
+  background: #e6f0f7;
+  box-shadow: inset 3px 0 0 var(--ufc-azul);
+}
+.cadastro .resultado .nome,
+.cadastro .resultado .dados {
+  grid-column: 1;
+}
+.cadastro .resultado .nome {
+  font-weight: 700;
+}
+.cadastro .resultado mark {
+  background: none;
+  padding: 0;
+  color: var(--ufc-azul);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cadastro .resultado .dados {
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+.cadastro .resultado .lado {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  text-align: right;
+  font-size: 0.82rem;
+}
+.cadastro .no-lab {
+  display: block;
+  color: var(--ufc-verde);
+  font-weight: 700;
+}
+.cadastro .resultados-rodape {
+  padding: 9px 14px;
+  border-top: 1px solid #eef2f5;
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+}
+.cadastro .resultados-rodape a {
+  font-weight: 700;
+}
+
+/* Reagente escolhido */
+.cadastro .escolhido {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 14px;
+  border: 1.5px solid var(--linha);
+  border-left: 4px solid var(--ufc-azul);
+  border-radius: var(--raio-controle);
+  padding: 10px 14px;
+}
+.cadastro .escolhido .nome {
+  font-family: var(--fonte-titulo);
+  font-stretch: 85%;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.cadastro .escolhido .dados {
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+}
+.cadastro .escolhido .trocar {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--ufc-azul);
+  background: none;
+  border: none;
+  padding: 4px 2px;
+}
+.cadastro .aviso-controle {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  font-size: 0.84rem;
+  color: var(--bs-warning-text-emphasis);
+  background: var(--bs-warning-bg-subtle);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.cadastro .ja-tem {
+  font-size: 0.85rem;
+  background: #e6f0f7;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: -6px 0 18px;
+}
+
+/* Quantidade e unidade */
+.cadastro .qtd {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.cadastro .qtd .entrada {
+  width: 140px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: right;
+}
+/* Sem as setinhas do input number: somar de 1 em 1 não ajuda em 1.000 mL. */
+.cadastro .qtd input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.cadastro .qtd input[type="number"]::-webkit-inner-spin-button,
+.cadastro .qtd input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.cadastro .unidades {
+  display: flex;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio-controle);
+  overflow: hidden;
+}
+.cadastro .unidades input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.cadastro .unidades label {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  padding: 0 12px;
+  border-left: 1px solid var(--linha);
+  font-weight: 700;
+  color: var(--tinta-suave);
+  cursor: pointer;
+  margin: 0;
+}
+.cadastro .unidades label:first-of-type {
+  border-left: none;
+}
+.cadastro .unidades input:checked + label {
+  background: var(--ufc-azul);
+  color: #fff;
+}
+.cadastro .unidades input:focus-visible + label {
+  outline: 3px solid rgba(0, 98, 155, 0.45);
+  outline-offset: -3px;
+}
+.cadastro .unidades.is-invalid {
+  border-color: var(--alerta);
+}
+
+.cadastro .linha-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.cadastro .vence {
+  font-size: 0.82rem;
+  margin-top: 5px;
+  font-weight: 700;
+}
+.cadastro .vence:empty {
+  display: none;
+}
+.cadastro .vence.breve {
+  color: var(--bs-warning-text-emphasis);
+}
+.cadastro .vence.vencida {
+  color: var(--alerta);
+}
+.cadastro .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  margin-top: 8px;
+  color: var(--tinta-suave);
+  font-weight: 400;
+}
+.cadastro .cadastro-rodape {
+  border: none;
+  background: var(--superficie);
+  padding: 14px 24px 22px;
+  gap: 10px;
+}
+
+@media (max-width: 575.98px) {
+  .cadastro-topo {
+    padding: 14px 16px 24px;
+  }
+  .cadastro-topo h2 {
+    font-size: 1.3rem;
+  }
+  .cadastro .cadastro-corpo {
+    padding: 16px 16px 4px;
+  }
+  .cadastro .linha-campos {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .cadastro .qtd .entrada {
+    width: 100%;
+  }
+  .cadastro .unidades {
+    width: 100%;
+  }
+  .cadastro .unidades label {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 0;
+  }
+  .cadastro .cadastro-rodape {
+    padding: 12px 16px 18px;
+  }
+  .cadastro .cadastro-rodape .btn {
+    white-space: nowrap;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .cadastro .cadastro-rodape .btn-confirm-lab {
+    flex: 1;
+  }
+}

@@ -35,8 +35,13 @@ export async function listarreagentes(
   return query;
 }
 
+// Catálogo inteiro para a busca do modal de estoque (nome, fórmula, CAS e
+// controle aparecem nos resultados).
 export async function listarreagentesParaestoque() {
-  return supabaseClient.from("reagente").select("id, nome").order("nome");
+  return supabaseClient
+    .from("reagente")
+    .select("id, nome, composicao_quimica, numero_cas, instituicao_controladora")
+    .order("nome");
 }
 
 export async function salvarreagente(id, dadosForm) {
