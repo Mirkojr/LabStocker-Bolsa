@@ -5,88 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar conta - LabStocker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../css/style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../imagens/favicon/favicon-32x32.png">
 </head>
-<body>
+<body class="tela-clara">
 
-    <main class="container">
-        <div class="row justify-content-center my-5">
-            <div class="col-md-7">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-
-                        <div class="text-center mb-4">
-                            <img src="../../imagens/logo-labstocker-branco.png" alt="Logo UFC" class="img-fluid" style="max-height: 200px;">
-                        </div>
-                        
-                        <h2 class="text-center mb-4">Criar conta</h2>
-                        
-                        <form id="form-register">
-                            
-                            <fieldset class="mb-3">
-                                <legend class="fs-6">Vínculo com a UFC</legend>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="tipo_identificador" id="radio-siape" value="SIAPE" required>
-                                    <label class="form-check-label" for="radio-siape">Docente ou técnico (SIAPE)</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="tipo_identificador" id="radio-matricula" value="MATRICULA" required>
-                                    <label class="form-check-label" for="radio-matricula">Discente (matrícula)</label>
-                                </div>
-                            </fieldset>
-
-                            <div class="mb-3">
-                                <label for="register-identificador" class="form-label">Número do SIAPE ou da matrícula</label>
-                                <input type="text" class="form-control" id="register-identificador" required>
-                            </div>
-
-                            <hr>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="register-nome" class="form-label">Nome</label>
-                                    <input type="text" class="form-control" id="register-nome" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="register-sobrenome" class="form-label">Sobrenome</label>
-                                    <input type="text" class="form-control" id="register-sobrenome" required>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="register-email" class="form-label">E-mail</label>
-                                <input type="email" class="form-control" id="register-email" required>
-                            </div>
-
-                            <div class="alert alert-info small mb-3">
-                                Depois do cadastro, peça ao chefe (ou a um gestor) do seu laboratório para adicionar você pelo e-mail acima.
-                            </div>
-                            
-                            <hr>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="register-senha" class="form-label">Senha</label>
-                                    <input type="password" class="form-control" id="register-senha" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="register-confirmar-senha" class="form-label">Confirmar senha</label>
-                                    <input type="password" class="form-control" id="register-confirmar-senha" required>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                Cadastrar
-                            </button>
-                        </form>
-                        
-                        <div class="text-center">
-                            <a href="../../index.html">Já tem uma conta? Entrar</a>
-                        </div>
-                        
-                    </div>
-                </div>
+    <header class="faixa-ufc faixa-pagina">
+        <div class="container faixa-pagina-conteudo">
+            <a href="../../index.html" class="btn-voltar" aria-label="Voltar para a tela de entrada"><i class="bi bi-arrow-left"></i></a>
+            <div class="faixa-pagina-titulo">
+                <h1>Criar conta</h1>
+                <p>LabStocker, Universidade Federal do Ceará</p>
             </div>
+        </div>
+    </header>
+
+    <main class="container conteudo-pagina">
+        <div class="painel cartao-cadastro">
+            <form id="form-register">
+
+                <fieldset class="mb-4">
+                    <legend class="h6 fw-bold">Vínculo com a UFC</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_identificador" id="radio-siape" value="SIAPE" required>
+                        <label class="form-check-label" for="radio-siape">Docente ou técnico (SIAPE)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_identificador" id="radio-matricula" value="MATRICULA" required>
+                        <label class="form-check-label" for="radio-matricula">Discente (matrícula)</label>
+                    </div>
+                    <div class="mt-3">
+                        <label for="register-identificador" class="form-label fw-bold small">Número do SIAPE ou da matrícula</label>
+                        <input type="text" class="form-control" id="register-identificador" inputmode="numeric" required>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="h6 fw-bold">Seus dados</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="register-nome" class="form-label fw-bold small">Nome</label>
+                            <input type="text" class="form-control" id="register-nome" autocomplete="given-name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="register-sobrenome" class="form-label fw-bold small">Sobrenome</label>
+                            <input type="text" class="form-control" id="register-sobrenome" autocomplete="family-name" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="register-email" class="form-label fw-bold small">E-mail</label>
+                            <input type="email" class="form-control" id="register-email" placeholder="nome@ufc.br" autocomplete="email" required aria-describedby="ajuda-email">
+                            <div id="ajuda-email" class="form-text">É por este e-mail que o chefe (ou um gestor) do laboratório vai adicionar você à equipe.</div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="h6 fw-bold">Senha</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="register-senha" class="form-label fw-bold small">Senha</label>
+                            <input type="password" class="form-control" id="register-senha" minlength="6" autocomplete="new-password" required aria-describedby="ajuda-senha">
+                            <div id="ajuda-senha" class="form-text">Mínimo de 6 caracteres.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="register-confirmar-senha" class="form-label fw-bold small">Confirmar senha</label>
+                            <input type="password" class="form-control" id="register-confirmar-senha" minlength="6" autocomplete="new-password" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn btn-contrast w-100">Criar conta</button>
+            </form>
+
+            <p class="text-center text-muted small mt-4 mb-0">
+                Já tem conta? <a href="../../index.html" class="fw-bold">Entrar</a>
+            </p>
         </div>
     </main>
 

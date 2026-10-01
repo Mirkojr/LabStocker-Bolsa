@@ -67,9 +67,9 @@
 }
 
 body {
-  background: linear-gradient(135deg, #132e4b 0%, #0d2136 100%);
+  background: var(--papel);
   min-height: 100vh;
-  color: #f8f9fa;
+  color: var(--tinta);
   font-family: var(--fonte-texto);
 }
 
@@ -202,14 +202,6 @@ h6,
   --bs-pagination-active-border-color: var(--ufc-azul);
 }
 
-.glass-panel {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .search-input {
   border-radius: 50px;
   padding: 12px 25px;
@@ -293,59 +285,6 @@ h6,
   }
 }
 
-.glass-panel-dark {
-  background-color: #132e4b;
-  border-radius: 20px;
-  padding: 3rem 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-/* No painel escuro (telas ainda não migradas para a tela clara), o texto
-   colorido usa versões claras das cores para manter o contraste. */
-.glass-panel-dark .text-primary {
-  color: var(--bs-info) !important;
-}
-.glass-panel-dark .text-success {
-  color: #5cc98a !important;
-}
-.glass-panel-dark .text-danger {
-  color: #f08a82 !important;
-}
-.glass-panel-dark .btn-outline-danger {
-  --bs-btn-color: #f08a82;
-  --bs-btn-border-color: #f08a82;
-}
-
-.form-control-dark:disabled,
-.form-control-dark[readonly] {
-  /* Campo preenchido pelo sistema: aparência de texto travado, não de destaque */
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border: 1px dashed rgba(255, 255, 255, 0.3) !important;
-  opacity: 1 !important; /* Remove a opacidade padrão do Bootstrap que esconde o texto */
-  cursor: not-allowed;
-}
-
-.form-control-dark:focus {
-  background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(226, 191, 63, 0.35);
-  outline: none;
-}
-
-.input-group-text-dark {
-  background-color: #f0f2f5;
-  border: none;
-  border-radius: 50px 0 0 50px;
-  color: #132e4b;
-  padding-left: 20px;
-  display: flex;
-  align-items: center;
-}
-
 .btn-contrast {
   background-color: var(--ufc-ouro);
   color: var(--tinta);
@@ -360,24 +299,6 @@ h6,
 .btn-contrast:hover {
   background-color: var(--ufc-ouro-escuro);
   color: var(--tinta);
-}
-
-.btn-outline-light-custom {
-  color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50px;
-  padding: 10px;
-  background: transparent;
-  transition: 0.3s;
-}
-.btn-outline-light-custom:hover {
-  background-color: white;
-  color: #132e4b;
-  border-color: white;
-}
-
-.text-muted-light {
-  color: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* ===============================================
@@ -1032,17 +953,6 @@ body.tela-clara {
   }
 }
 
-/* Painéis com menos margem interna no celular, para sobrar largura ao conteúdo */
-@media (max-width: 575.98px) {
-  .glass-panel {
-    padding: 1rem;
-  }
-
-  .glass-panel-dark {
-    padding: 1.5rem 1rem;
-  }
-}
-
 /* ===============================================
    CABEÇALHO DE PÁGINA (faixa compacta) E PAINEL CLARO
    Toda tela interna abre com a faixa azul ameada: voltar, título e a ação
@@ -1428,5 +1338,47 @@ body.tela-clara {
     grid-template-areas:
       "pedido pedido"
       "qtd estoque";
+  }
+}
+
+/* ===============================================
+   ENTRADA (login) E CADASTRO
+   =============================================== */
+.faixa-entrada-conteudo {
+  padding-block: 1.25rem 4.5rem;
+}
+
+.faixa-entrada h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1.05;
+  max-width: 18ch;
+  margin: 2rem 0 0;
+}
+
+.entrada {
+  display: flex;
+  justify-content: center;
+  padding-block: 0 3rem;
+}
+
+/* O cartão de entrada sobe sobre a borda ameada da faixa */
+.cartao-entrada {
+  width: 100%;
+  max-width: 440px;
+  margin-top: -2.5rem;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(27, 42, 54, 0.12);
+}
+
+.cartao-cadastro {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+@media (min-width: 992px) {
+  .faixa-entrada-conteudo {
+    padding-bottom: 5.5rem;
   }
 }
