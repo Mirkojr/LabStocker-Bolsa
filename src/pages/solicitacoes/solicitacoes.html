@@ -28,19 +28,20 @@
 
         <div class="painel">
             
-            <div class="alert alert-light border mb-4 d-flex align-items-center" style=" border-radius: 15px;">
-                <i class="bi bi-info-circle-fill text-info me-3 fs-4"></i>
-                <div class="small">
-                    <strong>Atenção:</strong> ao aprovar um pedido, a quantidade sai do seu estoque na hora e a transferência fica registrada no histórico dos dois laboratórios.
-                </div>
+            <div class="resumo-estoque" id="abas-pedidos" role="group" aria-label="Mostrar pedidos">
+                <button type="button" class="btn-resumo" data-aba="pendentes" aria-pressed="true">Pendentes</button>
+                <button type="button" class="btn-resumo" data-aba="decididos" aria-pressed="false">Aprovados e recusados</button>
             </div>
+            <p class="small text-muted mb-3">
+                <i class="bi bi-info-circle me-1"></i>Ao aprovar, a quantidade sai do seu estoque na hora e a transferência fica no histórico dos dois laboratórios.
+            </p>
 
             <div id="spinner-solic" class="text-center py-5 d-none">
-                <div class="spinner-border text-info" role="status"></div>
+                <div class="spinner-border text-primary" role="status"></div>
                 <p class="mt-2 text-muted small">Carregando pedidos...</p>
             </div>
 
-            <div class="list-group list-group-flush" id="lista-pedidos">
+            <div class="lista-pedidos" id="lista-pedidos" role="list" aria-label="Pedidos">
                 </div>
 
         </div> 

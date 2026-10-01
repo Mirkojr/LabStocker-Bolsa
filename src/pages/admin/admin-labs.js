@@ -78,7 +78,7 @@ function renderLabs(labs) {
     const nome = escapeHtml(lab.nome_laboratorio);
     const chefe = lab.chefe
       ? `<i class="bi bi-person-badge me-1"></i>Chefe: ${escapeHtml(`${lab.chefe.nome} ${lab.chefe.sobrenome}`)} <span class="text-muted">(${escapeHtml(lab.chefe.email || "")})</span>`
-      : '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sem chefe</span>';
+      : '<span class="validade-breve"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sem chefe: defina quem chefia este laboratório</span>';
 
     const item = document.createElement("li");
     item.className =
@@ -89,14 +89,24 @@ function renderLabs(labs) {
                 <span class="text-muted ms-2 small">(SIPAC: ${escapeHtml(lab.codigo_sipac)})</span>
                 <div class="small mt-1">${chefe}</div>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm ${lab.chefe ? "btn-outline-primary" : "btn-primary"} btn-chefe"
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-sm ${lab.chefe ? "btn-outline-primary" : "btn-primary"} rounded-pill px-3 btn-chefe"
                     data-id="${escapeHtml(lab.id)}" data-nome="${nome}" data-tem-chefe="${lab.chefe ? "1" : ""}">
                     ${lab.chefe ? "Trocar chefe" : "Definir chefe"}
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${escapeHtml(lab.id)}" title="Excluir laboratório">
-                    <i class="bi bi-trash"></i>
-                </button>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle btn-mais" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mais ações para ${nome}">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button class="dropdown-item text-danger btn-delete" type="button" data-id="${escapeHtml(lab.id)}">
+                                <i class="bi bi-trash me-2"></i>Excluir laboratório
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         `;
     listaLabs.appendChild(item);

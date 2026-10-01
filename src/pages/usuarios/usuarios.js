@@ -20,6 +20,7 @@ const formVinculo = document.getElementById("form-vinculo");
 const inputEmail = document.getElementById("vinculo-email");
 const selectPapel = document.getElementById("vinculo-papel");
 const inputValidade = document.getElementById("vinculo-validade");
+const btnAdicionarPessoa = document.getElementById("btn-adicionar-pessoa");
 
 const CARGOS = ["Técnico", "Docente", "Discente"];
 const ORDEM_PAPEL = { chefe: 0, gestor: 1, membro: 2 };
@@ -76,7 +77,15 @@ function prepararFormulario() {
   const amanha = new Date(Date.now() + 24 * 60 * 60 * 1000);
   inputValidade.min = amanha.toISOString().slice(0, 10);
 
-  formVinculo.classList.remove("d-none");
+  // O formulário fica fechado; o botão da faixa abre e fecha.
+  btnAdicionarPessoa.classList.remove("d-none");
+}
+
+function alternarFormulario() {
+  const abrir = formVinculo.classList.contains("d-none");
+  formVinculo.classList.toggle("d-none", !abrir);
+  btnAdicionarPessoa.setAttribute("aria-expanded", String(abrir));
+  if (abrir) inputEmail.focus();
 }
 
 function vinculoAtivo(v) {
@@ -142,9 +151,14 @@ function renderAtivos(vinculos) {
     return;
   }
 
-  listaUsuariosEl.innerHTML = vinculos.map(criarItemVinculo).join("");
+  listaUsuariosEl.innerHTML =
+    `<div class="linha-equipe linha-cabecalho" aria-hidden="true">
+        <div>Pessoa</div><div>Papel</div><div>Cargo</div><div>Desde</div><div></div>
+     </div>` + vinculos.map(criarItemVinculo).join("");
 }
 
+// Uma linha por pessoa: Pessoa, Papel, Cargo, Desde e um menu com as
+// mudanças de papel (as ações raras e sensíveis não ficam sempre à mostra).
 function criarItemVinculo(v) {
   const perfil = v.usuario || {};
   const nome = escapeHtml(nomeCompleto(v.usuario));
@@ -153,53 +167,68 @@ function criarItemVinculo(v) {
   const ehEu = v.id_usuario === MEU_ID;
 
   const validade = v.expira_em
-    ? `<small class="text-warning"><i class="bi bi-hourglass-split me-1"></i>até ${formatarData(v.expira_em)}</small>`
+    ? `<small class="text-warning d-block"><i class="bi bi-hourglass-split me-1"></i>até ${formatarData(v.expira_em)}</small>`
     : "";
-  const concedido = v.concedente
-    ? `por ${escapeHtml(nomeCompleto(v.concedente))} em ${formatarData(v.concedido_em)}`
-    : `em ${formatarData(v.concedido_em)}${v.observacao ? ` · ${escapeHtml(v.observacao)}` : ""}`;
+  const concedente = v.concedente
+    ? `<small class="text-muted d-block">por ${escapeHtml(nomeCompleto(v.concedente))}</small>`
+    : v.observacao
+      ? `<small class="text-muted d-block">${escapeHtml(v.observacao)}</small>`
+      : "";
 
   const cargo = possoEditarCargo(v)
-    ? `<select class="form-select form-select-sm select-cargo" data-usuario="${escapeHtml(v.id_usuario)}" style="width: auto;" aria-label="Cargo">
-         <option value="">Cargo não informado</option>
+    ? `<select class="form-select form-select-sm select-cargo" data-usuario="${escapeHtml(v.id_usuario)}" aria-label="Cargo de ${nome}">
+         <option value="">Não informado</option>
          ${CARGOS.map((c) => `<option value="${c}" ${perfil.cargo === c ? "selected" : ""}>${c}</option>`).join("")}
        </select>`
-    : `<small class="text-muted">Cargo: ${escapeHtml(perfil.cargo || "não informado")}</small>`;
+    : `<span class="${perfil.cargo ? "" : "text-muted"}">${escapeHtml(perfil.cargo || "Não informado")}</span>`;
 
-  const acoes = [];
+  const itens = [];
   if (possoMudarPapel(v)) {
     const novo = v.papel === "gestor" ? "membro" : "gestor";
-    acoes.push(`<button class="btn btn-sm btn-outline-secondary rounded-pill btn-mudar-papel"
+    itens.push(`<li><button class="dropdown-item btn-mudar-papel" type="button"
         data-email="${escapeHtml(perfil.email || "")}" data-papel="${novo}" data-nome="${nome}">
-        ${novo === "gestor" ? "Tornar gestor" : "Tornar membro"}</button>`);
+        <i class="bi bi-arrow-left-right me-2"></i>${novo === "gestor" ? "Tornar gestor" : "Tornar membro"}</button></li>`);
   }
   if (LAB.acoes.includes("chefia.transferir") && !ehEu) {
-    acoes.push(`<button class="btn btn-sm btn-outline-warning rounded-pill btn-transferir"
-        data-usuario="${escapeHtml(v.id_usuario)}" data-nome="${nome}">Passar chefia</button>`);
+    itens.push(`<li><button class="dropdown-item btn-transferir" type="button"
+        data-usuario="${escapeHtml(v.id_usuario)}" data-nome="${nome}">
+        <i class="bi bi-award me-2"></i>Passar a chefia</button></li>`);
   }
   if (possoRevogar(v)) {
-    acoes.push(`<button class="btn btn-sm btn-outline-danger rounded-pill btn-revogar"
-        data-id="${escapeHtml(v.id)}" data-nome="${nome}">Revogar</button>`);
+    if (itens.length) itens.push('<li><hr class="dropdown-divider"></li>');
+    itens.push(`<li><button class="dropdown-item text-danger btn-revogar" type="button"
+        data-id="${escapeHtml(v.id)}" data-nome="${nome}">
+        <i class="bi bi-person-x me-2"></i>Revogar acesso</button></li>`);
   }
+  const menu = itens.length
+    ? `<div class="dropdown">
+         <button class="btn btn-sm btn-outline-secondary rounded-circle btn-mais" type="button"
+           data-bs-toggle="dropdown" aria-expanded="false" aria-label="Ações para ${nome}">
+           <i class="bi bi-three-dots-vertical"></i>
+         </button>
+         <ul class="dropdown-menu dropdown-menu-end">${itens.join("")}</ul>
+       </div>`
+    : "";
 
   return `
-    <div class="d-flex flex-wrap align-items-center gap-3 p-3 mb-2 rounded-4 border">
-      <div class="rounded-circle d-flex align-items-center justify-content-center ${CLASSE_PAPEL[v.papel]} shadow-sm flex-shrink-0" style="width: 48px; height: 48px;">
-        <span class="fw-bold fs-5">${inicial}</span>
-      </div>
-      <div class="flex-grow-1" style="min-width: 200px;">
-        <h6 class="mb-0 fw-bold">${nome}${ehEu ? ' <small class="text-muted">(você)</small>' : ""}</h6>
-        <small class="text-muted"><i class="bi bi-envelope me-1"></i>${escapeHtml(perfil.email || "Sem e-mail")}</small>
-        <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
-          <span class="badge rounded-pill ${CLASSE_PAPEL[v.papel]}">${papel}</span>
-          ${validade}
-          <small class="text-muted">Concedido ${concedido}</small>
+    <div class="linha-equipe">
+      <div class="leq-pessoa">
+        <div class="avatar-papel ${CLASSE_PAPEL[v.papel]}" aria-hidden="true">${inicial}</div>
+        <div class="min-w-0">
+          <div class="le-nome">${nome}${ehEu ? ' <small class="text-muted fw-normal">(você)</small>' : ""}</div>
+          <small class="text-muted d-block text-truncate">${escapeHtml(perfil.email || "Sem e-mail")}</small>
         </div>
       </div>
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        ${cargo}
-        ${acoes.join("")}
+      <div class="leq-papel">
+        <span class="badge rounded-pill ${CLASSE_PAPEL[v.papel]}">${papel}</span>
+        ${validade}
       </div>
+      <div class="leq-cargo">${cargo}</div>
+      <div class="leq-desde">
+        <span>${formatarData(v.concedido_em)}</span>
+        ${concedente}
+      </div>
+      <div class="leq-acoes le-acoes">${menu}</div>
     </div>`;
 }
 
@@ -333,6 +362,7 @@ async function handleCargo(select) {
 }
 
 formVinculo.addEventListener("submit", handleAdicionar);
+btnAdicionarPessoa.addEventListener("click", alternarFormulario);
 
 listaUsuariosEl.addEventListener("click", (e) => {
   const btnPapel = e.target.closest(".btn-mudar-papel");

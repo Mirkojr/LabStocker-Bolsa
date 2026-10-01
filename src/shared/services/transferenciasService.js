@@ -22,6 +22,7 @@ export async function listarSolicitacoesPendentes(labOrigemId) {
             data_solicitacao,
             laboratorio:id_lab_destino ( nome_laboratorio ),
             estoquelab:id_item_estoque (
+                quantidade,
                 unidade_medida,
                 reagente ( nome )
             )
@@ -30,6 +31,30 @@ export async function listarSolicitacoesPendentes(labOrigemId) {
     .eq("id_lab_origem", labOrigemId)
     .eq("status", "pendente")
     .order("data_solicitacao", { ascending: false });
+}
+
+// Pedidos que o laboratório DONO (origem) já aprovou ou recusou, do mais recente.
+export async function listarPedidosDecididos(labOrigemId, limite = 30) {
+  return supabaseClient
+    .from("transferencia")
+    .select(
+      `
+            id,
+            quantidade_transferida,
+            data_solicitacao,
+            status,
+            motivo_recusa,
+            laboratorio:id_lab_destino ( nome_laboratorio ),
+            estoquelab:id_item_estoque (
+                unidade_medida,
+                reagente ( nome )
+            )
+        `
+    )
+    .eq("id_lab_origem", labOrigemId)
+    .in("status", ["aprovado", "recusado"])
+    .order("data_solicitacao", { ascending: false })
+    .limit(limite);
 }
 
 export async function aprovarTransferencia(transferId) {

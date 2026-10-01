@@ -836,12 +836,13 @@ body.tela-clara {
 }
 
 .linha-estoque {
-  grid-template-columns: minmax(0, 1fr) 9rem 15rem auto;
+  /* A coluna de ações tem largura fixa para o cabeçalho alinhar com as linhas */
+  grid-template-columns: minmax(0, 1fr) 9rem 15rem 10rem;
   border-left: 4px solid transparent;
 }
 
 .linha-reagente {
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1.1fr) auto;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1.1fr) 5.5rem;
 }
 
 .linha-cabecalho {
@@ -1301,5 +1302,131 @@ body.tela-clara {
   .eh-conteudo {
     grid-area: conteudo;
     padding-top: 0;
+  }
+}
+
+/* ===============================================
+   EQUIPE: uma linha por pessoa (Pessoa, Papel, Cargo, Desde, ações)
+   =============================================== */
+.linha-equipe {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 8rem 11rem 10rem 2.5rem;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.leq-pessoa {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.avatar-papel {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.leq-desde {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767.98px) {
+  .linha-equipe {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "pessoa acoes"
+      "papel desde"
+      "cargo cargo";
+  }
+
+  .leq-pessoa {
+    grid-area: pessoa;
+  }
+
+  .leq-papel {
+    grid-area: papel;
+  }
+
+  .leq-cargo {
+    grid-area: cargo;
+  }
+
+  .leq-desde {
+    grid-area: desde;
+    text-align: right;
+  }
+
+  .leq-acoes {
+    grid-area: acoes;
+  }
+
+  .leq-cargo .form-select {
+    max-width: 14rem;
+  }
+}
+
+/* ===============================================
+   PEDIDOS RECEBIDOS: pedido, quanto foi pedido, quanto há em estoque e ações
+   =============================================== */
+.linha-pedido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8rem 10rem 14.5rem;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.lp-rotulo {
+  display: none;
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 767.98px) {
+  .linha-pedido {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "pedido pedido"
+      "qtd estoque"
+      "acoes acoes";
+  }
+
+  .lp-pedido {
+    grid-area: pedido;
+  }
+
+  .lp-pedido-qtd {
+    grid-area: qtd;
+    text-align: left;
+  }
+
+  .lp-estoque {
+    grid-area: estoque;
+    text-align: left;
+  }
+
+  .lp-acoes {
+    grid-area: acoes;
+    justify-content: flex-start;
+  }
+
+  .lp-rotulo {
+    display: block;
+  }
+
+  .linha-decidido {
+    grid-template-areas:
+      "pedido pedido"
+      "qtd estoque";
   }
 }

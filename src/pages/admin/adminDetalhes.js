@@ -18,6 +18,15 @@ const projetoId = params.get("id");
 
 let dadosProjetoAtual = null;
 
+const NAO_INFORMADO = "Não informado";
+
+// A etapa 2 (aprovação final) aparece como prévia desde o início e vira o
+// formulário de upload depois que a minuta é gerada.
+function mostrarEtapaAprovacao() {
+  document.getElementById("area-upload-pdf").classList.remove("d-none");
+  document.getElementById("previa-aprovacao")?.classList.add("d-none");
+}
+
 function formatarUnidade(unidade) {
   if (!unidade) return "";
   const u = unidade.toLowerCase().trim();
@@ -50,19 +59,21 @@ async function carregarDetalhes() {
   dadosProjetoAtual = data;
 
   // --- Preencher Dados do Requerente ---
-  document.getElementById("view-nome").textContent = data.responsavel_nome || "-";
-  document.getElementById("view-cpf").textContent = formatarCPF(data.responsavel_cpf);
-  document.getElementById("view-siape").textContent = data.responsavel_siape || "-";
-  document.getElementById("view-email").textContent = data.responsavel_email || "-";
-  document.getElementById("view-telefone").textContent = formatarTelefone(
-    data.responsavel_telefone
-  );
-  document.getElementById("view-titulo").textContent = data.titulo_projeto || "-";
-  document.getElementById("view-financiador").textContent = data.orgao_financiador || "-";
-  document.getElementById("view-registro").textContent = data.registro_numero || "-";
-  document.getElementById("view-periodo").textContent = data.periodo_execucao || "-";
-  document.getElementById("view-lab-nome").textContent = data.lab_nome || "-";
-  document.getElementById("view-lab-sipac").textContent = data.lab_sipac || "-";
+  document.getElementById("view-nome").textContent = data.responsavel_nome || NAO_INFORMADO;
+  document.getElementById("view-cpf").textContent = data.responsavel_cpf
+    ? formatarCPF(data.responsavel_cpf)
+    : NAO_INFORMADO;
+  document.getElementById("view-siape").textContent = data.responsavel_siape || NAO_INFORMADO;
+  document.getElementById("view-email").textContent = data.responsavel_email || NAO_INFORMADO;
+  document.getElementById("view-telefone").textContent = data.responsavel_telefone
+    ? formatarTelefone(data.responsavel_telefone)
+    : NAO_INFORMADO;
+  document.getElementById("view-titulo").textContent = data.titulo_projeto || NAO_INFORMADO;
+  document.getElementById("view-financiador").textContent = data.orgao_financiador || NAO_INFORMADO;
+  document.getElementById("view-registro").textContent = data.registro_numero || NAO_INFORMADO;
+  document.getElementById("view-periodo").textContent = data.periodo_execucao || NAO_INFORMADO;
+  document.getElementById("view-lab-nome").textContent = data.lab_nome || NAO_INFORMADO;
+  document.getElementById("view-lab-sipac").textContent = data.lab_sipac || NAO_INFORMADO;
 
   const listaProd = document.getElementById("view-produtos");
   listaProd.innerHTML = "";
@@ -117,7 +128,7 @@ async function carregarDetalhes() {
 
     // Se já existe um DOCX gerado (minuta), mostra o upload do PDF
     if (data.documento_url) {
-      document.getElementById("area-upload-pdf").classList.remove("d-none");
+      mostrarEtapaAprovacao();
     }
   }
 }
@@ -212,7 +223,7 @@ document.getElementById("form-gerar-minuta").addEventListener("submit", async (e
         if (updateError) throw updateError;
 
         alert("Minuta gerada e baixada! Assine o documento e faça o upload do PDF abaixo.");
-        document.getElementById("area-upload-pdf").classList.remove("d-none");
+        mostrarEtapaAprovacao();
       } catch (innerErr) {
         console.error(innerErr);
         alert("Erro: " + innerErr.message);
