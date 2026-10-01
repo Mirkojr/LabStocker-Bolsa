@@ -10,6 +10,16 @@ import {
   salvarItemestoque,
 } from "../../shared/services/estoqueService.js";
 import { listarreagentesParaestoque } from "../../shared/services/reagentesService.js";
+import {
+  definirCatalogo,
+  definirItensDoLab,
+  focarInicio,
+  lerDados,
+  nomeReagenteEscolhido,
+  prepararEdicao,
+  prepararNovo,
+  validar,
+} from "./estoqueCadastro.js";
 import { registrarConsumo } from "../../shared/services/consumoService.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
 import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
@@ -32,15 +42,9 @@ const spinner = document.getElementById("loading-spinner-estoque");
 const modalEl = document.getElementById("modal-estoque");
 const modalestoque = new bootstrap.Modal(modalEl);
 
-// Elementos do Form
-const modalTitle = modalEl.querySelector(".modal-title-lab");
-const modalSubmitBtn = formestoque.querySelector('button[type="submit"]');
+// Elementos do Form (os campos ficam em estoqueCadastro.js)
 const editIdInput = document.getElementById("estoque-edit-id");
-const selectreagente = document.getElementById("estoque-reagente");
-const quantidadeInput = document.getElementById("estoque-quantidade");
-const unidadeInput = document.getElementById("estoque-unidade");
-const validadeInput = document.getElementById("estoque-validade");
-const observacoesInput = document.getElementById("estoque-observacoes");
+const btnNovoItem = document.querySelector('[data-bs-target="#modal-estoque"]');
 
 // Elementos do modal de consumo
 const modalConsumoEl = document.getElementById("modal-consumo");
@@ -52,18 +56,14 @@ const consumoQuantidadeInput = document.getElementById("consumo-quantidade");
 const consumoDisponivelEl = document.getElementById("consumo-disponivel");
 const consumoFinalidadeInput = document.getElementById("consumo-finalidade");
 
-// Steppers de quantidade (substituem as setinhas nativas do input number)
-const stepperEstoque = criarStepperQuantidade(quantidadeInput.closest(".qty-stepper"), {
-  passo: 1,
-  min: 0.01,
-  max: 1000000,
-});
+// Stepper de quantidade do consumo (substitui as setinhas nativas do input number)
 const stepperConsumo = criarStepperQuantidade(
   consumoQuantidadeInput.closest(".qty-stepper"),
   { passo: 1, min: 0.01, max: null } // max é definido dinamicamente ao abrir o modal
 );
 
 let ID_LAB_DO_USUARIO = null;
+let NOME_LAB = "";
 let ACOES_LAB = []; // ações permitidas no laboratório ativo (ver shared/permissoes.js)
 let itensCache = []; // dados carregados do banco; filtros/ordenacao operam sobre ele
 let itensFiltrados = []; // resultado dos filtros/ordenacao; paginado no cliente
@@ -72,14 +72,6 @@ let consumoQuantidadeDisponivel = 0; // saldo do item atualmente aberto no modal
 
 // Container de paginacao (inserido logo abaixo da lista)
 const paginadorEstoqueEl = garantirContainerPaginador(listaestoqueEl, "paginador-estoque");
-
-// Preenche o <select> de unidades do FORM a partir da fonte única (constants.js)
-function popularUnidadesForm() {
-  if (!unidadeInput) return;
-  unidadeInput.innerHTML =
-    '<option value="" disabled selected>Selecione...</option>' +
-    UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join("");
-}
 
 // Preenche o <select> de unidades do FILTRO
 function popularUnidadesFiltro() {
@@ -350,18 +342,10 @@ async function fetchreagentesParaModal() {
   try {
     const { data, error } = await listarreagentesParaestoque();
     if (error) throw error;
-
-    selectreagente.innerHTML =
-      '<option value="" disabled selected>Selecione um reagente...</option>';
-    data.forEach((reagente) => {
-      const opt = document.createElement("option");
-      opt.value = reagente.id;
-      opt.textContent = reagente.nome;
-      selectreagente.appendChild(opt);
-    });
+    definirCatalogo(data);
   } catch (error) {
     console.error("Erro:", error.message);
-    showToast("Erro ao carregar lista de reagentes.", "error");
+    showToast("Erro ao carregar o catálogo de reagentes.", "error");
   }
 }
 
@@ -373,32 +357,14 @@ async function handleFormSubmitestoque(evento) {
   }
 
   const QTD_MAX = 1000000;
-  const OBS_MAX = 500;
 
   const id = editIdInput.value;
-  const dadosForm = {
-    id_laboratorio: ID_LAB_DO_USUARIO,
-    id_reagente: selectreagente.value,
-    quantidade: parseFloat(quantidadeInput.value),
-    unidade_medida: unidadeInput.value,
-    data_validade: validadeInput.value || null,
-    observacoes_operacionais: observacoesInput.value || null,
-  };
+  const dadosForm = { id_laboratorio: ID_LAB_DO_USUARIO, ...lerDados() };
 
   // Validações (defesa no cliente; o banco também garante via CHECK)
-  if (!(dadosForm.quantidade > 0) || dadosForm.quantidade > QTD_MAX) {
-    showToast(
-      `Quantidade deve ser maior que zero e até ${QTD_MAX.toLocaleString("pt-BR")}.`,
-      "error"
-    );
-    return;
-  }
-  if (!UNIDADES.includes(dadosForm.unidade_medida)) {
-    showToast("Selecione uma unidade válida.", "error");
-    return;
-  }
-  if (dadosForm.observacoes_operacionais && dadosForm.observacoes_operacionais.length > OBS_MAX) {
-    showToast(`As observações devem ter no máximo ${OBS_MAX} caracteres.`, "error");
+  const erro = validar(dadosForm, QTD_MAX);
+  if (erro) {
+    showToast(erro, "error");
     return;
   }
 
@@ -409,7 +375,7 @@ async function handleFormSubmitestoque(evento) {
     if (error) throw error;
 
     if (!id) {
-      const nomereagente = selectreagente.options[selectreagente.selectedIndex].text;
+      const nomereagente = nomeReagenteEscolhido();
       const { error: erroMov } = await registrarMovimentacaoEntradaestoque({
         id_laboratorio: ID_LAB_DO_USUARIO,
         tipo: "ENTRADA",
@@ -424,7 +390,7 @@ async function handleFormSubmitestoque(evento) {
       }
     }
 
-    showToast(id ? "Item atualizado com sucesso!" : "Item adicionado ao estoque!", "success");
+    showToast(id ? "Alterações salvas." : "Item adicionado ao estoque.", "success");
     modalestoque.hide();
     fetchestoque(ID_LAB_DO_USUARIO); // recarrega o cache
   } catch (error) {
@@ -436,14 +402,7 @@ async function handleFormSubmitestoque(evento) {
 function handleEditClickestoque(button) {
   const { id, reagenteId, quantidade, unidade, validade, observacoes } = button.dataset;
   editIdInput.value = id;
-  selectreagente.value = reagenteId;
-  quantidadeInput.value = quantidade;
-  unidadeInput.value = unidade;
-  validadeInput.value = validade;
-  observacoesInput.value = observacoes;
-  stepperEstoque?.atualizarEstadoBotoes();
-  modalTitle.textContent = "Editar item";
-  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar alterações';
+  prepararEdicao(NOME_LAB, { reagenteId, quantidade, unidade, validade, observacoes });
   modalestoque.show();
 }
 async function handleDeleteClickestoque(button) {
@@ -469,13 +428,8 @@ async function handleDeleteClickestoque(button) {
 }
 
 function resetModalestoque() {
-  formestoque.reset();
   editIdInput.value = "";
-  modalTitle.textContent = "Adicionar item ao estoque";
-  modalSubmitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
-  selectreagente.value = "";
-  unidadeInput.value = "";
-  stepperEstoque?.atualizarEstadoBotoes();
+  prepararNovo(NOME_LAB);
 }
 
 // ===============================================
@@ -560,11 +514,14 @@ function resetModalConsumo() {
 
 // --- Inicialização ---
 document.addEventListener("DOMContentLoaded", async () => {
-  popularUnidadesForm();
   popularUnidadesFiltro();
 
   ID_LAB_DO_USUARIO = await getCurrentLabId();
-  ACOES_LAB = (await obterLaboratorioAtivo())?.acoes || [];
+  const labAtivo = await obterLaboratorioAtivo();
+  ACOES_LAB = labAtivo?.acoes || [];
+  NOME_LAB = labAtivo?.nome || "";
+  definirItensDoLab(() => itensCache);
+  prepararNovo(NOME_LAB);
   aplicarPermissoes(document.body, ACOES_LAB);
   if (ID_LAB_DO_USUARIO) {
     fetchestoque(ID_LAB_DO_USUARIO);
@@ -605,4 +562,6 @@ listaestoqueEl.addEventListener("click", (e) => {
 });
 
 modalEl.addEventListener("hidden.bs.modal", resetModalestoque);
+modalEl.addEventListener("shown.bs.modal", focarInicio);
+btnNovoItem?.addEventListener("click", resetModalestoque);
 modalConsumoEl.addEventListener("hidden.bs.modal", resetModalConsumo);
