@@ -105,7 +105,7 @@ async function handleRevogar(btn) {
     titulo: "Revogar admin",
     mensagem: souEu
       ? "Você vai remover o seu próprio acesso de admin. Motivo (opcional):"
-      : `${escapeHtml(nomeAdmin)} deixa de ser admin. O registro fica no histórico. Motivo (opcional):`,
+      : `${nomeAdmin} deixa de ser admin. O registro fica no histórico. Motivo (opcional):`,
     textoConfirmar: "Revogar",
     obrigatorio: false,
   });

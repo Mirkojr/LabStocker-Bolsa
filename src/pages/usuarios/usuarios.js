@@ -288,7 +288,7 @@ async function handleMudarPapel(btn) {
   const { email, papel, nome } = btn.dataset;
   const ok = await confirmar({
     titulo: "Alterar papel",
-    mensagem: `${escapeHtml(nome)} passará a ser <strong>${NOMES_PAPEL[papel]}</strong>. O vínculo atual fica registrado no histórico.`,
+    mensagem: `${nome} passará a ser ${NOMES_PAPEL[papel]}. O vínculo atual fica registrado no histórico.`,
     textoConfirmar: "Alterar",
     tipo: "primary",
     icone: "bi-arrow-left-right",
@@ -310,7 +310,7 @@ async function handleRevogar(btn) {
   const { id, nome } = btn.dataset;
   const { confirmado, motivo } = await confirmarRecusa({
     titulo: "Revogar vínculo",
-    mensagem: `${escapeHtml(nome)} perde o acesso a este laboratório. O registro continua no histórico. Motivo (opcional):`,
+    mensagem: `${nome} perde o acesso a este laboratório. O registro continua no histórico. Motivo (opcional):`,
     textoConfirmar: "Revogar",
     obrigatorio: false,
   });
@@ -331,7 +331,7 @@ async function handleTransferir(btn) {
   const { usuario, nome } = btn.dataset;
   const ok = await confirmar({
     titulo: "Passar a chefia",
-    mensagem: `${escapeHtml(nome)} passa a ser chefe do laboratório e você vira <strong>gestor</strong>. O novo chefe pode revogar seu vínculo depois. Continuar?`,
+    mensagem: `${nome} passa a ser chefe do laboratório e você vira gestor. O novo chefe pode revogar seu vínculo depois. Continuar?`,
     textoConfirmar: "Passar chefia",
     tipo: "warning",
     icone: "bi-award-fill",
