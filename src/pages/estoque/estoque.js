@@ -22,6 +22,7 @@ import {
 } from "./estoqueCadastro.js";
 import { registrarConsumo } from "../../shared/services/consumoService.js";
 import { confirmar } from "../../shared/utils/confirmacao.js";
+import { limparErroCampo, mostrarErroCampo } from "../../shared/utils/validacaoCampo.js";
 import { criarStepperQuantidade } from "../../shared/utils/quantityStepper.js";
 import { formatarNumero, formatarQuantidade } from "../../shared/utils/formatters.js";
 import {
@@ -55,6 +56,13 @@ const consumoItemLabel = document.getElementById("consumo-item-label");
 const consumoQuantidadeInput = document.getElementById("consumo-quantidade");
 const consumoDisponivelEl = document.getElementById("consumo-disponivel");
 const consumoFinalidadeInput = document.getElementById("consumo-finalidade");
+const consumoErroQuantidade = document.getElementById("consumo-quantidade-erro");
+const erroQuantidadeConsumo = (mensagem) => {
+  mostrarErroCampo(consumoQuantidadeInput, consumoErroQuantidade, mensagem);
+  consumoQuantidadeInput.focus();
+};
+const limparErroQuantidadeConsumo = () =>
+  limparErroCampo(consumoQuantidadeInput, consumoErroQuantidade);
 
 // Stepper de quantidade do consumo (substitui as setinhas nativas do input number)
 const stepperConsumo = criarStepperQuantidade(
@@ -361,12 +369,9 @@ async function handleFormSubmitestoque(evento) {
   const id = editIdInput.value;
   const dadosForm = { id_laboratorio: ID_LAB_DO_USUARIO, ...lerDados() };
 
-  // Validações (defesa no cliente; o banco também garante via CHECK)
-  const erro = validar(dadosForm, QTD_MAX);
-  if (erro) {
-    showToast(erro, "error");
-    return;
-  }
+  // Validações (defesa no cliente; o banco também garante via CHECK).
+  // Os erros aparecem embaixo de cada campo, dentro do modal.
+  if (!validar(dadosForm, QTD_MAX)) return;
 
   try {
     const { error } = id
@@ -460,13 +465,12 @@ async function handleFormSubmitConsumo(evento) {
   const nomeReagente = consumoItemLabel.textContent;
 
   if (!(quantidade > 0)) {
-    showToast("Informe uma quantidade válida.", "error");
+    erroQuantidadeConsumo("Informe uma quantidade válida.");
     return;
   }
   if (quantidade > consumoQuantidadeDisponivel) {
-    showToast(
-      `Quantidade maior que o disponível (${formatarNumero(consumoQuantidadeDisponivel)}).`,
-      "error"
+    erroQuantidadeConsumo(
+      `Quantidade maior que o disponível (${formatarNumero(consumoQuantidadeDisponivel)}).`
     );
     return;
   }
@@ -505,6 +509,7 @@ async function handleFormSubmitConsumo(evento) {
 
 function resetModalConsumo() {
   formConsumo.reset();
+  limparErroQuantidadeConsumo();
   consumoItemIdInput.value = "";
   consumoItemLabel.textContent = "—";
   consumoDisponivelEl.textContent = "";
@@ -565,3 +570,4 @@ modalEl.addEventListener("hidden.bs.modal", resetModalestoque);
 modalEl.addEventListener("shown.bs.modal", focarInicio);
 btnNovoItem?.addEventListener("click", resetModalestoque);
 modalConsumoEl.addEventListener("hidden.bs.modal", resetModalConsumo);
+consumoQuantidadeInput.addEventListener("input", limparErroQuantidadeConsumo);

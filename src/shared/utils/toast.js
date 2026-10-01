@@ -13,8 +13,23 @@ function obterContainer() {
   return container;
 }
 
+// No celular os toasts ficam embaixo da tela (ver #toast-container no CSS).
+// Com um modal aberto, sobem para logo acima do rodapé dele, para não
+// cobrir os botões; a altura do modal varia, então a posição é medida.
+const TELA_PEQUENA = "(max-width: 576px)";
+
+function posicionar(container) {
+  container.style.bottom = "";
+  if (!window.matchMedia(TELA_PEQUENA).matches) return;
+  const rodape = document.querySelector(".modal.show .modal-footer");
+  if (!rodape) return;
+  const acimaDoRodape = window.innerHeight - rodape.getBoundingClientRect().top + 8;
+  if (acimaDoRodape > 12) container.style.bottom = `${acimaDoRodape}px`;
+}
+
 export function showToast(mensagem, tipo = "success") {
   const container = obterContainer();
+  posicionar(container);
 
   let iconClass = "bi-check-circle-fill";
   let typeClass = "toast-success";
@@ -34,7 +49,7 @@ export function showToast(mensagem, tipo = "success") {
             <i class="bi ${iconClass} fs-4 me-3"></i>
             <span class="fw-semibold text-dark">${escapeHtml(mensagem)}</span>
         </div>
-        <button type="button" class="btn-close ms-3" aria-label="Close"></button>
+        <button type="button" class="btn-close ms-3" aria-label="Fechar"></button>
     `;
 
   toast.querySelector(".btn-close").onclick = () => {
