@@ -1,3 +1,5 @@
+import { escapeHtml } from "./dom.js";
+
 // Garante que exista um container de toasts na pagina.
 // Centralizar isso aqui faz o feedback visual funcionar em QUALQUER tela,
 // sem depender de cada HTML declarar manualmente o #toast-container.
@@ -30,7 +32,7 @@ export function showToast(mensagem, tipo = "success") {
   toast.innerHTML = `
         <div class="d-flex align-items-center">
             <i class="bi ${iconClass} fs-4 me-3"></i>
-            <span class="fw-semibold text-dark">${mensagem}</span>
+            <span class="fw-semibold text-dark">${escapeHtml(mensagem)}</span>
         </div>
         <button type="button" class="btn-close ms-3" aria-label="Close"></button>
     `;

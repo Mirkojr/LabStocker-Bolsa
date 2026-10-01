@@ -4,6 +4,8 @@
 //
 // Depende do bundle do Bootstrap (window.bootstrap), ja carregado nas paginas.
 
+import { escapeHtml } from "./dom.js";
+
 function criarModalBase() {
   const wrapper = document.createElement("div");
   wrapper.className = "modal fade";
@@ -33,11 +35,11 @@ export function confirmar({
                 <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
                     <div class="modal-body p-4 text-center">
                         <div class="mb-3"><i class="bi ${icone} text-${tipo}" style="font-size:2.5rem;"></i></div>
-                        <h5 class="fw-bold mb-2 text-dark-emphasis">${titulo}</h5>
-                        <p class="text-muted mb-4">${mensagem}</p>
+                        <h5 class="fw-bold mb-2 text-dark-emphasis">${escapeHtml(titulo)}</h5>
+                        <p class="text-muted mb-4">${escapeHtml(mensagem)}</p>
                         <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-acao="cancelar">${textoCancelar}</button>
-                            <button type="button" class="btn btn-${tipo} rounded-pill px-4 fw-bold" data-acao="confirmar">${textoConfirmar}</button>
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-acao="cancelar">${escapeHtml(textoCancelar)}</button>
+                            <button type="button" class="btn btn-${tipo} rounded-pill px-4 fw-bold" data-acao="confirmar">${escapeHtml(textoConfirmar)}</button>
                         </div>
                     </div>
                 </div>
@@ -79,18 +81,18 @@ export function confirmarRecusa({
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
                     <div class="modal-header bg-danger text-white border-0">
-                        <h5 class="modal-title fw-bold">${titulo}</h5>
+                        <h5 class="modal-title fw-bold">${escapeHtml(titulo)}</h5>
                         <button type="button" class="btn-close btn-close-white" data-acao="cancelar" aria-label="Fechar"></button>
                     </div>
                     <div class="modal-body p-4">
-                        <p class="text-muted small mb-2">${mensagem}</p>
+                        <p class="text-muted small mb-2">${escapeHtml(mensagem)}</p>
                         <textarea class="form-control" data-campo="motivo" rows="3" maxlength="${maxLength}"
                             placeholder="Ex.: estoque insuficiente no momento."></textarea>
                         <div class="text-danger small mt-1 d-none" data-erro="motivo"></div>
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-acao="cancelar">Cancelar</button>
-                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" data-acao="confirmar">${textoConfirmar}</button>
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" data-acao="confirmar">${escapeHtml(textoConfirmar)}</button>
                     </div>
                 </div>
             </div>`;
