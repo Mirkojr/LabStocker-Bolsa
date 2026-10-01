@@ -1,217 +1,170 @@
 # LabStocker
 
-> **LabStocker** — sistema web para gestão de reagentes químicos, estoque, resíduos e
-> transferências entre laboratórios. Projeto da Bolsa de Inovação Tecnológica da UFC.
->
-> Front-end em HTML, CSS e JavaScript vanilla (ES modules), empacotado com **Vite**.
-> Back-end em **Supabase** (PostgreSQL + Auth + RLS + Storage).
+> Sistema web para gestão de laboratórios acadêmicos, com foco em controle de inventário químico, rastreabilidade de consumo e gerenciamento de descarte de resíduos.
 
-## ✨ Funcionalidades
+## Visão Geral
 
-- **Autenticação** de usuários, com papéis por laboratório (chefe, gestor, membro) e admin do sistema
-- **Gestão de estoque** de reagentes por laboratório
-- **Catálogo global de reagentes** (com composição química)
-- **Controle de resíduos** com classificação de perigo
-- **Transferências** de itens entre laboratórios (solicitar / aprovar / recusar)
-- **Relatórios e histórico** de movimentações, com exportação em CSV
-- **Painel de administração**: laboratórios, chefes, admins e catálogo
-- **Autorizações de projeto**: geração de minuta de ofício em `.docx` e upload do PDF assinado
-- **Feedback / suporte** ao usuário
+O **LabStocker** é uma plataforma para apoiar a operação de laboratórios (universitários ou institucionais) onde há necessidade de:
 
-## 🛠️ Tecnologias
+- organizar o **estoque de reagentes** por laboratório;
+- registrar **consumo e movimentação** de itens;
+- controlar o ciclo de **resíduos químicos** (geração e histórico);
+- administrar **transferências entre laboratórios** com regras de aprovação;
+- aplicar **permissões por papel** (admin, chefe, gestor e membro) com segurança no banco.
 
-| Camada              | Tecnologia                                  |
-| ------------------- | ------------------------------------------- |
-| Front-end           | HTML, CSS, JavaScript (vanilla, ES modules) |
-| UI                  | Bootstrap 5 + Bootstrap Icons               |
-| Build / Dev server  | Vite                                        |
-| Qualidade de código | ESLint + Prettier                           |
-| Back-end / BaaS     | Supabase (PostgreSQL, Auth, RLS, Storage)   |
-| Migrations / testes | Supabase CLI + pgTAP (Docker)               |
-| Cliente do banco    | `@supabase/supabase-js`                     |
-| Documentos          | docxtemplater + PizZip + FileSaver          |
-| Deploy              | GitHub Pages                                |
+### Problema que o projeto resolve
 
-## 📁 Estrutura de pastas
+Em muitos laboratórios, o controle de materiais e resíduos ainda é feito em planilhas isoladas ou processos manuais, o que gera:
 
-O projeto usa uma arquitetura **co-localizada**: cada página tem seu HTML e seu JS juntos
-na mesma pasta dentro de `src/pages/`, enquanto o código reutilizado por várias páginas
-fica centralizado em `src/shared/`.
+- baixa rastreabilidade de entradas/saídas;
+- inconsistência de inventário;
+- dificuldade de auditoria e conformidade;
+- risco operacional em descarte e manipulação de substâncias.
 
-## ✅ Pré-requisitos
+O LabStocker centraliza esse fluxo com autenticação, políticas de acesso e persistência em banco relacional, reduzindo erros e melhorando governança.
 
-- **Node.js 20.19+** (obrigatório — o Vite 8 não roda em versões anteriores)
-- Conta no Supabase (o plano gratuito serve) ou um Supabase self-hosted
-- **Docker** (só para rodar o banco local e os testes do banco)
-- Um navegador moderno
+## Arquitetura e Stack
 
-Verifique sua versão com `node -v`.
+### Stack principal
 
-## 🚀 Como rodar
+| Camada | Tecnologia |
+| --- | --- |
+| Front-end | HTML, CSS e JavaScript Vanilla (ES Modules) |
+| Build e Dev Server | Vite |
+| Backend/BaaS | Supabase (PostgreSQL, Auth, RLS, Storage) |
+| Cliente de API | `@supabase/supabase-js` |
+| Qualidade de código | ESLint + Prettier |
+| Banco local e testes | Supabase CLI + pgTAP |
+| CI/CD | GitHub Actions + GitHub Pages |
 
-### 1. Clonar e instalar
+### Organização de código
+
+Estrutura relevante em `src/`:
+
+```text
+src/
+├─ pages/                 # páginas da aplicação (HTML + JS por feature)
+├─ shared/
+│  ├─ services/           # acesso a dados/regras de integração com Supabase
+│  └─ utils/              # utilitários reutilizáveis
+├─ auth.js                # fluxo de autenticação de entrada
+└─ index.html             # tela inicial/login
+```
+
+Diretrizes arquiteturais do projeto:
+
+- páginas ficam em `pages/` e compõem a interface por domínio funcional;
+- integrações e chamadas ao Supabase passam por `shared/services/`;
+- utilitários transversais ficam em `shared/utils/`;
+- regras de permissão no banco são aplicadas por RLS (não apenas no front-end).
+
+## Pré-requisitos e Instalação
+
+### Pré-requisitos
+
+- **Node.js 20+**
+- **npm**
+- **Docker** (necessário para rotinas locais do Supabase e testes de banco)
+
+### Instalação local (passo a passo)
+
+1. **Clonar o repositório**
 
 ```bash
-git clone <url-do-repositorio>
-cd labstocker
+git clone https://github.com/Mirkojr/LabStocker-Bolsa.git
+cd LabStocker-Bolsa
+```
+
+2. **Instalar dependências**
+
+```bash
 npm install
 ```
 
-### 2. Configurar o Supabase
+3. **Configurar variáveis de ambiente** (seção abaixo)
 
-O banco é versionado em `supabase/migrations/` e aplicado com o Supabase CLI (já instalado
-pelo `npm install`). O passo a passo completo, inclusive para bancos que já existiam antes
-das migrations, está em [supabase/README.md](supabase/README.md).
-
-1. Crie um projeto novo no painel do Supabase.
-2. Aplique as migrations (cria tabelas, funções, políticas e o bucket de documentos):
-
-   ```bash
-   npx supabase login
-   npx supabase link --project-ref <ref-do-projeto>
-   npx supabase db push
-   ```
-
-3. Em **Project Settings → API**, copie a **Project URL** e a **anon public key**.
-
-### 3. Criar o arquivo de variáveis de ambiente
-
-Copie o modelo e preencha com as credenciais do passo anterior:
-
-```bash
-cp src/.env.example src/.env
-```
-
-```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-anon-key-aqui
-```
-
-> ⚠️ **O arquivo precisa estar em `src/`, não na raiz** — é onde fica o `root` do Vite.
->
-> - O `.env` é ignorado pelo Git e **nunca** deve ser commitado.
-> - Se criar o arquivo pelo Bloco de Notas do Windows, confirme que ele não virou
->   `.env.txt` e que o encoding é UTF-8 ou ASCII (não UTF-16).
-> - Toda variável precisa começar com `VITE_`, senão o Vite não a expõe ao front-end.
-> - Depois de alterar o `.env`, **reinicie o servidor de desenvolvimento**.
-
-### 4. Rodar
+4. **Executar em modo desenvolvimento**
 
 ```bash
 npm run dev
 ```
 
-Acesse o endereço exibido no terminal.
+5. Abrir a URL exibida no terminal (normalmente `http://localhost:5173`).
 
-> ℹ️ **Não abra o `index.html` direto no navegador** e não use extensões como o
-> "Live Server" ou servidores estáticos simples (`npx serve`, `python3 -m http.server`).
-> O projeto depende do Vite para resolver as importações de pacotes npm e para
-> substituir as variáveis de ambiente. Sem ele, a aplicação não carrega.
+## Configuração de Ambiente
 
-## 📜 Scripts disponíveis
+Para o frontend conectar ao Supabase, crie o arquivo `src/.env` (o exemplo base está em `src/.env.example`).
 
-| Comando                | O que faz                                                     |
-| ---------------------- | ------------------------------------------------------------- |
-| `npm run dev`          | Servidor de desenvolvimento com hot reload                    |
-| `npm run build`        | Gera o build de produção em `dist/`                           |
-| `npm run preview`      | Serve o `dist/` localmente — **teste aqui antes de abrir PR** |
-| `npm run lint`         | Verifica erros de código com ESLint                           |
-| `npm run lint:fix`     | Corrige automaticamente o que for possível                    |
-| `npm run format`       | Formata o código com Prettier                                 |
-| `npm run format:check` | Só verifica a formatação                                      |
-| `npm run db:start`     | Sobe o Supabase local (Docker) com todas as migrations        |
-| `npm run test:db`      | Roda os testes do banco (pgTAP)                               |
-| `npm run db:reset`     | Recria o banco local do zero                                  |
-| `npm run db:stop`      | Desliga o Supabase local                                      |
-| `npm run criar-admin`  | Cria o primeiro admin (veja abaixo)                           |
+### Variáveis obrigatórias
 
-## 🧹 Qualidade de código
-
-O projeto usa **ESLint** (encontra erros de lógica e código morto) e **Prettier**
-(padroniza a formatação). No dia a dia você não precisa rodar nada na mão: instale as
-extensões recomendadas do VS Code e o editor cuida disso ao salvar.
-
-- `dbaeumer.vscode-eslint`
-- `esbenp.prettier-vscode`
-
-### Testes do banco
-
-As regras de permissão vivem no banco e são testadas com **pgTAP**. Com o Docker rodando:
-
-```bash
-npm run db:start
-npm run test:db
+```env
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<sua-anon-key>
 ```
 
-Detalhes em [supabase/README.md](supabase/README.md#-rodando-o-banco-e-os-testes-localmente-docker).
+### Observações importantes
 
-## 👤 Criando o primeiro usuário admin
+- o arquivo deve ficar em **`src/.env`**;
+- variáveis expostas ao frontend precisam do prefixo **`VITE_`**;
+- nunca commite o `.env`;
+- após alterar variáveis, reinicie o `npm run dev`.
 
-Não há admin fixo no código nem senha conhecida no seed. Na instalação:
+## Workflows de CI/CD
 
-1. A pessoa que vai administrar cria a conta pela tela de cadastro.
-2. Quem faz o deploy roda, com a chave **service_role** do projeto (nunca vai para o front
-   nem para o repositório):
+O projeto usa GitHub Actions com dois fluxos principais:
 
-   ```bash
-   SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=<chave> npm run criar-admin -- pessoa@ufc.br
-   ```
+### 1) Deploy no GitHub Pages
 
-O comando só funciona enquanto não existir nenhum admin. Depois, admins gerenciam outros
-admins, laboratórios e chefes pela interface. Veja
-[supabase/README.md](supabase/README.md#-primeiro-admin) (inclui a versão para PowerShell).
+Workflow: **`.github/workflows/static.yml`**
 
-## 🚢 Deploy
+- gatilhos: `push` na branch `main` e `workflow_dispatch`;
+- passos:
+  1. checkout do código;
+  2. setup de Node 20 com cache npm;
+  3. `npm ci`;
+  4. `npm run build` com secrets de ambiente;
+  5. upload do `dist/` como artifact;
+  6. deploy no GitHub Pages.
 
-O deploy é automático: todo push na branch `main` dispara o workflow
-`.github/workflows/static.yml`, que instala as dependências, roda `npm run build` e
-publica a pasta `dist/` no GitHub Pages.
-
-Para que o build do CI funcione, os secrets abaixo precisam estar cadastrados em
-**Settings → Secrets and variables → Actions**:
+Secrets necessários no repositório (Actions secrets):
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-> A `anon key` é pública por design — ela vai embutida no JavaScript do navegador.
-> A segurança dos dados depende inteiramente das políticas de **RLS** no Supabase.
+### 2) Testes de banco (pgTAP)
 
-## 🧩 Arquitetura (resumo)
+Workflow: **`.github/workflows/testes-banco.yml`**
 
-- As **páginas** ficam em `src/pages/<nome>/`, cada uma com seu próprio HTML + JS
-  co-localizados (ex.: `pages/relatorios/relatorios.html` e `relatorios.js`).
-- O **código compartilhado** vive em `src/shared/`: `config.js`, `supabaseClient.js`,
-  `sessionManager.js`, `authGuard.js`, além das pastas `services/` e `utils/`.
-- Toda comunicação com o banco passa pela camada de **services**
-  (`src/shared/services/`), que usa o `supabaseClient`. Nenhuma página chama o Supabase
-  diretamente.
-- `authGuard.js` exige login. `shared/permissoes.js` (usado por `sessionManager.js`) sabe em
-  qual laboratório o usuário está trabalhando, quais ações pode fazer nele e se ele é admin;
-  as telas escondem os botões marcados com `data-permissao` que o papel não permite.
-- A tela de **login** (`src/index.html` + `src/auth.js`) fica na raiz de `src/`.
-- A **paginação** é centralizada em `src/shared/utils/paginacao.js`, com suporte a
-  paginação no servidor (`calcularRange` + `.range()` do Supabase) e no cliente
-  (`paginarLista`).
-- A segurança dos dados é garantida por **RLS** no Supabase: cada usuário só acessa o que
-  a política permite.
-- **Permissões**: cada usuário tem um papel por laboratório (chefe, gestor ou membro) e pode
-  ter vínculo com vários laboratórios. A regra fica numa única função do banco,
-  `tem_permissao(laboratorio, acao)`, usada por todas as políticas e RPCs. Veja
-  [supabase/README.md](supabase/README.md#-modelo-de-permissões).
+- gatilhos: `pull_request`, `push` na `main` e `workflow_dispatch`;
+- passos:
+  1. checkout;
+  2. setup de Node 20;
+  3. `npm ci`;
+  4. inicialização do Supabase local via CLI;
+  5. execução de `npx supabase test db` (pgTAP);
+  6. desligamento do ambiente Supabase ao final.
 
-## 🤝 Contribuindo
+Esse fluxo valida migrations, políticas de segurança e regras de banco antes da integração das mudanças.
 
-Veja o [CONTRIBUTING.md](CONTRIBUTING.md) para o padrão de branches, commits e Pull
-Requests.
+## Scripts úteis
 
-Resumo rápido:
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | inicia servidor de desenvolvimento (Vite) |
+| `npm run build` | gera build de produção em `dist/` |
+| `npm run preview` | serve o build local para validação |
+| `npm run lint` | roda lint no código-fonte |
+| `npm run lint:fix` | corrige automaticamente problemas de lint possíveis |
+| `npm run db:start` | sobe ambiente local do Supabase |
+| `npm run db:reset` | recria banco local aplicando migrations |
+| `npm run test:db` | executa testes pgTAP |
+| `npm run db:stop` | encerra ambiente local do Supabase |
 
-1. Crie uma branch a partir da `main`: `feat/nome-da-feature` ou `fix/nome-do-bug`.
-2. Faça commits no padrão [Conventional Commits](https://www.conventionalcommits.org/)
-   (`feat:`, `fix:`, `chore:`, `docs:`, `style:`, `refactor:`).
-3. Rode `npm run lint` e `npm run build` antes de abrir o PR.
-4. Abra o Pull Request descrevendo **o que muda**, **por quê** e **como testar**.
+## Referências internas
 
-## 📄 Licença
+- Guia de banco/migrations/testes: `supabase/README.md`
+- Processo de contribuição: `CONTRIBUTING.md`
 
-Projeto acadêmico — a definir.
+## Licença
+
+Projeto acadêmico. Definição de licença pendente.
