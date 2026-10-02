@@ -35,7 +35,15 @@ SELECT ok(
 -- ESTOQUE
 -- ============================================================
 SELECT tests.logar('f0000000-0000-0000-0000-000000000001'); -- sem vínculo
-SELECT is((SELECT count(*)::int FROM estoquelab), 2, 'qualquer logado lê o estoque de todos os laboratórios');
+SELECT is((SELECT count(*)::int FROM estoquelab), 0, 'quem não tem vínculo não lê o estoque');
+RESET ROLE;
+
+SELECT tests.logar('e0000000-0000-0000-0000-000000000001'); -- membro L1
+SELECT is((SELECT count(*)::int FROM estoquelab), 1, 'membro lê só o estoque do próprio laboratório');
+RESET ROLE;
+
+SELECT tests.logar('a0000000-0000-0000-0000-000000000001'); -- admin
+SELECT is((SELECT count(*)::int FROM estoquelab), 2, 'admin lê o estoque de todos os laboratórios');
 RESET ROLE;
 
 SELECT tests.anonimo();

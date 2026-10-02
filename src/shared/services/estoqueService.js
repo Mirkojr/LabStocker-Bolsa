@@ -13,12 +13,11 @@ export async function listarestoquePorlaboratorio(labId) {
     .order("data_validade");
 }
 
+// Estoque de outro laboratório: só o que está disponível (com saldo e na
+// validade), sem local nem observações. Produto controlado vem sem a
+// quantidade (null). A tabela estoquelab só é lida pelo próprio laboratório.
 export async function listarEstoqueDisponivelPorLaboratorio(labId) {
-  return supabaseClient
-    .from("estoquelab")
-    .select("*, reagente(nome)")
-    .eq("id_laboratorio", labId)
-    .gt("quantidade", 0);
+  return supabaseClient.rpc("estoque_disponivel", { p_laboratorio: labId });
 }
 
 export async function listarreagentesParaestoque() {
