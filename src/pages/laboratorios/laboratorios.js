@@ -148,17 +148,33 @@ function renderestoqueExterno(itens) {
     const div = document.createElement("div");
     div.className =
       "list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom";
-    const nomeReagente = escapeHtml(item.reagente.nome);
+    const nomeReagente = escapeHtml(item.reagente_nome);
+    // Controlado: o banco não informa a quantidade a outros laboratórios.
+    const quantidade =
+      item.quantidade === null
+        ? "Quantidade não divulgada"
+        : formatarQuantidade(item.quantidade, item.unidade_medida);
+    const controle = item.instituicao_controladora
+      ? `<span class="controle-reagente small"><i class="bi bi-file-earmark-lock"></i>Controlado: ${escapeHtml(item.instituicao_controladora)}</span>`
+      : "";
+    const validade = item.data_validade
+      ? `<span class="small text-muted">Vence em ${new Date(item.data_validade).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</span>`
+      : "";
     div.innerHTML = `
             <div>
-                <h6 class="mb-0 fw-bold text-dark">${nomeReagente}</h6>
-                <span class="badge bg-light text-primary border">${escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida))}</span>
+                <h6 class="mb-1 fw-bold text-dark">${nomeReagente}</h6>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge bg-light text-primary border">${escapeHtml(quantidade)}</span>
+                    ${validade}
+                    ${controle}
+                </div>
             </div>
             <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold btn-solicitar"
                 data-id="${escapeHtml(item.id)}"
                 data-nome="${nomeReagente}"
                 data-unidade="${escapeHtml(item.unidade_medida)}"
-                data-max="${escapeHtml(item.quantidade)}"
+                data-max="${escapeHtml(item.quantidade ?? "")}"
+                data-controle="${escapeHtml(item.instituicao_controladora || "")}"
                 data-lab="${escapeHtml(item.id_laboratorio)}"
                 aria-label="Pedir ${nomeReagente}">
                 Pedir
@@ -172,13 +188,13 @@ function renderestoqueExterno(itens) {
 buscaestoqueExtInput.addEventListener("keyup", () => {
   const termo = buscaestoqueExtInput.value.toLowerCase();
   const filtrados = ESTOQUE_ATUAL_CACHE.filter((i) =>
-    i.reagente.nome.toLowerCase().includes(termo)
+    i.reagente_nome.toLowerCase().includes(termo)
   );
   renderestoqueExterno(filtrados);
 });
 
 function abrirModalSolicitacao(btn) {
-  const { id, nome, unidade, max, lab } = btn.dataset;
+  const { id, nome, unidade, max, lab, controle } = btn.dataset;
 
   document.getElementById("solic-item-id").value = id;
   document.getElementById("solic-lab-destino").value = lab;
@@ -186,7 +202,10 @@ function abrirModalSolicitacao(btn) {
 
   qtdSolicitadaInput.value = "";
   unidadeSolicitadaSpan.textContent = unidade;
-  textoSolicitacao.innerHTML = `Você está pedindo <strong>${escapeHtml(nome)}</strong>.<br>Disponível: ${escapeHtml(formatarQuantidade(max, unidade))}`;
+  const disponivel = max
+    ? `Disponível: ${escapeHtml(formatarQuantidade(max, unidade))}`
+    : `Produto controlado (${escapeHtml(controle)}): a quantidade disponível não é divulgada. O laboratório confere ao analisar o pedido.`;
+  textoSolicitacao.innerHTML = `Você está pedindo <strong>${escapeHtml(nome)}</strong>.<br>${disponivel}`;
   erroQtd.classList.add("d-none");
 
   modalSolicitar.show();
@@ -200,7 +219,8 @@ formSolicitacao.addEventListener("submit", async (e) => {
   const qtd = parseFloat(qtdSolicitadaInput.value);
   const max = parseFloat(document.getElementById("solic-max-qtd").value);
 
-  if (qtd > max || qtd <= 0) {
+  // Sem "max" (controlado), o saldo é conferido na aprovação.
+  if (!(qtd > 0) || qtd > max) {
     erroQtd.classList.remove("d-none");
     return;
   }
