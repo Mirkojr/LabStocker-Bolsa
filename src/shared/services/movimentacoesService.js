@@ -1,10 +1,10 @@
 import { supabaseClient } from "../supabaseClient.js";
 
-// Acesso a dados da tabela 'Movimentacao' (entradas/compras de estoque).
+// Acesso a dados da tabela 'movimentacao' (entradas/compras de estoque).
 
 export async function listarEntradasPorLaboratorio(labId) {
   return supabaseClient
-    .from("Movimentacao")
+    .from("movimentacao")
     .select("*")
     .eq("id_laboratorio", labId)
     .eq("tipo", "ENTRADA")
@@ -13,7 +13,7 @@ export async function listarEntradasPorLaboratorio(labId) {
 
 export async function listarMovimentacoesPorPeriodo(inicioISO, fimISO, labId = null) {
   let query = supabaseClient
-    .from("Movimentacao")
+    .from("movimentacao")
     .select("*")
     .gte("data_movimentacao", inicioISO)
     .lte("data_movimentacao", fimISO);

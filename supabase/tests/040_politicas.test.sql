@@ -12,14 +12,14 @@ SELECT policies_are('public', 'reagente', ARRAY[
   'Ver reagentes', 'Cadastrar reagente', 'Editar reagente', 'Excluir reagente']);
 SELECT policies_are('public', 'perfis', ARRAY['Ver perfis', 'Atualizar proprio perfil']);
 SELECT policies_are('public', 'estoquelab', ARRAY[
-  'Ver estoque', 'Inserir estoque', 'Atualizar estoque', 'Excluir estoque']);
+  'Ver estoque', 'Inserir estoque', 'Excluir estoque']);
 SELECT policies_are('public', 'residuo', ARRAY[
   'Ver residuos', 'Inserir residuo', 'Atualizar residuo', 'Excluir residuo']);
 SELECT policies_are('public', 'transferencia', ARRAY[
   'Ver transferencias', 'Solicitar transferencia', 'Recusar transferencia']);
 SELECT policies_are('public', 'consumo', ARRAY['Ver consumos']);
-SELECT policies_are('public', 'Movimentacao', ARRAY[
-  'Ver movimentacoes', 'Inserir movimentacoes', 'Atualizar movimentacoes', 'Excluir movimentacoes']);
+SELECT policies_are('public', 'movimentacao', ARRAY['Ver movimentacoes', 'Inserir movimentacoes']);
+SELECT policies_are('public', 'auditoria', ARRAY['Ver auditoria']);
 SELECT policies_are('public', 'feedback', ARRAY['Criar feedback', 'Ver feedbacks']);
 SELECT policies_are('public', 'projetos', ARRAY[
   'Criar propria solicitacao', 'Ver solicitacoes', 'Admin gerencia solicitacoes']);
@@ -47,10 +47,10 @@ SELECT throws_ok(
   $$INSERT INTO estoquelab (id_laboratorio, id_reagente, quantidade, unidade_medida)
     VALUES ('10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 1, 'L')$$,
   '42501', NULL, 'membro não cadastra item de estoque');
-UPDATE estoquelab SET quantidade = 999 WHERE id = '30000000-0000-0000-0000-000000000001';
+SELECT throws_ok(
+  $$UPDATE estoquelab SET quantidade = 999 WHERE id = '30000000-0000-0000-0000-000000000001'$$,
+  '42501', NULL, 'membro não altera quantidade direto');
 RESET ROLE;
-SELECT is((SELECT quantidade FROM estoquelab WHERE id = '30000000-0000-0000-0000-000000000001'), 10::numeric,
-  'membro não altera quantidade direto');
 
 SELECT tests.logar('d0000000-0000-0000-0000-000000000001'); -- gestor L1
 SELECT lives_ok(
