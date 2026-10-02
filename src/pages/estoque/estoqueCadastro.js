@@ -33,6 +33,9 @@ const el = {
   erroReagente: $("estoque-reagente-erro"),
   erroQuantidade: $("estoque-quantidade-erro"),
   erroUnidade: $("estoque-unidade-erro"),
+  motivoCampo: $("estoque-motivo-campo"),
+  motivo: $("estoque-motivo"),
+  erroMotivo: $("estoque-motivo-erro"),
 };
 
 // Campos validados: quem recebe o erro e onde fica a mensagem.
@@ -40,6 +43,7 @@ const CAMPOS = {
   reagente: () => [el.busca, el.erroReagente],
   quantidade: () => [el.quantidade, el.erroQuantidade],
   unidade: () => [el.unidades, el.erroUnidade],
+  motivo: () => [el.motivo, el.erroMotivo],
 };
 const limparErro = (campo) => limparErroCampo(...CAMPOS[campo]());
 
@@ -49,6 +53,7 @@ let resultados = [];
 let ativo = -1;
 let escolhido = null;
 let editando = false;
+let original = null; // { reagenteId, quantidade, unidade } do item em edição
 
 // Sem acento e em minúsculas, mantendo o tamanho do texto (os índices do
 // texto normalizado servem para destacar o trecho no nome original).
@@ -200,6 +205,7 @@ function escolher(r) {
   el.procura.classList.add("d-none");
 
   mostrarJaTem(r);
+  atualizarMotivo();
 
   // Primeiro frasco desse reagente já cadastrado define a unidade sugerida.
   if (!unidadeEscolhida()) {
@@ -236,6 +242,7 @@ function trocar() {
   el.busca.value = "";
   el.busca.focus();
   renderResultados();
+  atualizarMotivo();
 }
 
 // ---------- Unidade ----------
@@ -255,6 +262,29 @@ function marcarUnidade(u) {
   const radio = el.unidades.querySelector(`input[value="${CSS.escape(u || "")}"]`);
   if (radio) radio.checked = true;
   limparErro("unidade");
+  atualizarMotivo();
+}
+
+// ---------- Motivo do ajuste (só na edição) ----------
+// Mudar quantidade, unidade ou reagente de um item já cadastrado é uma
+// correção de inventário: o banco exige o motivo e o guarda na auditoria.
+function precisaMotivo() {
+  if (!editando || !original) return false;
+  return (
+    el.idReagente.value !== original.reagenteId ||
+    parseFloat(el.quantidade.value) !== original.quantidade ||
+    unidadeEscolhida() !== original.unidade
+  );
+}
+
+function atualizarMotivo() {
+  const precisa = precisaMotivo();
+  el.motivoCampo.classList.toggle("d-none", !precisa);
+  if (!precisa) limparErro("motivo");
+}
+
+export function lerMotivo() {
+  return precisaMotivo() ? el.motivo.value.trim() || null : null;
 }
 
 // ---------- Validade ----------
@@ -301,11 +331,14 @@ function limpar() {
   el.semValidade.checked = false;
   el.validade.disabled = false;
   el.observacoes.value = "";
+  el.motivo.value = "";
+  el.motivoCampo.classList.add("d-none");
   atualizarAvisoValidade();
 }
 
 export function prepararNovo(nomeLab) {
   editando = false;
+  original = null;
   limpar();
   el.titulo.textContent = "Novo item no estoque";
   el.lab.textContent = nomeLab || "";
@@ -317,6 +350,7 @@ export function prepararEdicao(
   { reagenteId, quantidade, unidade, validade, observacoes }
 ) {
   editando = true;
+  original = { reagenteId, quantidade: parseFloat(quantidade), unidade };
   limpar();
   el.titulo.textContent = "Editar item";
   el.lab.textContent = nomeLab || "";
@@ -330,6 +364,7 @@ export function prepararEdicao(
   el.validade.disabled = !validade;
   el.observacoes.value = observacoes || "";
   atualizarAvisoValidade();
+  atualizarMotivo();
 }
 
 // Foco inicial ao abrir: a busca (novo) ou a quantidade (edição).
@@ -363,6 +398,9 @@ export function validar(dados, qtdMax) {
   }
   if (!UNIDADES.includes(dados.unidade_medida)) {
     erros.push(["unidade", el.unidades.querySelector("input"), "Escolha a unidade."]);
+  }
+  if (precisaMotivo() && !el.motivo.value.trim()) {
+    erros.push(["motivo", el.motivo, "Informe o motivo do ajuste."]);
   }
   for (const [campo, , mensagem] of erros) mostrarErroCampo(...CAMPOS[campo](), mensagem);
   erros[0]?.[1]?.focus();
@@ -412,8 +450,15 @@ el.escolhido.addEventListener("click", (e) => {
   if (e.target.closest(".trocar")) trocar();
 });
 
-el.quantidade.addEventListener("input", () => limparErro("quantidade"));
-el.unidades.addEventListener("change", () => limparErro("unidade"));
+el.quantidade.addEventListener("input", () => {
+  limparErro("quantidade");
+  atualizarMotivo();
+});
+el.unidades.addEventListener("change", () => {
+  limparErro("unidade");
+  atualizarMotivo();
+});
+el.motivo.addEventListener("input", () => limparErro("motivo"));
 el.validade.addEventListener("input", atualizarAvisoValidade);
 el.validade.addEventListener("change", atualizarAvisoValidade);
 el.semValidade.addEventListener("change", alternarSemValidade);

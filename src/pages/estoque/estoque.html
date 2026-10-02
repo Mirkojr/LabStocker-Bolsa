@@ -133,6 +133,13 @@
                                 <input type="text" class="entrada" id="estoque-observacoes" maxlength="500" placeholder="Ex.: armário de ácidos, prateleira 2">
                             </div>
                         </div>
+
+                        <div class="campo d-none" id="estoque-motivo-campo">
+                            <label for="estoque-motivo">Motivo do ajuste</label>
+                            <input type="text" class="entrada" id="estoque-motivo" maxlength="300" aria-describedby="estoque-motivo-ajuda" placeholder="Ex.: contagem do inventário, frasco quebrado">
+                            <div class="ajuda" id="estoque-motivo-ajuda">Você mudou o que está no frasco. O motivo fica registrado no histórico do laboratório.</div>
+                            <div class="invalid-feedback" id="estoque-motivo-erro"></div>
+                        </div>
                     </div>
 
                     <div class="modal-footer cadastro-rodape">

@@ -6,6 +6,7 @@ import { listarTransferenciasPorLaboratorio } from "../../shared/services/transf
 import { listarResiduosDescartadosPorLaboratorio } from "../../shared/services/residuosService.js";
 import { listarEntradasPorLaboratorio } from "../../shared/services/movimentacoesService.js";
 import { listarConsumosPorLaboratorio } from "../../shared/services/consumoService.js"; // Import novo adicionado
+import { listarAjustesEstoquePorLaboratorio } from "../../shared/services/auditoriaService.js";
 import {
   garantirContainerPaginador,
   paginarLista,
@@ -53,17 +54,19 @@ async function fetchHistorico() {
   if (paginadorHistEl) paginadorHistEl.innerHTML = "";
 
   try {
-    const [resTransf, resresiduos, resMov, resConsumos] = await Promise.all([
+    const [resTransf, resresiduos, resMov, resConsumos, resAjustes] = await Promise.all([
       listarTransferenciasPorLaboratorio(MEU_LAB_ID),
       listarResiduosDescartadosPorLaboratorio(MEU_LAB_ID),
       listarEntradasPorLaboratorio(MEU_LAB_ID),
       listarConsumosPorLaboratorio(MEU_LAB_ID), // Nova promessa para consumos
+      listarAjustesEstoquePorLaboratorio(MEU_LAB_ID),
     ]);
 
     if (resTransf.error) throw resTransf.error;
     if (resresiduos.error) throw resresiduos.error;
     if (resMov.error) throw resMov.error;
     if (resConsumos.error) throw resConsumos.error; // Tratamento de erro pro novo dado
+    if (resAjustes.error) throw resAjustes.error;
 
     const listaTransf = resTransf.data.map((item) => ({
       ...item,
@@ -92,8 +95,23 @@ async function fetchHistorico() {
         : "Usuário removido",
     }));
 
-    // Mesclando as 4 listas
-    const listaCompleta = [...listaTransf, ...listaresiduos, ...listaMov, ...listaConsumos];
+    const listaAjustes = resAjustes.data.map((item) => ({
+      ...item,
+      tipo_registro: "AJUSTE_ESTOQUE",
+      data_ordenacao: item.data_registro,
+      nome_usuario: item.perfis
+        ? `${item.perfis.nome} ${item.perfis.sobrenome}`
+        : "Usuário removido",
+    }));
+
+    // Mesclando as listas
+    const listaCompleta = [
+      ...listaTransf,
+      ...listaresiduos,
+      ...listaMov,
+      ...listaConsumos,
+      ...listaAjustes,
+    ];
     listaCompleta.sort((a, b) => new Date(b.data_ordenacao) - new Date(a.data_ordenacao));
 
     HISTORICO_CACHE = listaCompleta;
@@ -237,6 +255,23 @@ function descreverTransferencia(item) {
   };
 }
 
+// O que mudou numa edição de item, campo a campo: "Quantidade: 500 mL → 750 mL".
+function mudancasDoAjuste({ dados_antes: antes = {}, dados_depois: depois = {} }) {
+  const qtd = (d) => formatarQuantidade(d.quantidade, d.unidade_medida);
+  const data = (d) =>
+    d.data_validade
+      ? new Date(d.data_validade).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+      : "sem validade";
+  const local = (d) => d.observacoes_operacionais || "não informado";
+
+  const linhas = [];
+  if (antes.id_reagente !== depois.id_reagente) linhas.push("Reagente trocado");
+  if (qtd(antes) !== qtd(depois)) linhas.push(`Quantidade: ${qtd(antes)} → ${qtd(depois)}`);
+  if (data(antes) !== data(depois)) linhas.push(`Validade: ${data(antes)} → ${data(depois)}`);
+  if (local(antes) !== local(depois)) linhas.push(`Onde fica: ${local(antes)} → ${local(depois)}`);
+  return linhas;
+}
+
 function renderHistorico(itens) {
   if (itens.length === 0) {
     mostrarVazio(listaHistorico, {
@@ -300,6 +335,29 @@ function renderHistorico(itens) {
         quantidade: escapeHtml(formatarQuantidade(item.quantidade, item.unidade_medida)),
         hora,
       });
+    } else if (item.tipo_registro === "AJUSTE_ESTOQUE") {
+      const excluido = item.acao === "exclusao";
+      const linha = excluido ? item.dados_antes || {} : item.dados_depois || {};
+      const mudancas = excluido
+        ? ""
+        : mudancasDoAjuste(item)
+            .map((m) => `${escapeHtml(m)}<br>`)
+            .join("");
+      const motivo = item.motivo
+        ? `<span class="fst-italic">Motivo: ${escapeHtml(item.motivo)}</span><br>`
+        : "";
+      html = montarItem({
+        cor: excluido ? "danger" : "primary",
+        icone: excluido ? "bi-x-octagon" : "bi-pencil-square",
+        titulo: escapeHtml(item.item_nome || "Item desconhecido"),
+        selo: excluido ? "Item excluído" : "Item editado",
+        seloClasse: excluido ? "bg-danger" : "bg-primary",
+        detalhes: `<p class="mb-1 small text-muted">
+                                ${mudancas}${motivo}${excluido ? "Excluído" : "Editado"} por: <strong>${escapeHtml(item.nome_usuario)}</strong>
+                            </p>`,
+        quantidade: escapeHtml(formatarQuantidade(linha.quantidade, linha.unidade_medida)),
+        hora,
+      });
     } else {
       const t = descreverTransferencia(item);
       const motivo =
@@ -347,6 +405,11 @@ inputBusca.addEventListener("keyup", () => {
       const nomeUsuario = item.nome_usuario || "";
       const finalidade = item.finalidade || "";
       textoPesquisavel = (nomereagente + nomeUsuario + finalidade).toLowerCase();
+    } else if (item.tipo_registro === "AJUSTE_ESTOQUE") {
+      const rotulo = item.acao === "exclusao" ? "item excluído" : "item editado";
+      textoPesquisavel = [item.item_nome, item.nome_usuario, item.motivo, rotulo]
+        .join(" ")
+        .toLowerCase();
     } else {
       const nomereagente = item.estoquelab?.reagente?.nome || "";
       const nomeOrigem = item.LabOrigem?.nome_laboratorio || "";

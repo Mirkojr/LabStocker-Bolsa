@@ -59,6 +59,19 @@ As escritas em `vinculo_laboratorio` e `administrador` só acontecem pelas RPCs
 por `vinculos_do_laboratorio(laboratorio)`, que devolve os nomes (inclusive de
 ex-integrantes) sem abrir a tabela `perfis`.
 
+### Auditoria
+
+Toda inclusão, alteração e exclusão em `estoquelab`, `reagente` e `residuo` vira uma linha
+em `auditoria` (trigger `registrar_auditoria`), com os valores de antes e de depois em
+`jsonb`, quem fez, quando e a origem: `manual`, `consumo` ou `transferencia` (as RPCs
+marcam a origem com `marcar_origem_auditoria`). A tabela só tem política de leitura;
+ninguém do app insere, altera ou apaga linhas nela. As entradas em `movimentacao` também
+são só de inserção.
+
+A edição de um item de estoque é feita só pela RPC `editar_item_estoque`, que exige motivo
+quando muda a quantidade, a unidade ou o reagente. O motivo fica na auditoria e aparece no
+Histórico.
+
 ### Dependência do Supabase Auth
 
 O usuário logado é lido só por `usuario_atual()` e `email_atual()` (que chamam

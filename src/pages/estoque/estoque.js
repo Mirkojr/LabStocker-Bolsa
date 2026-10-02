@@ -15,6 +15,7 @@ import {
   definirItensDoLab,
   focarInicio,
   lerDados,
+  lerMotivo,
   nomeReagenteEscolhido,
   prepararEdicao,
   prepararNovo,
@@ -375,7 +376,7 @@ async function handleFormSubmitestoque(evento) {
 
   try {
     const { error } = id
-      ? await salvarItemestoque(id, dadosForm)
+      ? await salvarItemestoque(id, dadosForm, lerMotivo())
       : await salvarItemestoque(null, dadosForm);
     if (error) throw error;
 

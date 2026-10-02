@@ -25,9 +25,20 @@ export async function listarreagentesParaestoque() {
   return supabaseClient.from("reagente").select("id, nome").order("nome");
 }
 
-export async function salvarItemestoque(id, dadosForm) {
+// Item novo entra direto na tabela. A edição passa pela RPC editar_item_estoque,
+// que exige motivo quando muda quantidade, unidade ou reagente e deixa a
+// alteração registrada na auditoria.
+export async function salvarItemestoque(id, dadosForm, motivo = null) {
   if (id) {
-    return supabaseClient.from("estoquelab").update(dadosForm).eq("id", id);
+    return supabaseClient.rpc("editar_item_estoque", {
+      p_id: id,
+      p_id_reagente: dadosForm.id_reagente,
+      p_quantidade: dadosForm.quantidade,
+      p_unidade_medida: dadosForm.unidade_medida,
+      p_data_validade: dadosForm.data_validade,
+      p_observacoes: dadosForm.observacoes_operacionais,
+      p_motivo: motivo,
+    });
   }
 
   return supabaseClient.from("estoquelab").insert(dadosForm);
