@@ -11,22 +11,17 @@ DELETE FROM public.auditoria;
 -- ============================================================
 SELECT has_table('public', 'movimentacao', 'tabela movimentacao em minúsculas');
 SELECT hasnt_table('public', 'Movimentacao', 'não existe mais tabela "Movimentacao"');
-SELECT has_view('public', 'Movimentacao', 'view de compatibilidade para o front antigo');
+SELECT hasnt_view('public', 'Movimentacao', 'view de compatibilidade removida');
 
 SELECT tests.logar('d0000000-0000-0000-0000-000000000001'); -- gestor L1
 SELECT lives_ok(
   $$INSERT INTO movimentacao (id_laboratorio, tipo, item_nome, quantidade, unidade)
     VALUES ('10000000-0000-0000-0000-000000000001', 'ENTRADA', 'Acetona', 1, 'L')$$,
   'gestor registra entrada em movimentacao');
-SELECT lives_ok(
-  $$INSERT INTO "Movimentacao" (id_laboratorio, tipo, item_nome, quantidade, unidade)
-    VALUES ('10000000-0000-0000-0000-000000000001', 'ENTRADA', 'Acetona', 2, 'L')$$,
-  'front antigo ainda registra entrada pela view');
-SELECT is((SELECT count(*)::int FROM "Movimentacao"), 2, 'view lê as entradas');
 SELECT throws_ok(
-  $$INSERT INTO "Movimentacao" (id_laboratorio, tipo, item_nome, quantidade, unidade)
+  $$INSERT INTO movimentacao (id_laboratorio, tipo, item_nome, quantidade, unidade)
     VALUES ('10000000-0000-0000-0000-000000000002', 'ENTRADA', 'Acetona', 1, 'L')$$,
-  '42501', NULL, 'view respeita a RLS (outro laboratório)');
+  '42501', NULL, 'gestor não registra entrada em outro laboratório');
 SELECT throws_ok($$UPDATE movimentacao SET quantidade = 99$$, '42501', NULL,
   'entrada não pode ser alterada');
 SELECT throws_ok($$DELETE FROM movimentacao$$, '42501', NULL, 'entrada não pode ser apagada');
