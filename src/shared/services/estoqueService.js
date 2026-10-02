@@ -34,7 +34,7 @@ export async function salvarItemestoque(id, dadosForm) {
 }
 
 export async function registrarMovimentacaoEntradaestoque(dados) {
-  return supabaseClient.from("Movimentacao").insert(dados);
+  return supabaseClient.from("movimentacao").insert(dados);
 }
 
 export async function excluirItemestoque(id) {

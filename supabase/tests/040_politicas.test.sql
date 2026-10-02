@@ -18,7 +18,7 @@ SELECT policies_are('public', 'residuo', ARRAY[
 SELECT policies_are('public', 'transferencia', ARRAY[
   'Ver transferencias', 'Solicitar transferencia', 'Recusar transferencia']);
 SELECT policies_are('public', 'consumo', ARRAY['Ver consumos']);
-SELECT policies_are('public', 'Movimentacao', ARRAY[
+SELECT policies_are('public', 'movimentacao', ARRAY[
   'Ver movimentacoes', 'Inserir movimentacoes', 'Atualizar movimentacoes', 'Excluir movimentacoes']);
 SELECT policies_are('public', 'feedback', ARRAY['Criar feedback', 'Ver feedbacks']);
 SELECT policies_are('public', 'projetos', ARRAY[
