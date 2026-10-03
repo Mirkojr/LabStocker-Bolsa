@@ -12,7 +12,7 @@
 - **Gestão de estoque** de reagentes por laboratório
 - **Catálogo global de reagentes** (com composição química)
 - **Controle de resíduos** com classificação de perigo
-- **Transferências** de itens entre laboratórios (solicitar / aprovar / recusar)
+- **Pedidos entre laboratórios**: um laboratório pede um reagente a outro; o pedido aprovado gera a **transferência** do estoque
 - **Relatórios e histórico** de movimentações, com exportação em CSV
 - **Painel de administração**: laboratórios, chefes, admins e catálogo
 - **Autorizações de projeto**: geração de minuta de ofício em `.docx` e upload do PDF assinado
