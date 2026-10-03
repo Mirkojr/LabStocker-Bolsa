@@ -27,7 +27,7 @@ tipo/nome-da-feature
 
 ```
 feat/auth-login
-feat/solicitar-transferencia
+feat/pedido-entre-laboratorios
 fix/erro-aprovar-transferencia
 refactor/organizacao-services
 ```
@@ -92,17 +92,17 @@ teste
 ```
 ## O que foi feito
 
-Implementação da solicitação de transferência de reagentes entre laboratórios
+Implementação do pedido de reagentes entre laboratórios
 
 ## Como testar
 
 1. Entrar como usuário de um laboratório
-2. Acessar "Laboratórios" > ver estoque de outro lab > "Solicitar"
-3. Confirmar que o pedido aparece para o lab dono aprovar
+2. Acessar "Laboratórios" > abrir outro laboratório > "Pedir" em um reagente
+3. Entrar como gestor do laboratório de origem e confirmar que o pedido aparece em "Pedidos recebidos"
 
 ## Observações
 
-Rodar a migration `migracao_movimentacao.sql` no Supabase
+Cria a migration `supabase/migrations/AAAAMMDDHHMMSS_pedido_entre_laboratorios.sql` (testada com `npm run db:reset` e `npm run test:db`). Aplicar com `npx supabase db push` antes do merge, porque o site publica sozinho a cada push na `main`.
 ```
 
 ---
@@ -127,7 +127,7 @@ Rodar a migration `migracao_movimentacao.sql` no Supabase
 - Não commitar diretamente na branch `main`
 - Todo código deve passar por revisão
 - Evitar commits muito grandes ou genéricos
-- Não commitar segredos/chaves; conferir `src/shared/config.js` antes de subir
+- Não commitar segredos/chaves: o `src/.env` é ignorado pelo Git e a chave `service_role` nunca vai para o repositório
 
 ---
 

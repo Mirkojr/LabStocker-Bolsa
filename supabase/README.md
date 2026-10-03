@@ -9,13 +9,20 @@ Todo o banco (tabelas, funções, políticas de RLS, bucket de Storage) está ve
 
 ## 🔐 Modelo de permissões
 
-| Papel           | Onde           | O que pode                                                                                            |
-| --------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
-| **Admin**       | Sistema todo   | Cadastra laboratórios, define e troca chefes, gerencia admins, lê tudo. Não opera estoque.            |
-| **Chefe**       | Um laboratório | Tudo no laboratório. Concede e revoga gestor e membro. Transfere a chefia. Edita o catálogo.          |
-| **Gestor**      | Um laboratório | Edita estoque, aprova e recusa transferências, concede e revoga **membros**.                          |
-| **Membro**      | Um laboratório | Registra consumo e resíduo, vê o histórico, pede transferência (aprovada por gestor/chefe da origem). |
-| Qualquer logado | —              | Lê o estoque de todos os laboratórios.                                                                |
+| Papel                  | Onde                | O que pode                                                                                                            |
+| ---------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Admin**              | Sistema todo        | Cadastra laboratórios, define e troca chefes, gerencia admins, lê tudo. Não opera estoque.                            |
+| **Chefe**              | Um laboratório      | Tudo no laboratório. Concede e revoga gestor e membro. Transfere a chefia. Edita o catálogo.                          |
+| **Gestor**             | Um laboratório      | Edita estoque, aprova e recusa pedidos de outros laboratórios, concede e revoga **membros**.                          |
+| **Membro**             | Um laboratório      | Registra consumo e resíduo, vê o histórico, faz pedidos a outros laboratórios (aprovados por gestor/chefe da origem). |
+| Qualquer vínculo ativo | Outros laboratórios | Consulta a disponibilidade (reagente, quantidade, unidade, validade) para fazer pedidos.                              |
+
+- **Estoque**: cada laboratório lê o próprio estoque completo (`laboratorio.ver`: vínculo
+  ativo ou admin). Os outros laboratórios não leem a tabela `estoquelab`: consultam
+  `estoque_disponivel(laboratorio)`, que devolve só reagente, quantidade, unidade e validade,
+  e só para quem tem algum vínculo ativo (ou é admin). Produto controlado (PF ou Exército)
+  aparece sem a quantidade. O laboratório que fez um pedido também enxerga a linha do item
+  pedido, para mostrar o nome do reagente no Histórico, nos Relatórios e nos Pedidos.
 
 - **Vínculos** (`vinculo_laboratorio`): um por usuário e laboratório; uma pessoa pode ter
   papéis diferentes em laboratórios diferentes. Validade opcional (`expira_em`); vínculo
